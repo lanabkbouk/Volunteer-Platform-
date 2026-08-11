@@ -98,7 +98,7 @@ export async function fetchSkillsByCategory(categoryId) {
 // ⚠️ مختلف عن categories.js: SkillController بالباك اند حاليًا كله
 // دوال فاضية (index/store/update/destroy بدون أي تنفيذ فعلي، وجدول
 // skills نفسه فيه بس id/timestamps — عمود "name" انضاف لاحقًا بـ
-// migration منفصلة). يعني هذا الجزء Mock-only 100% لحد ما فريق سنا
+// migration منفصلة). يعني هذا الجزء Mock-only 100% لحد ما فريق 
 // يكمل SkillController فعليًا. الاستدعاءات الحقيقية أدناه جاهزة
 // ومكتوبة بانتظار ذلك، لكنها لن تُستخدم قبل تفعيل VITE_API_MODE=real
 // وتأكيد اكتمال الكنترولر.

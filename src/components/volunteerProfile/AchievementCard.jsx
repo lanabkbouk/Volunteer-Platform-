@@ -1,5 +1,5 @@
 // src/components/volunteerProfile/AchievementCard.jsx
-import { Lock, CheckCircle2, CalendarCheck2 } from "lucide-react";
+import { Lock, CheckCircle2, CalendarCheck2, Target } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 import Typography from "../ui/Typography";
 import { getAchievementStyle } from "../../utils/achievementStyles";
@@ -40,7 +40,9 @@ export default function AchievementCard({ achievement, justUnlocked = false }) {
         CARD_SURFACE,
         CARD_PADDING,
         isUnlocked
-          ? "shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
+          // ring إضافية (خاصية box-shadow، مستقلة عن border) لإبراز
+          // البطاقات المكتسبة عن الباقي حتى وهي بحالة السكون، مو بس عند hover
+          ? "shadow-sm ring-1 ring-primary/15 transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
           : "border-dashed transition-colors duration-300 hover:border-heading/20",
         shouldCelebrate ? "animate-unlock-glow" : "",
       ].join(" ")}
@@ -57,16 +59,28 @@ export default function AchievementCard({ achievement, justUnlocked = false }) {
       )}
 
       <div className="flex items-start justify-between gap-3">
-        <motion.div
-          initial={shouldCelebrate ? { scale: 0, rotate: -20 } : false}
-          animate={shouldCelebrate ? { scale: 1, rotate: 0 } : false}
-          transition={{ type: "spring", stiffness: 300, damping: 14, delay: 0.05 }}
-          className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${
-            isUnlocked ? colorClasses : "bg-heading/5 text-heading/30"
-          }`}
-        >
-          {isUnlocked ? <Icon size={22} aria-hidden="true" /> : <Lock size={20} aria-hidden="true" />}
-        </motion.div>
+        {/* أيقونة الإنجاز الحقيقية تظهر دايمًا (حتى وهي مقفولة) — بس
+            باهتة (opacity) مع شارة قفل صغيرة فوقها، بدل استبدالها بالكامل
+            بأيقونة قفل عامة. هيك المقفول يبان كـ"هدف مستقبلي له هوية
+            بصرية واضحة" بدل عنصر Disabled بلا معنى */}
+        <div className="relative h-12 w-12 shrink-0">
+          <motion.div
+            initial={shouldCelebrate ? { scale: 0, rotate: -20 } : false}
+            animate={shouldCelebrate ? { scale: 1, rotate: 0 } : false}
+            transition={{ type: "spring", stiffness: 300, damping: 14, delay: 0.05 }}
+            className={`flex h-12 w-12 items-center justify-center rounded-xl ${colorClasses} ${
+              isUnlocked ? "" : "opacity-35 saturate-50"
+            }`}
+          >
+            <Icon size={22} aria-hidden="true" />
+          </motion.div>
+
+          {!isUnlocked && (
+            <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full border border-heading/10 bg-field shadow-sm">
+              <Lock size={11} className="text-heading/50" aria-hidden="true" />
+            </span>
+          )}
+        </div>
 
         {/* شارة حالة واضحة لتمييز المكتسب عن غير المكتسب بنظرة واحدة */}
         <span
@@ -91,7 +105,7 @@ export default function AchievementCard({ achievement, justUnlocked = false }) {
         <Typography
           variant="h6"
           as="h3"
-          className={isUnlocked ? "text-heading font-semibold" : "text-heading/55 font-semibold"}
+          className={isUnlocked ? "text-heading font-semibold" : "text-heading/60 font-semibold"}
         >
           {achievement.name}
         </Typography>
@@ -99,7 +113,7 @@ export default function AchievementCard({ achievement, justUnlocked = false }) {
         {achievement.description ? (
           <Typography
             variant="bodySm"
-            className={isUnlocked ? "text-heading/70 leading-relaxed" : "text-heading/40 leading-relaxed"}
+            className={isUnlocked ? "text-heading/70 leading-relaxed" : "text-heading/45 leading-relaxed"}
           >
             {achievement.description}
           </Typography>
@@ -110,12 +124,20 @@ export default function AchievementCard({ achievement, justUnlocked = false }) {
         <AchievementProgressBar current={achievement.progress.current} target={achievement.progress.target} />
       )}
 
-      {isUnlocked && (
+      {isUnlocked ? (
         <div className="mt-auto flex items-center gap-1.5 border-t border-heading/5 pt-3 text-xs text-heading/40">
           <CalendarCheck2 size={13} aria-hidden="true" />
           Earned {formatDate(achievement.earnedDate)}
         </div>
-      )}
+      ) : !showsProgress ? (
+        // هدف بخطوة وحدة (مثلًا "أول فرصة") ما إله progress bar مفيد —
+        // بس لسا بدنا سطر تحفيزي يوازن ارتفاع البطاقة مع بقية البطاقات
+        // بنفس الصف، ويأكد إنها "هدف قابل للتحقيق" مش نهاية الطريق
+        <div className="mt-auto flex items-center gap-1.5 border-t border-heading/5 pt-3 text-xs text-heading/40">
+          <Target size={13} aria-hidden="true" />
+          Complete this to unlock
+        </div>
+      ) : null}
     </motion.div>
   );
 }

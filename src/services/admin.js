@@ -1,7 +1,7 @@
 // خدمات شاشة الأدمن — مراجعة طلبات توثيق المنظمات (قبول/رفض).
 //
 // ⚠️ الباك اند الحقيقي: لم تُضَف هذه الـ routes بعد (راجع routes/api.php
-// بمستودع سنا — يوجد فقط auth + CRUD عادي لـ categories/organizations/
+// بمستودع  — يوجد فقط auth + CRUD عادي لـ categories/organizations/
 // volunteers، بدون أي namespace خاص بالأدمن). المتوقّع لاحقًا:
 //   GET   /api/admin/organizations?status=pending
 //   PATCH /api/admin/organizations/{id}/verify   { status, reason? }

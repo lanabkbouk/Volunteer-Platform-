@@ -42,18 +42,23 @@ export default function VolunteerJourneyPage() {
           <VolunteeringHoursSummary />
         </section>
 
-        <section className={`mt-8 ${PANEL_SURFACE} p-6 md:p-8`}>
-          <Typography variant="h4" gutterBottom>
-            Completed Opportunities
-          </Typography>
-          <CompletedOpportunitiesTimeline participations={completedParticipations} />
-        </section>
-
+        {/* الإنجازات (طبقة "الهوية" — ملخّص/تحفيز، متل قسم Overview فوقها)
+            قبل الـ Timeline التفصيلي تحتها (طبقة "المعاملات" الزمنية) —
+            نفس ترتيب صفحات الإنجازات/البروفايل العالمية (GitHub, Strava,
+            Duolingo): إبراز الإنجازات كـ"واجهة تحفيزية" قبل السجل الزمني
+            التفصيلي، بدل إغراقها بعد قائمة طويلة */}
         <section className={`mt-8 ${PANEL_SURFACE} p-6 md:p-8`}>
           <Typography variant="h4" gutterBottom>
             Achievements
           </Typography>
           <AchievementsList />
+        </section>
+
+        <section className={`mt-8 ${PANEL_SURFACE} p-6 md:p-8`}>
+          <Typography variant="h4" gutterBottom>
+            Completed Opportunities
+          </Typography>
+          <CompletedOpportunitiesTimeline participations={completedParticipations} />
         </section>
       </div>
     </div>

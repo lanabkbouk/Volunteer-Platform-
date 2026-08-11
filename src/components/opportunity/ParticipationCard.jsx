@@ -41,7 +41,7 @@ export default function ParticipationCard({ participation }) {
   // نعرض الرقمين سوا (يلي حدّده المتطوع لنفسه + يلي أكّدته المنظمة)
   const hoursLabel = formatParticipationHours(participation);
 
-  // قرار مع فريق سنا: الانسحاب متاح من pending أو accepted سوا، بس مش
+  // قرار مع فريق : الانسحاب متاح من pending أو accepted سوا، بس مش
   // من rejected أو expired — ما في شي ينسحب منه. راجع
   // utils/participationPolicy.js للقاعدة الكاملة (مشتركة مع بطاقة دورة
   // حياة الفرصة بصفحة التفاصيل)

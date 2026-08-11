@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Compass } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { Compass, Filter, Sparkles, ArrowRight } from "lucide-react";
 import Typography from "../components/ui/Typography";
 import ParticipationCard from "../components/opportunity/ParticipationCard";
 import ParticipationStatusTabs, { PARTICIPATION_TAB } from "../components/opportunity/ParticipationStatusTabs";
@@ -16,6 +16,18 @@ import { matchesParticipationStatusTab } from "../utils/participationDisplayStat
 import { PARTICIPATION_STATUS } from "../constants/participationStatus";
 import { CARD_SURFACE } from "../utils/surfaceStyles";
 import { ROUTES } from "../constants/paths";
+
+// رسائل فارغة سياقية لكل تبويب حالة — تظهر بس لما يكون عند المتطوع
+// مشاركات أصلًا (وإلا العرض الفارغ الكامل تحت بيتكفّل فيها بدعوة صريحة
+// للانضمام لأول فرصة). نفس مفاتيح PARTICIPATION_TAB الموجودة أصلًا.
+const TAB_EMPTY_MESSAGES = {
+  [PARTICIPATION_TAB.PENDING]: "No requests awaiting review right now.",
+  [PARTICIPATION_TAB.ACCEPTED]: "No accepted opportunities in this view.",
+  [PARTICIPATION_TAB.ACTIVE]: "No opportunities in progress right now.",
+  [PARTICIPATION_TAB.COMPLETED]: "No completed opportunities yet.",
+  [PARTICIPATION_TAB.REJECTED]: "No rejected requests here.",
+  [PARTICIPATION_TAB.WITHDRAWN]: "No withdrawals here.",
+};
 
 export default function Participates() {
   const navigate = useNavigate();
@@ -68,6 +80,7 @@ export default function Participates() {
                 <Skeleton className="h-5 w-1/2" />
                 <Skeleton className="h-5 w-20 rounded-full" />
               </div>
+              <Skeleton className="h-4 w-1/3" />
               <div className="flex gap-4">
                 <Skeleton className="h-4 w-24" />
                 <Skeleton className="h-4 w-28" />
@@ -90,10 +103,31 @@ export default function Participates() {
         />
       ) : (
         <>
+          {/* جسر بصري لباقي رحلة التطوع — نفس أسلوب البطاقة السردية
+              المستخدمة بصفحة My Journey (VolunteeringHoursSummary) بالضبط،
+              حتى تحس الصفحتين إنهم امتداد لبعض مش قسمين منفصلين */}
+          <Link
+            to={ROUTES.MY_JOURNEY}
+            className="mb-6 flex items-center gap-4 rounded-2xl border border-primary/15 bg-primary/5 p-5 shadow-sm transition-colors hover:bg-primary/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+          >
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/15">
+              <Sparkles size={18} className="text-primary" aria-hidden="true" />
+            </div>
+            <p className="flex-1 text-sm leading-relaxed text-body">
+              See your <strong className="font-bold text-primary">confirmed hours</strong> and{" "}
+              <strong className="font-bold text-primary">achievements</strong> on your My Journey page.
+            </p>
+            <ArrowRight size={16} className="shrink-0 text-primary" aria-hidden="true" />
+          </Link>
+
           <ParticipationStatusTabs activeTab={activeTab} onChange={setActiveTab} counts={counts} />
 
           {filteredParticipations.length === 0 ? (
-            <p className="py-12 text-center text-sm text-body">No participations in this status.</p>
+            <EmptyState
+              icon={Filter}
+              title="No participations in this status"
+              description={TAB_EMPTY_MESSAGES[activeTab] || "Try a different status tab."}
+            />
           ) : (
             <div className="flex flex-col gap-4">
               {visibleParticipations.map((participation) => (

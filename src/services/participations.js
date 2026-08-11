@@ -171,7 +171,7 @@ export async function updateParticipationStatus(participationId, status, reason)
   }
 }
 
-// انسحاب المتطوع من مشاركة — قرار مُحدَّث مع فريق سنا: بدل الحذف
+// انسحاب المتطوع من مشاركة — قرار مُحدَّث مع فريق: بدل الحذف
 // الكامل (كان يعني اختفاء المتطوع من قائمة المتقدمين عند المنظمة
 // بصمت تام، بدون أي تفسير)، المشاركة تبقى بالسجل بحالة WITHDRAWN
 // صريحة — متاح من pending أو accepted سوا، بأي وقت. راجع
@@ -216,7 +216,7 @@ export async function withdrawParticipation(participationId) {
 // إدارة الساعات النهائية (منظمة فقط، بعد انتهاء الفرصة) — راجع
 // ManageHoursModal.jsx وApplicantCard.jsx. الشرط (opportunityHasEnded
 // && isAccepted) محسوب بالكامل بالفرونت أصلاً؛ هالدالة نفّذت هون
-// كنقطة واحدة، لكنها لن تُستخدم فعليًا بوضع real لحد ما فريق سنا يضيف:
+// كنقطة واحدة، لكنها لن تُستخدم فعليًا بوضع real لحد ما فريق  يضيف:
 //   - عمود hours_logged (nullable) بجدول opportunity_volunteer
 //   - PATCH /participations/{id}/hours { hours }
 // ————————————————————————————————————————————————————————————
