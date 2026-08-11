@@ -22,25 +22,33 @@ const DEFAULT_MOCK_ADMIN = {
 // Build إنتاجي حقيقي (npm run build) بغض النظر عن أي متغير بيئة آخر —
 // فحتى لو نُسي ضبط VITE_API_MODE، هذا الحساب لا يمكن أن يظهر بأي بناء
 // إنتاجي مطلقًا
+//
+// بيئات المعاينة (مثل نشرات Vercel قبل ربط الباك اند الحقيقي) مش
+// "تطوير محلي" بمعنى import.meta.env.DEV، لكن لسا مش إنتاج حقيقي —
+// فبنسمح بتفعيل الحساب الوهمي فيها فقط عبر متغير بيئة صريح ومقصود
+// (VITE_ENABLE_MOCK_ADMIN=true بإعدادات المشروع على Vercel)، بدل ما
+// يكون شغّال افتراضيًا. لازم يُزال هذا المتغير لما يترّبط الباك اند
+// الحقيقي (عندها VITE_API_MODE=real أصلًا بيعطّل فرع الـ Mock كله).
 const IS_LOCAL_DEV = Boolean(import.meta.env.DEV)
+const IS_MOCK_ADMIN_ENABLED = IS_LOCAL_DEV || import.meta.env.VITE_ENABLE_MOCK_ADMIN === 'true'
 
 // قراءة قائمة المستخدمين الوهميين من التخزين المحلي — نضمن دايمًا
 // وجود حساب أدمن واحد بالقائمة حتى لو التخزين فاضي بالكامل أو ما
 // فيه أدمن بعد (بدون تخزينه فعليًا بـ localStorage، فقط نُلحقه لحظة
-// القراءة، فهو موجود دايمًا وجاهز للاختبار) — لكن فقط بوضع التطوير
-// المحلي، راجع تعليق IS_LOCAL_DEV أعلاه
+// القراءة، فهو موجود دايمًا وجاهز للاختبار) — لكن فقط لما يكون الحساب
+// الوهمي مفعّل، راجع تعليق IS_MOCK_ADMIN_ENABLED أعلاه
 export function loadMockUsers() {
   try {
     const raw = localStorage.getItem(MOCK_USERS_STORAGE_KEY)
     const parsed = raw ? JSON.parse(raw) : []
     const users = Array.isArray(parsed) ? parsed : []
 
-    if (!IS_LOCAL_DEV) return users
+    if (!IS_MOCK_ADMIN_ENABLED) return users
 
     const hasAdmin = users.some((user) => user.accountType === ACCOUNT_TYPES.ADMIN)
     return hasAdmin ? users : [...users, DEFAULT_MOCK_ADMIN]
   } catch {
-    return IS_LOCAL_DEV ? [DEFAULT_MOCK_ADMIN] : []
+    return IS_MOCK_ADMIN_ENABLED ? [DEFAULT_MOCK_ADMIN] : []
   }
 }
 
