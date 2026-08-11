@@ -24,6 +24,7 @@ const Register = lazy(() => import('./pages/auth/Register'))
 const ForgotPassword = lazy(() => import('./pages/auth/ForgotPassword'))
 const ResetPassword = lazy(() => import('./pages/auth/ResetPassword'))
 const VolunteerProfile = lazy(() => import('./pages/volunteerProfile'))
+const VolunteerJourney = lazy(() => import('./pages/volunteerJourney'))
 const OrgProfile = lazy(() => import('./pages/orgProfile'))
 const MyCauses = lazy(() => import('./pages/myCauses'))
 const CreateEditCause = lazy(() => import('./pages/createEditCause'))
@@ -65,6 +66,7 @@ const router = createBrowserRouter(
           {/* Volunteer */}
           <Route element={<ProtectedRoute allowedAccountTypes={[ACCOUNT_TYPES.VOLUNTEER]} />}>
             <Route path={ROUTES.VOLUNTEER_PROFILE} element={<VolunteerProfile />} />
+            <Route path={ROUTES.MY_JOURNEY} element={<VolunteerJourney />} />
             <Route path={ROUTES.EXPLORE} element={<OpportunitiesListPage />} />
             <Route path={ROUTES.MY_VOLUNTEERING} element={<Participates />} />
           </Route>

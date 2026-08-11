@@ -27,6 +27,12 @@ export function useUpdateParticipationStatusMutation(opportunityId) {
       )
 
       queryClient.invalidateQueries({ queryKey: queryKeys.participations.mine })
+      // ⚠️ لازم كمان نبطّل كاش الفرص: currentVolunteers محسوبة لحظيًا من
+      // حالة المشاركات (راجع computeLiveCurrentVolunteers بـ services/opportunities.js)،
+      // فبدون هالسطر العداد بالكارد/التفاصيل بيضل يعرض القيمة القديمة
+      // المخزّنة بالكاش لحد ما يصير refetch يدوي أو reload، رغم إن
+      // القبول/الرفض نفسه نجح فعليًا بالبيانات
+      queryClient.invalidateQueries({ queryKey: queryKeys.opportunities.all })
     },
   })
 }

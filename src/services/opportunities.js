@@ -44,15 +44,18 @@ const MOCK_MODE = isMockMode()
 // ولا بالرفض — يعني فرصة توصل عددها الكامل وينسحب/يُرفض نصف المتقدمين،
 // بتضل registration_closed للأبد رغم وجود مقاعد فاضية فعليًا).
 // الحل: نفس فلسفة status المحسوبة بالضبط (getEffectiveOpportunityStatus) —
-// currentVolunteers لازم تُحسب لحظيًا من عدد المشاركات الفعلية
-// (pending+accepted) بدل قيمة نخزّنها ونحدّثها يدويًا بكل عملية، فأي
-// انضمام/انسحاب/قبول/رفض ينعكس تلقائيًا بدون أي كود إضافي لكل حالة.
+// currentVolunteers لازم تُحسب لحظيًا من عدد المشاركات الفعلية بدل قيمة
+// نخزّنها ونحدّثها يدويًا بكل عملية، فأي انضمام/انسحاب/قبول/رفض ينعكس
+// تلقائيًا بدون أي كود إضافي لكل حالة.
+//
+// ⚠️ عدد المتطوعين الفعلي = accepted فقط. مجرد إرسال طلب انضمام (pending)
+// مو مشاركة فعلية بالفرصة، فما بيُحسب. rejected وwithdrawn (حتى لو كان
+// متطوع مقبول سابقًا وانسحب) بينقصوا العدد تلقائيًا لأنهم مش accepted.
 function computeLiveCurrentVolunteers(opportunityId) {
   return MOCK_PARTICIPATIONS.filter(
     (participation) =>
       participation.opportunityId === opportunityId &&
-      (participation.status === PARTICIPATION_STATUS.PENDING ||
-        participation.status === PARTICIPATION_STATUS.ACCEPTED),
+      participation.status === PARTICIPATION_STATUS.ACCEPTED,
   ).length
 }
 
@@ -229,7 +232,14 @@ export async function fetchCompletedOpportunities() {
     // تحديدًا (Success Stories) لازم فلتر أقوى: isSuccessfulOpportunity
     // بتتأكد كمان إنها وصلت فعليًا لعدد المتطوعين الأدنى المطلوب
     // (minVolunteers) قبل ما تنتهي — راجع utils/opportunityStatus.js
-    return MOCK_OPPORTUNITIES.map(attachComputedStatus).filter(isSuccessfulOpportunity)
+    // ⚠️ لازم Arrow Function هون، مش تمرير isSuccessfulOpportunity مباشرة:
+    // Array.filter بيستدعي الـ callback بـ(item, index, array)، فلو مرّرناها
+    // مباشرة كـ .filter(isSuccessfulOpportunity)، الـ index (رقم صغير 0،1،2...)
+    // كان عم يتمرّر كوسيط "now" (بدل ما يضل افتراضي = new Date())، وبالتالي
+    // مقارنة التواريخ جوا getEffectiveOpportunityStatus كانت دايمًا غلط
+    // (رقم صغير مقابل Date كامل)، فـ COMPLETED ما كانت توصلها أي فرصة أبدًا
+    // ورجعت [] دايمًا — بغض النظر عن أي بيانات Mock موجودة فعليًا
+    return MOCK_OPPORTUNITIES.map(attachComputedStatus).filter((opportunity) => isSuccessfulOpportunity(opportunity))
   }
 
   try {

@@ -1,61 +1,13 @@
-import { useEffect, useState } from "react";
 import { AlertCircle, Trophy } from "lucide-react";
-import { fetchVolunteerAchievements } from "../../services/achievements";
+import useAchievements from "../../hooks/useAchievements";
 import AchievementCard from "./AchievementCard";
 import Skeleton from "../ui/Skeleton";
 import EmptyState from "../common/EmptyState";
 import Typography from "../ui/Typography";
 import { CARD_SURFACE, CARD_PADDING } from "../../utils/surfaceStyles";
-import { getSeenAchievementIds, markAchievementIdsSeen } from "../../utils/achievementSeenTracker";
 
 export default function AchievementsList() {
-  const [achievements, setAchievements] = useState([]);
-  const [justUnlockedIds, setJustUnlockedIds] = useState(new Set());
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  // بتزيد بكل ضغطة "Try again" — بيعيد تشغيل الـ effect تحتها لإعادة الجلب
-  const [retryCount, setRetryCount] = useState(0);
-
-  useEffect(() => {
-    let isMounted = true;
-    let markSeenTimeout;
-
-    async function load() {
-      setLoading(true);
-      setError("");
-
-      try {
-        const data = await fetchVolunteerAchievements();
-        if (!isMounted) return;
-
-        const seen = getSeenAchievementIds();
-        const unlockedIds = data.filter((item) => item.unlocked).map((item) => item.id);
-        const newlyUnlocked = new Set(unlockedIds.filter((id) => !seen.has(id)));
-
-        setJustUnlockedIds(newlyUnlocked);
-        setAchievements(data);
-
-        // ⚠️ تأجيل التعليم كـ"مشاهد" — لو علّمناه فورًا هون (كان الكود
-        // القديم)، أي زيارة لصفحة البروفايل بتلغي التنبيه بالجرس على
-        // طول، حتى لو المستخدم أصلاً ما شاف الجرس أو الحركة بعد. منستنى
-        // 4 ثواني (وقت كافي لحركة الاحتفال + يلاحظها المستخدم فعليًا)
-        // قبل ما نعتبره "مشاهد" نهائيًا
-        markSeenTimeout = setTimeout(() => {
-          markAchievementIdsSeen(new Set([...seen, ...unlockedIds]));
-        }, 4000);
-      } catch (err) {
-        if (isMounted) setError(err.message || "Failed to load achievements");
-      } finally {
-        if (isMounted) setLoading(false);
-      }
-    }
-
-    load();
-    return () => {
-      isMounted = false;
-      clearTimeout(markSeenTimeout);
-    };
-  }, [retryCount]);
+  const { achievements, justUnlockedIds, loading, error, retry } = useAchievements();
 
   if (loading) {
     return (
@@ -85,7 +37,7 @@ export default function AchievementsList() {
         title="Couldn't load your achievements"
         description={error}
         actionLabel="Try again"
-        onAction={() => setRetryCount((count) => count + 1)}
+        onAction={retry}
       />
     );
   }

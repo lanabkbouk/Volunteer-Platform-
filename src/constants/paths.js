@@ -10,6 +10,7 @@ export const ROUTES = {
   RESET_PASSWORD: '/reset-password',
   EXPLORE: '/explore',
   MY_VOLUNTEERING: '/my-volunteering',
+  MY_JOURNEY: '/my-journey',
   DASHBOARD: '/dashboard',
   MY_CAUSES: '/my-causes',
   CREATE_CAUSE: '/my-causes/new',
@@ -34,6 +35,7 @@ export const LEGACY_REDIRECTS = [
   { from: '/volunteerProfile', to: ROUTES.VOLUNTEER_PROFILE },
   { from: '/orgProfile', to: ROUTES.ORGANIZATION_PROFILE },
   { from: '/admin/catalog', to: ROUTES.ADMIN_CATEGORIES },
+  { from: '/achievements', to: ROUTES.MY_JOURNEY },
 ]
 
 export const AUTH_QUERY_KEYS = {

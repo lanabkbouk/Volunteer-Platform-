@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useLocation } from "react-router-dom";
@@ -12,9 +12,6 @@ import { PANEL_SURFACE } from "../utils/surfaceStyles";
 import ProfileHeader from "../components/volunteerProfile/ProfileHeader";
 import ProfileForm from "../components/volunteerProfile/ProfileForm";
 import ProfilePreview from "../components/volunteerProfile/ProfilePreview";
-import AchievementsList from "../components/volunteerProfile/AchievementsList";
-import VolunteeringHoursSummary from "../components/volunteerProfile/VolunteeringHoursSummary";
-import Typography from "../components/ui/Typography";
 import Modal from "../components/ui/Modal";
 import Button from "../components/ui/Button";
 import Toast from "../components/common/Toast";
@@ -34,52 +31,6 @@ export default function VolunteerProfile() {
   const { user, updateUser } = useAuth();
   const location = useLocation();
   const guardMessage = location.state?.message || '';
-
-  // لو المستخدم وصل عبر رابط فيه #achievements (متل جرس الإشعارات لما
-  // يضغط على تحديث إنجاز جديد)، نمرّر تلقائيًا لقسم الإنجازات بالضبط
-  // بدل ما يوصل أعلى الصفحة ويدوّر عليه يدويًا
-  useEffect(() => {
-    if (location.hash !== '#achievements') return;
-
-    // ⚠️ ما منقدر نسكرول فورًا لحظة mount — قسم "Volunteering Hours"
-    // فوق الإنجازات لسا Skeleton بهاللحظة، وبيكبر بشكل كبير (إحصائيات +
-    // بطاقة سردية + قائمة منظمات) لما بياناته تجهز بعد شوي، فيتحرك قسم
-    // الإنجازات لتحت والسكرول القديم بيوقف فعليًا عند قسم الساعات بدل
-    // الإنجازات.
-    //
-    // محاولة أولى بالاعتماد على "ثبات الموقع" عبر requestAnimationFrame
-    // فشلت: موقع القسم بيكون "ثابت" تمامًا حتى أثناء مرحلة الـ Skeleton
-    // نفسها (لسا ما تغيّر شي)، فكانت بتعتبره مستقر وتسكرول فورًا قبل ما
-    // البيانات توصل أصلًا. الحل الصحيح: نراقب تغييرات الـ DOM فعليًا
-    // (MutationObserver) ونعيد جدولة السكرول في كل مرة يصير فيها أي
-    // تغيير، لحد ما "تهدأ" الصفحة فعليًا (بدون أي تغييرات) لفترة قصيرة
-    // — هيك منتفاعل مع التحميل الفعلي بدل تخمين مدة ثابتة.
-    function scrollToAchievements() {
-      document.getElementById('achievements')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-
-    let debounceId = setTimeout(scrollToAchievements, 150);
-
-    const observer = new MutationObserver(() => {
-      clearTimeout(debounceId);
-      debounceId = setTimeout(scrollToAchievements, 150);
-    });
-    observer.observe(document.body, { childList: true, subtree: true });
-
-    // سقف أمان (3 ثواني) بحال الصفحة ضلّت تتغيّر بدون توقف — بننفّذ
-    // آخر محاولة سكرول ونوقف المراقبة، بدل ما نضل بلا نهاية
-    const safetyTimeout = setTimeout(() => {
-      observer.disconnect();
-      clearTimeout(debounceId);
-      scrollToAchievements();
-    }, 3000);
-
-    return () => {
-      observer.disconnect();
-      clearTimeout(debounceId);
-      clearTimeout(safetyTimeout);
-    };
-  }, [location.hash]);
 
   // نفس هوك المهارات مستخدم هون وبـ ProfilePreview سوا — بفضل الكاش
   // المشترك ما بتنجلب مرتين حتى لو الاثنين رندروا بنفس اللحظة
@@ -195,20 +146,6 @@ export default function VolunteerProfile() {
               availableSkills={availableSkills}
             />
           </form>
-
-          <section className={`mt-8 ${PANEL_SURFACE} p-6 md:p-8`}>
-            <Typography variant="h4" gutterBottom>
-              Volunteering Hours
-            </Typography>
-            <VolunteeringHoursSummary />
-          </section>
-
-          <section id="achievements" className={`mt-8 ${PANEL_SURFACE} p-6 md:p-8`}>
-            <Typography variant="h4" gutterBottom>
-              Achievements
-            </Typography>
-            <AchievementsList />
-          </section>
         </div>
       </div>
 

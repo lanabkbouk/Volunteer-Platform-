@@ -41,9 +41,9 @@ function buildAchievementItems(achievements, seenAchievements) {
       type: 'achievement',
       title: 'New achievement unlocked',
       description: achievement.name,
-      // #achievements يمرّر تلقائيًا لقسم الإنجازات مباشرة (راجع
-      // useEffect بـ volunteerProfile.jsx) بدل ما يوصل أعلى الصفحة
-      href: `${ROUTES.VOLUNTEER_PROFILE}#achievements`,
+      // ينقل مباشرة لصفحة My Journey (pages/volunteerJourney.jsx) — الإنجازات
+      // صارت قسم فيها بدل صفحة مستقلة
+      href: ROUTES.MY_JOURNEY,
     }))
 }
 

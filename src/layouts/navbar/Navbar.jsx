@@ -11,6 +11,7 @@ import {
   UserRound,
   ChevronDown,
   Globe,
+  Compass,
 } from "lucide-react";
 
 import { ROUTES } from "../../constants/paths";
@@ -57,6 +58,14 @@ export default function Navbar({ role = "guest" }) {
       icon: UserRound,
     },
   ];
+
+  if (accountType === ACCOUNT_TYPES.VOLUNTEER) {
+    dropdownItems.push({
+      name: "My Journey",
+      href: ROUTES.MY_JOURNEY,
+      icon: Compass,
+    });
+  }
 
   if (accountType === ACCOUNT_TYPES.ADMIN) {
     dropdownItems.push({

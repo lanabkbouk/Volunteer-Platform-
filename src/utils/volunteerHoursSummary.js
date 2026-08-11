@@ -15,6 +15,19 @@ import { PARTICIPATION_STATUS } from '../constants/participationStatus'
 import { OPPORTUNITY_STATUS } from '../constants/opportunityStatus'
 
 /**
+ * القاعدة الموحّدة لـ"مشاركة مكتملة ومؤكدة" — مُصدَّرة حتى تُستخدم من
+ * أي مكان محتاج نفس الفلترة (مثلًا CompletedOpportunitiesTimeline)
+ * بدل ما يعيد كل مكان كتابة نفس الشرط بصياغته الخاصة.
+ * @param {{status:string, opportunity:{status:string}|null}} participation
+ */
+export function isCompletedParticipation(participation) {
+  return (
+    participation.status === PARTICIPATION_STATUS.ACCEPTED &&
+    participation.opportunity?.status === OPPORTUNITY_STATUS.COMPLETED
+  )
+}
+
+/**
  * @typedef {Object} OrganizationHoursBreakdown
  * @property {string|number} organizationId
  * @property {string} organizationName
@@ -42,11 +55,7 @@ import { OPPORTUNITY_STATUS } from '../constants/opportunityStatus'
  * @returns {VolunteerHoursSummary}
  */
 export function buildVolunteerHoursSummary(participations = []) {
-  const completed = participations.filter(
-    (participation) =>
-      participation.status === PARTICIPATION_STATUS.ACCEPTED &&
-      participation.opportunity?.status === OPPORTUNITY_STATUS.COMPLETED,
-  )
+  const completed = participations.filter(isCompletedParticipation)
 
   // "نشطة" = مقبولة والفرصة عم تشتغل هلق فعليًا (in_progress) — حقل
   // إضافي بس، ما بيأثر على totalConfirmedHours/completed فوق لأنه فلترة

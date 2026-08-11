@@ -49,6 +49,25 @@ const MOCK_MODE = isMockMode()
 // أي فرصة مرتبطة بها — منظمة غير موثّقة أصلًا ما بتقدر تنشر فرص) لإثبات
 // إن فلترة "الموثّقة فقط" بوضع mock فعلًا تستبعدها من الدليل العام.
 const MOCK_ORGANIZATIONS = [
+  // ⚠️ 'org-mock' هو نفسه MOCK_MY_ORGANIZATION_ID المستخدم بـ
+  // mockOpportunitiesStore.js لأغلب الفرص (o1/o2/o3/o4/o6) — تمثيل
+  // "منظمتي أنا" بلوحة تحكم المنظمة (راجع فلترة fetchMyOpportunities
+  // بـ services/opportunities.js). بدون هالسجل هون، الضغط على اسم
+  // المنظمة بكارد أي فرصة من هذول كان يوجّه لـ /organizations/org-mock
+  // فيرجع fetchOrganizationById null (.find() ما بيلاقي تطابق) وتظهر
+  // "This organization could not be found." — نفس اسم 'My Organization'
+  // المستخدم مسبقًا لنفس المعرّف بـ opportunities.js (إنشاء فرصة جديدة)
+  {
+    id: 'org-mock',
+    name: 'My Organization',
+    description: 'Your organization profile, used for testing opportunities you publish in mock mode.',
+    city: 'Rotterdam, Netherlands',
+    phone: '+31600000000',
+    website: '',
+    contactPerson: '',
+    profileImageUrl: null,
+    status: ORGANIZATION_STATUS.VERIFIED,
+  },
   {
     id: 'org1',
     name: 'Blue Drop Foundation',

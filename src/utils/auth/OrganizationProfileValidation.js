@@ -16,22 +16,22 @@
 
 import { z } from 'zod'
 
-const SYRIA_GOVERNORATES = [
-  'Damascus',
-  'Rif Dimashq',
-  'Aleppo',
-  'Homs',
-  'Hama',
-  'Latakia',
-  'Tartus',
-  'Idlib',
-  'Raqqa',
-  'Deir ez-Zor',
-  'Al-Hasakah',
-  'Daraa',
-  'As-Suwayda',
-  'Quneitra',
-]
+// const SYRIA_GOVERNORATES = [
+//   'Damascus',
+//   'Rif Dimashq',
+//   'Aleppo',
+//   'Homs',
+//   'Hama',
+//   'Latakia',
+//   'Tartus',
+//   'Idlib',
+//   'Raqqa',
+//   'Deir ez-Zor',
+//   'Al-Hasakah',
+//   'Daraa',
+//   'As-Suwayda',
+//   'Quneitra',
+// ]
 
 const requiredSelect = (options, message) =>
   z

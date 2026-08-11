@@ -53,6 +53,16 @@ export const MOCK_PARTICIPATIONS = [
   { id: 'p25', volunteerId: 'v3', opportunityId: 'o6', status: PARTICIPATION_STATUS.ACCEPTED, committedHours: 5, hoursLogged: 5, joinedDate: daysFromNow(-391) },
   { id: 'temp1', volunteerId: 'v-lanaa@example.com', opportunityId: 'o6', status: PARTICIPATION_STATUS.ACCEPTED, committedHours: 6, hoursLogged: 6, joinedDate: daysFromNow(-200) },
 
+  // — متطوعون إضافيون مقبولون بـ o5 (Winter Clothes Drive) — حتى يوصل
+  // عدد المقبولين فعليًا لـ minVolunteers (16) وتظهر كـ "Success Story"
+  // بالصفحة الرئيسية (راجع isSuccessfulOpportunity بـ utils/opportunityStatus.js).
+  // بدون بروفايل كامل بـ MOCK_VOLUNTEER_PROFILES عمدًا: هالفرصة تابعة
+  // لمنظمة تانية (org4) غير منظمة المستخدم الحالي (org-mock)، فما رح
+  // تنعرض بصفحة "قائمة المتقدمين" لدينا أصلًا — العدد فقط هو المطلوب هون
+  { id: 'p26', volunteerId: 'v4', opportunityId: 'o5', status: PARTICIPATION_STATUS.ACCEPTED, committedHours: 3, hoursLogged: 3, joinedDate: daysFromNow(-84) },
+  { id: 'p27', volunteerId: 'v5', opportunityId: 'o5', status: PARTICIPATION_STATUS.ACCEPTED, committedHours: 3, hoursLogged: 3, joinedDate: daysFromNow(-84) },
+  { id: 'p28', volunteerId: 'v6', opportunityId: 'o5', status: PARTICIPATION_STATUS.ACCEPTED, committedHours: 4, hoursLogged: 4, joinedDate: daysFromNow(-83) },
+
 ]
 
 // بروفايل كل متطوع — مفتاح المصفوفة هلق volunteerId (مش participation
