@@ -154,6 +154,8 @@ export default function MyCauseCard({ opportunity, onDelete, onToggleStatus, isV
             variant="ghost"
             size="medium"
             disabled={busy || !isVerified}
+            isLoading={togglingStatus}
+            loadingText="Updating..."
             onClick={handleToggleStatus}
             aria-label={isRegistrationClosed ? "Reopen registration" : "Close registration early"}
             title={
@@ -171,6 +173,8 @@ export default function MyCauseCard({ opportunity, onDelete, onToggleStatus, isV
           variant="ghost"
           size="medium"
           disabled={busy || !isVerified}
+          isLoading={deleting}
+          loadingText="Deleting..."
           onClick={handleDelete}
           className="text-danger hover:bg-danger/10 border-danger/20"
           aria-label="Delete this cause"

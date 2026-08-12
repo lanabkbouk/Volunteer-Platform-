@@ -20,7 +20,7 @@ export default function AuthShell({ title, subtitle, children, footer }) {
               <LogoIcon className="h-6 w-6" />
             </span>
             <h1 className="text-center text-2xl font-bold text-heading">{title}</h1>
-            <p className="mt-2 text-center text-sm text-body">{subtitle}</p>
+            {subtitle && <p className="mt-2 text-center text-sm text-body">{subtitle}</p>}
           </header>
 
           {children}

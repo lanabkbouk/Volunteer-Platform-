@@ -115,7 +115,6 @@ export default function Input({
             className="absolute right-3 top-1/2 -translate-y-1/2 text-heading/40 hover:text-heading transition-colors focus:outline-none focus:ring-2 focus:ring-primary/40 rounded"
             aria-label={showPassword ? 'Hide password' : 'Show password'}
             aria-pressed={showPassword}
-            tabIndex={-1}
           >
             {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
           </button>

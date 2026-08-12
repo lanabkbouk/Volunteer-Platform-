@@ -7,6 +7,7 @@
 
 import { Building2 } from "lucide-react";
 import Typography from "../ui/Typography";
+import { CARD_SURFACE, CARD_ELEVATION } from "../../utils/surfaceStyles";
 
 // يرجع منظمات فريدة (بدون تكرار، حسب id) من قائمة فرص — كائن كامل
 // (id, name, imageUrl) مش الاسم بس، حتى نقدر نعرض صورة المنظمة لاحقًا
@@ -45,7 +46,7 @@ export default function HomePartners({ opportunities }) {
         {organizations.map((org) => (
           <div
             key={org.id}
-            className="flex flex-col items-center text-center gap-3 rounded-2xl border border-heading/10 bg-field p-6 shadow-sm hover:shadow-md hover:border-primary/20 transition-all"
+            className={`flex flex-col items-center text-center gap-3 p-6 ${CARD_SURFACE} ${CARD_ELEVATION}`}
           >
             {org.imageUrl ? (
               <img
@@ -58,7 +59,7 @@ export default function HomePartners({ opportunities }) {
                 <Building2 size={24} className="text-primary" aria-hidden="true" />
               </div>
             )}
-            <span className="font-semibold text-heading text-sm leading-snug">{org.name}</span>
+            <span className="font-semibold text-heading text-sm leading-snug line-clamp-2 wrap-break-word">{org.name}</span>
           </div>
         ))}
       </div>

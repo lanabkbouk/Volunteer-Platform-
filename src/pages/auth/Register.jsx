@@ -203,8 +203,14 @@ export default function Register() {
             <AuthAlert variant='error'>{error || errors.root?.message}</AuthAlert>
             <AuthAlert variant='success'>{successMessage}</AuthAlert>
 
-            <Button type='submit' disabled={loading} fullWidth>
-              {loading ? 'Creating...' : isVolunteer ? 'Create Account' : 'Register Organization'}
+            <Button
+              type='submit'
+              disabled={loading}
+              isLoading={loading}
+              loadingText='Creating...'
+              fullWidth
+            >
+              {isVolunteer ? 'Create Account' : 'Register Organization'}
             </Button>
           </form>
     </AuthShell>

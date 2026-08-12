@@ -70,12 +70,13 @@ export default function OpportunityDetailsPage() {
   if (loading) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        {/* نفس شكل العمود الرأسي الواحد الحالي (صورة فوق، معلومات تحتها)
-            بوضع Skeleton، حتى ما يصير قفزة Layout مفاجئة لحظة ما
-            البيانات توصل */}
+        {/* نفس ترتيب العمود الرأسي الفعلي (عنوان، زر Participate،
+            صورة، باقي المعلومات) بوضع Skeleton، حتى ما يصير قفزة Layout
+            مفاجئة لحظة ما البيانات توصل */}
         <div className="max-w-3xl">
-          <Skeleton className="w-full aspect-video max-h-105 rounded-4xl mb-6" />
           <Skeleton className="h-9 w-2/3 mb-4" />
+          <Skeleton className="h-11 w-40 rounded-xl mb-8" />
+          <Skeleton className="w-full aspect-video max-h-105 rounded-4xl mb-6" />
           <Skeleton className="h-4 w-1/3 mb-4" />
           <div className="flex flex-wrap gap-4 mb-6">
             <Skeleton className="h-4 w-24" />
@@ -83,7 +84,6 @@ export default function OpportunityDetailsPage() {
             <Skeleton className="h-4 w-32" />
           </div>
           <Skeleton className="h-2 w-full rounded-full mb-6" />
-          <Skeleton className="h-11 w-40 rounded-xl mb-8" />
           <Skeleton className="h-24 w-full rounded-2xl mb-8" />
           <Skeleton className="h-6 w-48 mb-3" />
           <Skeleton className="h-4 w-full mb-2" />
@@ -135,8 +135,26 @@ export default function OpportunityDetailsPage() {
           : "Registration Closed"
         : "Participate";
 
+  // نفس منطق onClick/disabled يُستخدم لزر Participate الرئيسي (تحت
+  // العنوان مباشرة) ولنسخته المصغّرة بالشريط الثابت أسفل الشاشة تحت lg
+  // — استخراجهم هون بمكان واحد بدل تكرارهم بزرّين، حتى ما يصير فرق
+  // سلوك بين الزرّين بالغلط لاحقًا
+  const handleParticipateClick = isGuest
+    ? () => navigate(ROUTES.REGISTER) // زائر: نحوّله مباشرة لإنشاء حساب، بلا رسالة وسيطة
+    : isVolunteer
+      ? () => {
+          setJoinError("");
+          setIsHoursModalOpen(true);
+        } // نفتح نافذة اختيار الساعات أولًا، مو انضمام مباشر
+      : undefined;
+
+  // الزر يتعطل بحالات: انضم فعلاً / التسجيل مو مفتوح فعليًا / حساب
+  // منظمة مسجّل دخوله. الزائر ما بينعطل الزر عندو، بينقله للتسجيل بدل
+  // ما يمنعه
+  const isParticipateDisabled = isNonVolunteerAccount || hasJoined || (!isGuest && !isRegistrationOpen);
+
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 pb-28 lg:pb-10">
       <nav className="text-sm text-heading/50 mb-4" aria-label="Breadcrumb">
         <Link to={ROUTES.OPPORTUNITIES} className="hover:text-primary rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">
           Opportunities
@@ -146,13 +164,19 @@ export default function OpportunityDetailsPage() {
       </nav>
 
       {/* بنية نهائية بعمودين: الأيسر (flex-1) فيه كل تفاصيل الفرصة
-          بترتيب محدَّد بدقة (عنوان+حالة فوق الصورة، صورة، منظمة،
-          موقع/تاريخ/ساعات، تقدم، مهارات، Organized by، الوصف، وزر
-          Participate بالنهاية)، والأيمن (lg:w-80 shrink-0) فيه بس
+          بترتيب محدَّد بدقة (عنوان+حالة، زر Participate مباشرة تحته،
+          صورة، منظمة، موقع/تاريخ/ساعات، تقدم، مهارات، Organized by،
+          والوصف بالنهاية)، والأيمن (lg:w-80 shrink-0) فيه بس
           OpportunityLifecycleCard — يظهرون جنب بعض من lg فما فوق
           (flex-row)، ويترتبوا عمودي واحد تحت بعض (الأيمن بعد الأيسر
           بالكامل) تحت lg. بدون mx-auto على أي منهما: الأيسر يلتصق
-          بطرف يسار حاوية الصفحة max-w-7xl نفسها (نفس محاذاة breadcrumb) */}
+          بطرف يسار حاوية الصفحة max-w-7xl نفسها (نفس محاذاة breadcrumb)
+
+          ⚠️ زر Participate انتقل من نهاية العمود لتحت العنوان مباشرة
+          (بدل ما يكون آخر شي بعد الوصف الطويل) — المستخدم لازم يشوف
+          إمكانية المشاركة فورًا بدون تمرير طويل، على أي حجم شاشة. راجع
+          أيضًا الشريط الثابت أسفل الشاشة (lg:hidden) قبل ParticipateHoursModal
+          بالأسفل — تذكير إضافي بنفس الزر لمن يستمر بالتمرير جوا الوصف */}
       <div className="flex flex-col lg:flex-row gap-8 items-start">
         <div className="flex-1 min-w-0">
           {/* العنوان + الحالة فوق الصورة مباشرة */}
@@ -164,6 +188,59 @@ export default function OpportunityDetailsPage() {
               <OpportunityStatusBadge status={opportunity.status} />
               <StatusLegendPopover />
             </div>
+          </div>
+
+          {/* زر Participate — مباشرة تحت العنوان، أول شي يشوفه المستخدم
+              بدون أي تمرير، بدل ما يكون مدفون بعد كل التفاصيل */}
+          <div className="mb-8">
+            <Button
+              variant="primary"
+              size="large"
+              onClick={handleParticipateClick}
+              isLoading={false}
+              disabled={isParticipateDisabled}
+              loadingText="Joining..."
+            >
+              {/* AnimatePresence بـ mode="wait": الكلمة القديمة تخرج (fade+scale)
+                  قبل ما الجديدة تدخل، بدل استبدال فجائي — "You're in! ✓"
+                  بيوصل بإحساس احتفالي خفيف بدل مجرد تغيّر نص. mode="wait"
+                  هون (مو "popLayout" أو غيره) لأنه الزر بحجم ثابت، ما في
+                  داعي لأي حساب layout إضافي أثناء التبديل */}
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.span
+                  key={participateLabel}
+                  initial={prefersReducedMotion ? false : { opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={prefersReducedMotion ? undefined : { opacity: 0, scale: 0.9 }}
+                  transition={{ duration: prefersReducedMotion ? 0 : 0.18 }}
+                  className="inline-block"
+                >
+                  {participateLabel}
+                </motion.span>
+              </AnimatePresence>
+            </Button>
+
+            {/* رسالة توضيحية واحدة بحسب سبب التعطيل/الحالة — أولوية حساب
+                المنظمة أولًا (أوضح سبب)، ثم إغلاق التسجيل، ثم الزائر
+                (نص دائم وغير قابل للإغلاق، بلا رابط أو زر داخله — فقط
+                إعلام إنه محتاج حساب) */}
+            {isNonVolunteerAccount ? (
+              <p className="mt-2 text-sm text-heading/50">
+                Only volunteer accounts can join opportunities.
+              </p>
+            ) : !isGuest && !hasJoined && !isRegistrationOpen ? (
+              <p className="mt-2 text-sm text-heading/50">{registrationClosedReason}</p>
+            ) : isGuest ? (
+              <p className="mt-2 text-sm text-heading/50">
+                You'll need to create an account or sign in to join this opportunity.
+              </p>
+            ) : null}
+
+            {joinError ? (
+              <p className="mt-2 rounded-lg border border-danger bg-danger/5 px-3 py-2 text-sm text-danger">
+                {joinError}
+              </p>
+            ) : null}
           </div>
 
           {/* max-h-105 احترازي: يمنع aspect-video من فرض ارتفاع ضخم لو
@@ -263,77 +340,9 @@ export default function OpportunityDetailsPage() {
           <Typography variant="h4" className="mb-3">
             About this opportunity
           </Typography>
-          <Typography variant="body" className="text-body leading-relaxed mb-8">
+          <Typography variant="body" className="text-body leading-relaxed">
             {opportunity.description}
           </Typography>
-
-          {/* زر Participate — آخر عنصر بالعمود الأيسر */}
-          <div>
-            <Button
-              variant="primary"
-              size="large"
-              onClick={
-                isGuest
-                  ? () => navigate(ROUTES.REGISTER) // زائر: نحوّله مباشرة لإنشاء حساب، بلا رسالة وسيطة
-                  : isVolunteer
-                    ? () => {
-                        setJoinError("");
-                        setIsHoursModalOpen(true);
-                      } // نفتح نافذة اختيار الساعات أولًا، مو انضمام مباشر
-                    : undefined
-              }
-              isLoading={false}
-              // الزر يتعطل بحالات: انضم فعلاً / التسجيل مو مفتوح فعليًا /
-              // حساب منظمة مسجّل دخوله. الزائر ما بينعطل الزر عندو،
-              // بينقله للتسجيل بدل ما يمنعه
-              disabled={
-                isNonVolunteerAccount ||
-                hasJoined ||
-                (!isGuest && !isRegistrationOpen)
-              }
-              loadingText="Joining..."
-            >
-              {/* AnimatePresence بـ mode="wait": الكلمة القديمة تخرج (fade+scale)
-                  قبل ما الجديدة تدخل، بدل استبدال فجائي — "You're in! ✓"
-                  بيوصل بإحساس احتفالي خفيف بدل مجرد تغيّر نص. mode="wait"
-                  هون (مو "popLayout" أو غيره) لأنه الزر بحجم ثابت، ما في
-                  داعي لأي حساب layout إضافي أثناء التبديل */}
-              <AnimatePresence mode="wait" initial={false}>
-                <motion.span
-                  key={participateLabel}
-                  initial={prefersReducedMotion ? false : { opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={prefersReducedMotion ? undefined : { opacity: 0, scale: 0.9 }}
-                  transition={{ duration: prefersReducedMotion ? 0 : 0.18 }}
-                  className="inline-block"
-                >
-                  {participateLabel}
-                </motion.span>
-              </AnimatePresence>
-            </Button>
-
-            {/* رسالة توضيحية واحدة بحسب سبب التعطيل/الحالة — أولوية حساب
-                المنظمة أولًا (أوضح سبب)، ثم إغلاق التسجيل، ثم الزائر
-                (نص دائم وغير قابل للإغلاق، بلا رابط أو زر داخله — فقط
-                إعلام إنه محتاج حساب) */}
-            {isNonVolunteerAccount ? (
-              <p className="mt-2 text-sm text-heading/50">
-                Only volunteer accounts can join opportunities.
-              </p>
-            ) : !isGuest && !hasJoined && !isRegistrationOpen ? (
-              <p className="mt-2 text-sm text-heading/50">{registrationClosedReason}</p>
-            ) : isGuest ? (
-              <p className="mt-2 text-sm text-heading/50">
-                You'll need to create an account or sign in to join this opportunity.
-              </p>
-            ) : null}
-
-            {joinError ? (
-              <p className="mt-2 rounded-lg border border-danger bg-danger/5 px-3 py-2 text-sm text-danger">
-                {joinError}
-              </p>
-            ) : null}
-          </div>
         </div>
 
         {/* العمود الأيمن: بس How this works + Withdrawal Policy، بدون
@@ -341,6 +350,28 @@ export default function OpportunityDetailsPage() {
             تصنيفات (CategorySidebar انحذف بمهمة سابقة، ما إله أي أثر هون) */}
         <div className="lg:w-80 shrink-0">
           <OpportunityLifecycleCard />
+        </div>
+      </div>
+
+      {/* شريط CTA ثابت أسفل الشاشة تحت lg بس — الزر الرئيسي صار فوق
+          مباشرة تحت العنوان (مرئي فورًا)، بس المستخدم يقدر يتمرّر عميق
+          جوا وصف طويل وينسى وين الزر، خصوصًا على شاشة موبايل ضيقة.
+          هاي نسخة مصغّرة تبقى مرئية دايمًا أثناء التمرير، نفس
+          onClick/disabled/label بالضبط (لا فرق بالسلوك) */}
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-heading/10 bg-field/95 px-4 py-3 shadow-[0_-4px_16px_rgba(0,0,0,0.08)] backdrop-blur-sm lg:hidden">
+        <div className="mx-auto flex max-w-7xl items-center gap-3">
+          <Typography variant="bodySm" className="min-w-0 flex-1 truncate font-semibold text-heading">
+            {opportunity.title}
+          </Typography>
+          <Button
+            variant="primary"
+            onClick={handleParticipateClick}
+            disabled={isParticipateDisabled}
+            loadingText="Joining..."
+            className="shrink-0"
+          >
+            {participateLabel}
+          </Button>
         </div>
       </div>
 

@@ -18,7 +18,7 @@ export default function StatsGrid({ stats = [], loading = false, className = "" 
         {Array.from({ length: 4 }).map((_, index) => (
           <div
             key={index}
-            className={`${CARD_SURFACE} p-8 flex flex-col items-center gap-3`}
+            className={`${CARD_SURFACE} p-5 sm:p-8 flex flex-col items-center gap-3`}
           >
             <Skeleton className="h-9 w-16" />
             <Skeleton className="h-4 w-24" />

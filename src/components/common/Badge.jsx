@@ -15,12 +15,14 @@ const TONE_CLASSES = {
 /**
  * @param {string} label
  * @param {'neutral'|'primary'|'secondary'|'warning'|'danger'} [tone='neutral']
+ * @param {Function} [icon] - أيقونة Lucide اختيارية تُعرض قبل النص
  */
-export default function Badge({ label, tone = "neutral" }) {
+export default function Badge({ label, tone = "neutral", icon: Icon, className = "" }) {
   return (
     <span
-      className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium border ${TONE_CLASSES[tone]} shadow-sm`}
+      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border ${TONE_CLASSES[tone]} shadow-sm ${className}`}
     >
+      {Icon && <Icon size={14} aria-hidden="true" />}
       {label}
     </span>
   )

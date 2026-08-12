@@ -1,5 +1,5 @@
 const VARIANT_STYLES = {
-  error: 'border-danger bg-red-500/10 text-danger',
+  error: 'border-danger bg-danger/10 text-danger',
   success: 'border-green-500 bg-green-500/10 text-green-700',
 }
 

@@ -14,6 +14,7 @@ import { Link } from "react-router-dom";
 import { Users } from "lucide-react";
 import Typography from "../ui/Typography";
 import ParticipationStatusBadge from "../opportunity/ParticipationStatusBadge";
+import EmptyState from "../common/EmptyState";
 import { PANEL_SURFACE } from "../../utils/surfaceStyles";
 import { ROUTES } from "../../constants/paths";
 
@@ -32,7 +33,11 @@ export default function RecentActivityFeed({ activity = [] }) {
       </Typography>
 
       {activity.length === 0 ? (
-        <p className="text-sm text-body">No recent activity yet.</p>
+        <EmptyState
+          icon={Users}
+          title="No recent activity yet"
+          description="New volunteer applications will show up here as they come in."
+        />
       ) : (
         <ul className="flex flex-col divide-y divide-heading/10">
           {activity.map((item) => {

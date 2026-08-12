@@ -122,7 +122,7 @@ export default function ParticipationCard({ participation }) {
               variant="ghost"
               size="small"
               onClick={() => setIsReasonOpen(true)}
-              className="flex items-center gap-1 !px-3 !py-1.5 !text-sm text-heading/60 hover:bg-heading/5"
+              className="flex min-h-11 items-center gap-1 !px-3 !text-sm text-heading/60 hover:bg-heading/5"
             >
               <Info size={14} />
               View reason
@@ -136,7 +136,7 @@ export default function ParticipationCard({ participation }) {
               onClick={handleWithdraw}
               disabled={withdrawMutation.isPending}
               title="Available until this opportunity's registration closes"
-              className="flex items-center gap-1 !px-3 !py-1.5 !text-sm text-danger hover:bg-danger/10"
+              className="flex min-h-11 items-center gap-1 !px-3 !text-sm text-danger hover:bg-danger/10"
             >
               <LogOut size={14} />
               Withdraw

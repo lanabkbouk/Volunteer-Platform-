@@ -6,10 +6,9 @@
 
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { HeartHandshake, Search, UserPlus } from "lucide-react";
+import { Search, UserPlus } from "lucide-react";
 import Typography from "../ui/Typography";
 import Button from "../ui/Button";
-import Chip from "../ui/Chip";
 import { ROUTES } from "../../constants/paths";
 
 const HERO_IMAGE_URL =
@@ -33,11 +32,7 @@ export default function HomeHero({ volunteersCount, loading }) {
           transition={{ duration: 0.5 }}
           className="max-w-2xl"
         >
-          <Chip color="primary" className="mb-6 inline-flex items-center gap-1.5">
-            <HeartHandshake size={13} /> Volunteer Platform
-          </Chip>
-
-          <Typography variant="display" className="!text-white text-5xl md:text-7xl leading-[1.1] mb-6">
+          <Typography variant="display" className="!text-white text-5xl sm:text-6xl md:text-7xl leading-[1.1] mb-6">
             Give Your Time, <br /> Change Lives
           </Typography>
 
@@ -48,10 +43,12 @@ export default function HomeHero({ volunteersCount, loading }) {
 
           {!loading && volunteersCount ? (
             <div className="flex items-center gap-3 mb-10">
-              <span className="text-primary text-4xl font-extrabold">
+              <Typography variant="h3" as="span" color="primary" weight="extrabold">
                 {volunteersCount.toLocaleString("en-US")}+
-              </span>
-              <span className="text-white/80">Volunteers Making an Impact</span>
+              </Typography>
+              <Typography variant="body" as="span" className="!text-white/80">
+                Volunteers Making an Impact
+              </Typography>
             </div>
           ) : null}
 
@@ -65,10 +62,10 @@ export default function HomeHero({ volunteersCount, loading }) {
               <Search size={18} /> Explore Opportunities
             </Button>
             <Button
-              variant="ghost"
+              variant="outlineLight"
               size="large"
               onClick={() => navigate(ROUTES.REGISTER)}
-              className="flex items-center gap-2 !border-white !text-white !bg-transparent hover:!bg-white/10"
+              className="flex items-center gap-2"
             >
               <UserPlus size={18} /> Get Started
             </Button>

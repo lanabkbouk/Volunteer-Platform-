@@ -130,15 +130,7 @@ export default function Login() {
             required
           />
           <div className='mt-1 flex justify-end'>
-            {/* لمسة بصرية بس عند فشل الدخول (كلمة مرور خاطئة غالبًا) —
-                الرابط نفسه ظاهر دائمًا بكل الأحوال، هون بس نبرزه أكثر
-                لحظة الفشل بدل ما نخفيه بالوضع الطبيعي */}
-            <Link
-              to={ROUTES.FORGOT_PASSWORD}
-              className={`text-sm hover:underline ${
-                error ? 'font-semibold text-danger' : 'text-primary'
-              }`}
-            >
+            <Link to={ROUTES.FORGOT_PASSWORD} className='text-sm text-primary hover:underline'>
               Forgot password?
             </Link>
           </div>
@@ -146,8 +138,8 @@ export default function Login() {
 
         <AuthAlert variant='error'>{error || errors.root?.message}</AuthAlert>
 
-        <Button type='submit' disabled={loading} fullWidth>
-          {loading ? 'Signing In...' : 'Sign In'}
+        <Button type='submit' disabled={loading} isLoading={loading} loadingText='Signing In...' fullWidth>
+          Sign In
         </Button>
       </form>
     </AuthShell>

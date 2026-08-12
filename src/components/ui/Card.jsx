@@ -53,7 +53,7 @@ export default function Card({
       <div className={['px-6 py-6 flex flex-1 flex-col', contentClassName].join(' ')}>
         {title && (
           <div className="flex items-start justify-between gap-2 mb-2">
-            <Typography variant="h3" color="heading" className="text-2xl font-bold">
+            <Typography variant="h3" color="heading" className="text-2xl font-bold line-clamp-2">
               {title}
             </Typography>
             {titleAdornment}
@@ -63,7 +63,7 @@ export default function Card({
         {description && (
           <Typography
             variant="bodySm"
-            className="mb-6 text-[14px] text-body leading-relaxed"
+            className="mb-6 text-[14px] text-body leading-relaxed line-clamp-3"
           >
             {description}
           </Typography>

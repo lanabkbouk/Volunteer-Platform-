@@ -15,7 +15,6 @@ export default function ValuesGrid() {
       whileInView={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
       viewport={{ once: true }}
-      className="mb-20"
     >
       <Typography variant="h2" align="center" gutterBottom className="!mb-8">
         Our Values

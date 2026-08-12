@@ -18,6 +18,9 @@ export default function Button({
     primary: "bg-primary text-bg hover:bg-primary/90",
     secondary: "bg-secondary text-bg hover:bg-secondary/90",
     ghost: "bg-bg border border-heading/20 text-heading hover:bg-heading/5",
+    // نفس فكرة ghost بس مصمم لخلفية غامقة (Hero، أقسام سوداء) — حدود
+    // وخط أبيض بدل الداكن، حتى ما نحتاج overrides يدوية بكل استخدام
+    outlineLight: "bg-transparent border border-white/70 text-white hover:bg-white/10",
     success: "bg-green-600 text-white hover:bg-green-700",
     danger: "bg-danger text-white hover:bg-dangerHover",
   };

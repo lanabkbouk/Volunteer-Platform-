@@ -9,6 +9,7 @@
 import { Search } from "lucide-react";
 import Input from "../ui/Input";
 import { PANEL_SURFACE } from "../../utils/surfaceStyles";
+import { getCategoryLabel } from "../../utils/categoryStyles";
 
 function FilterListItem({ label, count, selected, onSelect }) {
   return (
@@ -16,13 +17,13 @@ function FilterListItem({ label, count, selected, onSelect }) {
       type="button"
       onClick={onSelect}
       aria-pressed={selected}
-      className={`flex w-full items-center justify-between gap-2 rounded-xl px-3 py-2 text-left text-sm transition-colors ${
+      className={`flex w-full min-h-11 items-center justify-between gap-2 rounded-xl px-3 py-2 text-left text-sm transition-colors ${
         selected
           ? "bg-primary/10 font-semibold text-primary shadow-sm shadow-primary/30"
           : "text-heading/70 hover:bg-primary/5"
       }`}
     >
-      <span className="truncate">{label}</span>
+      <span className="min-w-0 flex-1 truncate">{label}</span>
       {typeof count === "number" && <span className="shrink-0 text-xs text-heading/40">({count})</span>}
     </button>
   );
@@ -61,7 +62,7 @@ export default function CategorySidebar({
           {categories.map((category) => (
             <FilterListItem
               key={category.id}
-              label={category.name}
+              label={getCategoryLabel(category.name)}
               count={category.opportunitiesCount}
               selected={selectedCategoryId === category.id}
               onSelect={() => onSelectCategory(category.id)}

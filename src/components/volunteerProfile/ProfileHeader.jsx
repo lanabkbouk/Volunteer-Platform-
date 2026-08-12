@@ -22,6 +22,7 @@ export default function ProfileHeader({
           size="md"
           fallbackIcon={null}
           fallbackText={fullName?.[0]?.toUpperCase() || "V"}
+          alt={fullName ? `${fullName}'s profile photo` : "Profile photo"}
         />
 
         <div className="flex flex-col">

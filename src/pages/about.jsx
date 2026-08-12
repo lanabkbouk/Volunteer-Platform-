@@ -27,8 +27,8 @@ export default function About() {
     : [];
 
   return (
-    <div className="min-h-screen bg-bg text-heading px-6 py-16">
-      <div className="container mx-auto">
+    <div className="min-h-screen bg-bg text-heading py-16">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <SectionHeader />
 
         <GeometricDivider />

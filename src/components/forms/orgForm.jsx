@@ -40,7 +40,7 @@ export default function OrganizationForm({
           أوضح وأسهل بالاستخدام، خصوصًا إنه النص جنب الصورة أصلاً بيشرح
           إنه المنطقة كاملة قابلة للنقر. */}
       <div className='flex w-full flex-col gap-1'>
-        <label className='mb-1 text-sm font-medium text-heading'>
+        <label htmlFor='verificationImage' className='mb-1 text-sm font-medium text-heading'>
           Organization Verification Image
           <span className='ml-1 text-primary'>*</span>
         </label>
@@ -62,15 +62,17 @@ export default function OrganizationForm({
             <span className='text-xs text-body/70'>JPG, PNG or WEBP — up to 2MB</span>
           </div>
           <input
+            id='verificationImage'
             type='file'
             accept='image/jpeg,image/png,image/webp'
             className='sr-only'
+            aria-describedby={(verificationImageError || errors?.verificationImage?.message) ? 'verificationImage-error' : undefined}
             onChange={onVerificationImageChange}
           />
         </label>
 
         {(verificationImageError || errors?.verificationImage?.message) && (
-          <p className='mt-1 text-xs text-danger'>
+          <p id='verificationImage-error' className='mt-1 text-xs text-danger'>
             {verificationImageError || errors?.verificationImage?.message}
           </p>
         )}

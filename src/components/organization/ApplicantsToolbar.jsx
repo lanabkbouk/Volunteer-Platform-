@@ -34,14 +34,16 @@ export default function ApplicantsToolbar({
           value={statusFilter}
           onChange={onStatusFilterChange}
           triggerLabel="All statuses"
-          className="w-44"
+          fullWidth={false}
+          className="w-full sm:w-44"
         />
         <Dropdown
           items={APPLICANTS_SORT_OPTIONS}
           value={sortOrder}
           onChange={onSortOrderChange}
           triggerLabel="Newest first"
-          className="w-40"
+          fullWidth={false}
+          className="w-full sm:w-40"
         />
       </div>
     </div>

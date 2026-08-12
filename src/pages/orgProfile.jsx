@@ -116,35 +116,33 @@ export default function OrgProfile() {
 
   if (isLoading) {
     return (
-      <div className="mx-auto w-full flex-1 max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="container mx-auto px-4 md:px-16 py-10 md:py-14">
-          {/* هيكل تقريبي لرأس البروفايل: صورة دائرية + اسم + شارة حالة */}
-          <div className={`flex flex-col md:flex-row md:items-center gap-8 ${PANEL_SURFACE} px-8 py-10`}>
-            <div className="flex items-center gap-6">
-              <Skeleton className="h-24 w-24 rounded-xl" />
-              <div className="flex flex-col gap-3">
-                <Skeleton className="h-6 w-48" />
-                <Skeleton className="h-5 w-24 rounded-full" />
-              </div>
+      <div className="mx-auto w-full flex-1 max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+        {/* هيكل تقريبي لرأس البروفايل: صورة دائرية + اسم + شارة حالة */}
+        <div className={`flex flex-col md:flex-row md:items-center gap-8 ${PANEL_SURFACE} px-8 py-10`}>
+          <div className="flex items-center gap-6">
+            <Skeleton className="h-24 w-24 rounded-xl" />
+            <div className="flex flex-col gap-3">
+              <Skeleton className="h-6 w-48" />
+              <Skeleton className="h-5 w-24 rounded-full" />
             </div>
           </div>
+        </div>
 
-          {/* هيكل تقريبي للنموذج + بطاقة المعاينة */}
-          <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className={`lg:col-span-2 ${PANEL_SURFACE} p-6 md:p-8 flex flex-col gap-5`}>
-              <Skeleton className="h-4 w-32" />
-              <Skeleton className="h-12 w-full rounded-xl" />
-              <Skeleton className="h-4 w-32" />
-              <Skeleton className="h-28 w-full rounded-xl" />
-              <Skeleton className="h-4 w-32" />
-              <Skeleton className="h-12 w-full rounded-xl" />
-            </div>
-            <div className={`${PANEL_SURFACE} p-6 md:p-8 flex flex-col items-center gap-4`}>
-              <Skeleton className="h-20 w-20 rounded-full" />
-              <Skeleton className="h-5 w-32" />
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-2/3" />
-            </div>
+        {/* هيكل تقريبي للنموذج + بطاقة المعاينة */}
+        <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className={`lg:col-span-2 ${PANEL_SURFACE} p-6 md:p-8 flex flex-col gap-5`}>
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-12 w-full rounded-xl" />
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-28 w-full rounded-xl" />
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-12 w-full rounded-xl" />
+          </div>
+          <div className={`${PANEL_SURFACE} p-6 md:p-8 flex flex-col items-center gap-4`}>
+            <Skeleton className="h-20 w-20 rounded-full" />
+            <Skeleton className="h-5 w-32" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-2/3" />
           </div>
         </div>
       </div>
@@ -153,54 +151,51 @@ export default function OrgProfile() {
 
   return (
     <FormProvider {...methods}>
-      <div className="mx-auto w-full flex-1 max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="container mx-auto px-4 md:px-16 py-10 md:py-14">
-
-          {isRejected ? (
-            <RejectedVerificationPanel
-              organizationId={organizationId}
-              rejectionReason={organization?.rejectionReason}
-              onUploadSuccess={showSuccess}
-              onUploadError={showError}
-            />
-          ) : (
-            <VerificationStatusBanner
-              status={organization?.status}
-              rejectionReason={organization?.rejectionReason}
-            />
-          )}
-
-          <OrgProfileHeader
-            name={organization?.name}
-            imagePreview={imagePreview}
-            onImageChange={imageUpload.handleFileChange}
-            status={organization?.status}
+      <div className="mx-auto w-full flex-1 max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+        {isRejected ? (
+          <RejectedVerificationPanel
+            organizationId={organizationId}
+            rejectionReason={organization?.rejectionReason}
+            onUploadSuccess={showSuccess}
+            onUploadError={showError}
           />
+        ) : (
+          <VerificationStatusBanner
+            status={organization?.status}
+            rejectionReason={organization?.rejectionReason}
+          />
+        )}
 
-          {imageUpload.error && (
-            <p className="mt-2 text-sm text-danger">{imageUpload.error}</p>
-          )}
+        <OrgProfileHeader
+          name={organization?.name}
+          imagePreview={imagePreview}
+          onImageChange={imageUpload.handleFileChange}
+          status={organization?.status}
+        />
 
-          {/* FORM + PREVIEW */}
-          <form
-              onSubmit={methods.handleSubmit(onSubmit)}
-              className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6"
-            >
-            {/* LEFT: FORM */}
-            <div className={`lg:col-span-2 ${PANEL_SURFACE} p-6 md:p-8`}>
-              <OrgProfileForm submitting={updateProfileMutation.isPending} />
-            </div>
+        {imageUpload.error && (
+          <p className="mt-2 text-sm text-danger">{imageUpload.error}</p>
+        )}
 
-            {/* RIGHT: PREVIEW */}
-            <OrgProfilePreview email={organization?.email} phone={user?.phone} />
-          </form>
+        {/* FORM + PREVIEW */}
+        <form
+            onSubmit={methods.handleSubmit(onSubmit)}
+            className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6"
+          >
+          {/* LEFT: FORM */}
+          <div className={`lg:col-span-2 ${PANEL_SURFACE} p-6 md:p-8`}>
+            <OrgProfileForm submitting={updateProfileMutation.isPending} />
+          </div>
 
-          {!canUseServices && (
-            <p className="mt-4 text-xs text-body text-center">
-              Opportunity posting will be available once your organization is verified.
-            </p>
-          )}
-        </div>
+          {/* RIGHT: PREVIEW */}
+          <OrgProfilePreview email={organization?.email} phone={user?.phone} />
+        </form>
+
+        {!canUseServices && (
+          <p className="mt-4 text-xs text-body text-center">
+            Opportunity posting will be available once your organization is verified.
+          </p>
+        )}
       </div>
 
       <Toast

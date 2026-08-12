@@ -36,6 +36,7 @@ export default function CategoryRow({ category, onEdit, onDelete, isDeleting }) 
           variant="ghost"
           size="small"
           onClick={() => onEdit(category)}
+          className="min-h-11 min-w-11"
           aria-label={`Edit ${getCategoryLabel(category.name)}`}
         >
           <Pencil size={16} />
@@ -45,7 +46,7 @@ export default function CategoryRow({ category, onEdit, onDelete, isDeleting }) 
           size="small"
           disabled={isDeleting}
           onClick={() => onDelete(category)}
-          className="text-danger hover:bg-danger/10"
+          className="min-h-11 min-w-11 text-danger hover:bg-danger/10"
           aria-label={`Delete ${getCategoryLabel(category.name)}`}
         >
           <Trash2 size={16} />

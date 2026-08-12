@@ -194,7 +194,7 @@ export default function AdminOrganizationsReview() {
             </Typography>
           </div>
 
-          <div className="grid gap-2 sm:grid-cols-5">
+          <div className="grid gap-2 sm:grid-cols-5 justify-items-start sm:justify-items-stretch">
             <Badge label={`All ${totals.all}`} tone="neutral" />
             <Badge label={`Pending ${totals.pending}`} tone="warning" />
             <Badge label={`Approved ${totals.approved}`} tone="success" />

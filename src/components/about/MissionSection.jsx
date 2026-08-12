@@ -17,7 +17,7 @@ export default function MissionSection({ volunteers }) {
       whileInView={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
       viewport={{ once: true }}
-      className="grid md:grid-cols-2 gap-12 items-center mb-16"
+      className="grid md:grid-cols-2 gap-12 items-center"
     >
       <div>
         <Typography variant="h2" gutterBottom>

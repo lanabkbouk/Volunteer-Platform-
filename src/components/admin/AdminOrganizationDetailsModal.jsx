@@ -50,6 +50,7 @@ export default function AdminOrganizationDetailsModal({
       open={open}
       onClose={onClose}
       title="Organization details"
+      dialogClassName="max-w-2xl"
       scrollBody
       footer={
         <>

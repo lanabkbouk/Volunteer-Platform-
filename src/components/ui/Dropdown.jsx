@@ -15,6 +15,7 @@ export default function Dropdown({
   error = "",
   required = false,
   as = "div",
+  fullWidth = true,
   className = "",
 }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -48,7 +49,7 @@ export default function Dropdown({
   const Root = as;
 
   return (
-    <div className="flex flex-col gap-1 w-full">
+    <div className={`flex flex-col gap-1 ${fullWidth ? "w-full" : ""}`}>
       {label && (
         <label className={FIELD_LABEL}>
           {label}
@@ -56,11 +57,13 @@ export default function Dropdown({
         </label>
       )}
 
-      <Root ref={rootRef} className={`relative w-full ${className}`}>
+      <Root ref={rootRef} className={`relative ${fullWidth ? "w-full" : ""} ${className}`}>
         {/* Trigger — نفس لون وحدود وحجم بقية الحقول (Input/Textarea) */}
         <button
           type="button"
           onClick={() => setIsOpen((prev) => !prev)}
+          aria-haspopup="listbox"
+          aria-expanded={isOpen}
           className={`flex items-center justify-between w-full gap-2
             px-4 py-3 rounded-xl bg-field
             transition-colors duration-200
@@ -94,13 +97,14 @@ export default function Dropdown({
             ${isOpen ? "max-h-72 opacity-100" : "max-h-0 opacity-0"}`}
         >
           <ul
-            className="py-2 px-1 space-y-1 text-sm font-medium 
-              rounded-xl backdrop-blur-md bg-field/95 
+            role="listbox"
+            className="py-2 px-1 space-y-1 text-sm font-medium
+              rounded-xl backdrop-blur-md bg-field/95
               border border-heading/10 shadow-lg max-h-64 overflow-y-auto"
           >
             {items.map((item) =>
               item.href ? (
-                <li key={item.name}>
+                <li key={item.name} role="presentation">
                   <NavLink
                     to={item.href}
                     onClick={() => handleItemClick(item)}
@@ -110,9 +114,11 @@ export default function Dropdown({
                   </NavLink>
                 </li>
               ) : (
-                <li key={item.value ?? item.name}>
+                <li key={item.value ?? item.name} role="presentation">
                   <button
                     type="button"
+                    role="option"
+                    aria-selected={selectedItem?.value === item.value}
                     onClick={() => handleItemClick(item)}
                     className={`w-full text-left block px-4 py-3 rounded-md transition-colors ${
                       selectedItem?.value === item.value

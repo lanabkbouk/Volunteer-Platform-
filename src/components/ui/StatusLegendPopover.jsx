@@ -31,7 +31,7 @@ export default function StatusLegendPopover({ className = "" }) {
       {isOpen && (
         <div
           role="tooltip"
-          className="absolute z-50 mt-2 w-64 rounded-xl bg-field border-2 border-heading/20 shadow-2xl ring-1 ring-black/5 p-3 left-0"
+          className="absolute z-50 mt-2 w-64 max-w-[calc(100vw-2rem)] rounded-xl bg-field border-2 border-heading/20 shadow-2xl ring-1 ring-black/5 p-3 right-0"
         >
           <div className="flex flex-col gap-2.5">
             {Object.values(OPPORTUNITY_STATUS_META).map((meta) => {

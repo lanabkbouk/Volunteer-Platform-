@@ -140,7 +140,7 @@ export const CATEGORY_SELECTED_COLORS = new Proxy(CATEGORY_SELECTED_COLORS_BASE,
 // هاي الخريطة بس لأي نص يُعرض للمستخدم.
 // -----------------------------
 const CATEGORY_LABELS = {
-  Social: "Communities",
+  Social: "Community",
 };
 
 export function getCategoryLabel(categoryName) {

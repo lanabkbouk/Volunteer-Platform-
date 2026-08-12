@@ -21,6 +21,7 @@ export default function ImageUploader({
   fallbackIcon = "user",
   fallbackText,
   disabled = false,
+  alt = "Profile",
 }) {
   const FallbackIcon = fallbackIcon === "organization" ? Building2 : User
 
@@ -32,7 +33,7 @@ export default function ImageUploader({
         {previewUrl ? (
           <img
             src={previewUrl}
-            alt="Profile"
+            alt={alt}
             className="w-full h-full object-cover transition-transform duration-200 hover:scale-[1.03]"
           />
         ) : fallbackText ? (
@@ -44,7 +45,7 @@ export default function ImageUploader({
 
       {!disabled && (
         <label
-          className="absolute -bottom-2 -right-2 w-10 h-10 rounded-full bg-field border border-heading/10 flex items-center justify-center cursor-pointer hover:bg-primary/10 transition-colors shadow-sm focus-within:ring-2 focus-within:ring-primary/40"
+          className="absolute -bottom-2 -right-2 w-11 h-11 rounded-full bg-field border border-heading/10 flex items-center justify-center cursor-pointer hover:bg-primary/10 transition-colors shadow-sm focus-within:ring-2 focus-within:ring-primary/40"
         >
           <span className="sr-only">Change the image</span>
           <Camera size={16} className="text-primary" />

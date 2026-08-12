@@ -41,7 +41,7 @@ export default function Tabs({ tabs, activeTab, onChange, ariaLabel = "View" }) 
               role="tab"
               aria-selected={isActive}
               onClick={() => onChange(tab.id)}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
+              className={`flex items-center gap-1.5 min-h-11 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
                 isActive ? "bg-field text-primary shadow-sm" : "text-heading/60 hover:text-heading"
               }`}
             >

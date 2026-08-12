@@ -13,6 +13,7 @@ import FaqCategoryTabs from "./FaqCategoryTabs";
 import EmptyState from "../common/EmptyState";
 import { useFaqFilter, FAQ_CATEGORY_ALL } from "../../hooks/useFaqFilter";
 import { HOME_FAQS, FAQ_CATEGORY_META, FAQ_TAB_CATEGORIES } from "../../constants/homeContent";
+import { PANEL_SURFACE } from "../../utils/surfaceStyles";
 
 const TAB_CATEGORIES = FAQ_TAB_CATEGORIES.map((id) => ({
   id,
@@ -41,7 +42,7 @@ export default function HomeFaqSection() {
         </Typography>
       </div>
 
-      <div className="rounded-3xl bg-heading/5 border border-heading/10 p-4 sm:p-8">
+      <div className={`${PANEL_SURFACE} p-4 sm:p-8`}>
         <div className="flex justify-center mb-6">
           <FaqCategoryTabs categories={TAB_CATEGORIES} activeCategory={activeCategory} onChange={setActiveCategory} />
         </div>

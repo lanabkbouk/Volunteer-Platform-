@@ -22,7 +22,7 @@ export default function VerificationStatusBanner({ status, rejectionReason, hasL
     return (
       <div
         role="alert"
-        className="flex items-start gap-3 rounded-2xl border p-4 mb-8 bg-red-50 border-red-200 text-red-800"
+        className="flex items-start gap-3 rounded-3xl border p-6 md:p-8 mb-8 bg-red-50 border-red-200 text-red-800"
       >
         <AlertTriangle size={20} className="mt-0.5 shrink-0" />
         <div>
@@ -43,7 +43,7 @@ export default function VerificationStatusBanner({ status, rejectionReason, hasL
   return (
     <div
       role="status"
-      className={`flex items-start gap-3 rounded-2xl border p-4 mb-8 ${meta.bannerClassName}`}
+      className={`flex items-start gap-3 rounded-3xl border p-6 md:p-8 mb-8 ${meta.bannerClassName}`}
     >
       <Icon size={20} className="mt-0.5 shrink-0" />
       <div>

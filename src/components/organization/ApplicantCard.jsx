@@ -118,8 +118,10 @@ export default function ApplicantCard({
                 variant="success"
                 size="small"
                 disabled={isUpdating || !isVerified}
+                isLoading={isUpdating}
+                loadingText="Accepting..."
                 onClick={() => onAccept(applicant.id)}
-                className="flex items-center gap-1 !px-3 !py-1.5 !text-sm"
+                className="flex min-h-11 items-center gap-1 !px-3 !text-sm"
                 title={!isVerified ? "Available once your organization is verified" : undefined}
               >
                 <Check size={14} />
@@ -130,7 +132,7 @@ export default function ApplicantCard({
                 size="small"
                 disabled={isUpdating || !isVerified}
                 onClick={() => setIsRejectModalOpen(true)}
-                className="flex items-center gap-1 !px-3 !py-1.5 !text-sm text-danger hover:bg-danger/10"
+                className="flex min-h-11 items-center gap-1 !px-3 !text-sm text-danger hover:bg-danger/10"
                 title={!isVerified ? "Available once your organization is verified" : undefined}
               >
                 <X size={14} />
@@ -155,7 +157,7 @@ export default function ApplicantCard({
                   variant="secondary"
                   size="small"
                   onClick={() => onManageHours(applicant)}
-                  className="flex items-center gap-1 !px-3 !py-1.5 !text-sm"
+                  className="flex min-h-11 items-center gap-1 !px-3 !text-sm"
                 >
                   <Clock3 size={14} />
                   {hasConfirmedHours ? "Edit hours" : "Manage hours"}
