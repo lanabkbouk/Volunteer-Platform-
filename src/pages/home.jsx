@@ -10,6 +10,7 @@ import HomePartners from "../components/home/HomePartners";
 import HomeSuccessStories from "../components/home/HomeSuccessStories";
 import HomeHowToJoin from "../components/home/HomeHowToJoin";
 import HomeFaqSection from "../components/home/HomeFaqSection";
+import Button from "../components/ui/Button";
 import { usePlatformStatsQuery } from "../hooks/queries/usePlatformStatsQuery";
 import { useCompletedOpportunitiesQuery } from "../hooks/queries/useCompletedOpportunitiesQuery";
 
@@ -22,6 +23,8 @@ export default function Home() {
   const stats = statsQuery.data?.success ? statsQuery.data.data : null;
   const completedOpportunities = completedQuery.data ?? [];
   const loading = statsQuery.isPending || completedQuery.isPending;
+  // فشل جلب الإحصائيات كان يعرض القسم فاضٍ بصمت بدون أي إشارة للمستخدم
+  const statsError = statsQuery.isError;
 
   return (
     <div className="bg-bg text-heading">
@@ -29,7 +32,16 @@ export default function Home() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-24">
         <div className="space-y-24 sm:space-y-28">
-          <HomeStatsSection stats={stats} loading={loading} />
+          {statsError ? (
+            <div className="flex flex-col items-start gap-3 rounded-lg border border-danger bg-danger/5 px-4 py-3 text-sm text-danger">
+              <p>Failed to load platform statistics.</p>
+              <Button variant="danger" size="small" onClick={() => statsQuery.refetch()}>
+                Retry
+              </Button>
+            </div>
+          ) : (
+            <HomeStatsSection stats={stats} loading={loading} />
+          )}
 
           <HomeSuccessStories
             opportunities={completedOpportunities}

@@ -36,6 +36,12 @@ export default function OrgProfile() {
   // الخدمة بترجع { success, data } دايمًا (ما بترمي استثناء)، فمنطق
   // التحقق يضل هون بدل الاعتماد على query.isError
   const organization = organizationQuery.data?.success ? organizationQuery.data.data : null;
+  // isFetched (مو !isLoading): الاستعلام لازم يكون نفّذ فعليًا مرة عالأقل
+  // قبل ما نعتبرها "فشلت" — نفس نمط dashboard.jsx بالضبط، حتى لا يظهر
+  // الفورم فاضي بصمت عند فشل الجلب
+  const loadError = organizationQuery.isFetched && !organizationQuery.data?.success
+    ? organizationQuery.data?.error || "Unable to load your organization profile"
+    : "";
 
   const updateProfileMutation = useUpdateOrganizationProfileMutation(organizationId);
 
@@ -152,6 +158,12 @@ export default function OrgProfile() {
   return (
     <FormProvider {...methods}>
       <div className="mx-auto w-full flex-1 max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+        {loadError && (
+          <p className="mb-4 rounded-lg border border-danger bg-danger/5 px-3 py-2 text-sm text-danger">
+            {loadError}
+          </p>
+        )}
+
         {isRejected ? (
           <RejectedVerificationPanel
             organizationId={organizationId}

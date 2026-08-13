@@ -61,6 +61,17 @@ export default function OrganizationDetailsPage() {
   // يلاقي المتاح أول شي)، بس هلق بتبويب بدل قسم أول بالصفحة
   const [activeTab, setActiveTab] = useState(ORG_OPPORTUNITIES_TABS.OPEN);
 
+  // صورة رابطها صحيح شكليًا بس معطوبة/محذوفة (404) — نرجع لأيقونة
+  // Building2 الافتراضية بدل أيقونة المتصفح المكسورة. تصفير الحالة
+  // بيصير مباشرة أثناء الـ render (نمط React الموصى فيه لضبط state
+  // حسب تغيّر prop) بدل useEffect، تفاديًا لـ render إضافي
+  const [logoFailed, setLogoFailed] = useState(false);
+  const [lastLogoUrl, setLastLogoUrl] = useState(organization?.profileImageUrl);
+  if (organization?.profileImageUrl !== lastLogoUrl) {
+    setLastLogoUrl(organization?.profileImageUrl);
+    setLogoFailed(false);
+  }
+
   const loading = detailsQuery.isPending;
   const loadError = detailsQuery.isError
     ? detailsQuery.error?.message || "Failed to load this organization"
@@ -97,6 +108,11 @@ export default function OrganizationDetailsPage() {
   }
 
   const opportunitiesLoading = opportunitiesQuery.isPending;
+  // فشل جلب فرص المنظمة لازم يظهر كخطأ صريح — وإلا التبويبين بيعرضوا
+  // "لا توجد فرص" بدل خطأ شبكة/سيرفر فعلي
+  const opportunitiesError = opportunitiesQuery.isError
+    ? opportunitiesQuery.error?.message || "Failed to load this organization's opportunities"
+    : "";
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
@@ -113,10 +129,11 @@ export default function OrganizationDetailsPage() {
 
       {/* غلاف علوي: صورة/شعار + الاسم + المدينة + شارة التوثيق */}
       <div className="w-full aspect-[3/1] rounded-4xl overflow-hidden bg-primary/10 flex items-center justify-center mb-6">
-        {organization.profileImageUrl ? (
+        {organization.profileImageUrl && !logoFailed ? (
           <img
             src={organization.profileImageUrl}
             alt={organization.name}
+            onError={() => setLogoFailed(true)}
             className="w-full h-full object-cover"
           />
         ) : (
@@ -209,6 +226,13 @@ export default function OrganizationDetailsPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <CardSkeleton />
           <CardSkeleton />
+        </div>
+      ) : opportunitiesError ? (
+        <div className="flex flex-col items-start gap-3 rounded-lg border border-danger bg-danger/5 px-4 py-3 text-sm text-danger">
+          <p>{opportunitiesError}</p>
+          <Button variant="danger" size="small" onClick={() => opportunitiesQuery.refetch()}>
+            Retry
+          </Button>
         </div>
       ) : activeTab === ORG_OPPORTUNITIES_TABS.OPEN ? (
         openOpportunities.length === 0 ? (

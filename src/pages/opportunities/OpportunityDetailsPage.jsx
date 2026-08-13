@@ -36,6 +36,9 @@ export default function OpportunityDetailsPage() {
 
   const [hasJoined, setHasJoined] = useState(false);
   const [joinError, setJoinError] = useState("");
+  // صورة رابطها صحيح شكليًا بس معطوبة/محذوفة (404) — نرجع لنفس شكل
+  // "بلا صورة" (أيقونة التصنيف) بدل أيقونة المتصفح المكسورة
+  const [coverImageFailed, setCoverImageFailed] = useState(false);
   // نافذة اختيار عدد الساعات — بتنفتح قبل التأكيد الفعلي للمشاركة،
   // مو مباشرة عند ضغط "Participate"
   const [isHoursModalOpen, setIsHoursModalOpen] = useState(false);
@@ -163,94 +166,89 @@ export default function OpportunityDetailsPage() {
         <span className="text-heading">{opportunity.title}</span>
       </nav>
 
-      {/* بنية نهائية بعمودين: الأيسر (flex-1) فيه كل تفاصيل الفرصة
-          بترتيب محدَّد بدقة (عنوان+حالة، زر Participate مباشرة تحته،
-          صورة، منظمة، موقع/تاريخ/ساعات، تقدم، مهارات، Organized by،
-          والوصف بالنهاية)، والأيمن (lg:w-80 shrink-0) فيه بس
-          OpportunityLifecycleCard — يظهرون جنب بعض من lg فما فوق
-          (flex-row)، ويترتبوا عمودي واحد تحت بعض (الأيمن بعد الأيسر
-          بالكامل) تحت lg. بدون mx-auto على أي منهما: الأيسر يلتصق
-          بطرف يسار حاوية الصفحة max-w-7xl نفسها (نفس محاذاة breadcrumb)
+      {/* العنوان + الحالة، وزر Participate تحتهما مباشرة — full-width فوق
+          الـ grid بعمودين، حتى يبقيا أول شي يشوفه المستخدم بدون أي
+          تمرير، بغض النظر عن محاذاة الصورة والـ sidebar تحتهم */}
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <Typography variant="h1">
+          {opportunity.title}
+        </Typography>
+        <div className="flex items-center gap-2">
+          <OpportunityStatusBadge status={opportunity.status} />
+          <StatusLegendPopover />
+        </div>
+      </div>
 
-          ⚠️ زر Participate انتقل من نهاية العمود لتحت العنوان مباشرة
-          (بدل ما يكون آخر شي بعد الوصف الطويل) — المستخدم لازم يشوف
-          إمكانية المشاركة فورًا بدون تمرير طويل، على أي حجم شاشة. راجع
-          أيضًا الشريط الثابت أسفل الشاشة (lg:hidden) قبل ParticipateHoursModal
-          بالأسفل — تذكير إضافي بنفس الزر لمن يستمر بالتمرير جوا الوصف */}
-      <div className="flex flex-col lg:flex-row gap-8 items-start">
-        <div className="flex-1 min-w-0">
-          {/* العنوان + الحالة فوق الصورة مباشرة */}
-          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-            <Typography variant="h1">
-              {opportunity.title}
-            </Typography>
-            <div className="flex items-center gap-2">
-              <OpportunityStatusBadge status={opportunity.status} />
-              <StatusLegendPopover />
-            </div>
-          </div>
-
-          {/* زر Participate — مباشرة تحت العنوان، أول شي يشوفه المستخدم
-              بدون أي تمرير، بدل ما يكون مدفون بعد كل التفاصيل */}
-          <div className="mb-8">
-            <Button
-              variant="primary"
-              size="large"
-              onClick={handleParticipateClick}
-              isLoading={false}
-              disabled={isParticipateDisabled}
-              loadingText="Joining..."
+      {/* زر Participate — مباشرة تحت العنوان، أول شي يشوفه المستخدم
+          بدون أي تمرير، بدل ما يكون مدفون بعد كل التفاصيل */}
+      <div className="mb-8">
+        <Button
+          variant="primary"
+          size="large"
+          onClick={handleParticipateClick}
+          isLoading={false}
+          disabled={isParticipateDisabled}
+          loadingText="Joining..."
+        >
+          {/* AnimatePresence بـ mode="wait": الكلمة القديمة تخرج (fade+scale)
+              قبل ما الجديدة تدخل، بدل استبدال فجائي — "You're in! ✓"
+              بيوصل بإحساس احتفالي خفيف بدل مجرد تغيّر نص. mode="wait"
+              هون (مو "popLayout" أو غيره) لأنه الزر بحجم ثابت، ما في
+              داعي لأي حساب layout إضافي أثناء التبديل */}
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.span
+              key={participateLabel}
+              initial={prefersReducedMotion ? false : { opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={prefersReducedMotion ? undefined : { opacity: 0, scale: 0.9 }}
+              transition={{ duration: prefersReducedMotion ? 0 : 0.18 }}
+              className="inline-block"
             >
-              {/* AnimatePresence بـ mode="wait": الكلمة القديمة تخرج (fade+scale)
-                  قبل ما الجديدة تدخل، بدل استبدال فجائي — "You're in! ✓"
-                  بيوصل بإحساس احتفالي خفيف بدل مجرد تغيّر نص. mode="wait"
-                  هون (مو "popLayout" أو غيره) لأنه الزر بحجم ثابت، ما في
-                  داعي لأي حساب layout إضافي أثناء التبديل */}
-              <AnimatePresence mode="wait" initial={false}>
-                <motion.span
-                  key={participateLabel}
-                  initial={prefersReducedMotion ? false : { opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={prefersReducedMotion ? undefined : { opacity: 0, scale: 0.9 }}
-                  transition={{ duration: prefersReducedMotion ? 0 : 0.18 }}
-                  className="inline-block"
-                >
-                  {participateLabel}
-                </motion.span>
-              </AnimatePresence>
-            </Button>
+              {participateLabel}
+            </motion.span>
+          </AnimatePresence>
+        </Button>
 
-            {/* رسالة توضيحية واحدة بحسب سبب التعطيل/الحالة — أولوية حساب
-                المنظمة أولًا (أوضح سبب)، ثم إغلاق التسجيل، ثم الزائر
-                (نص دائم وغير قابل للإغلاق، بلا رابط أو زر داخله — فقط
-                إعلام إنه محتاج حساب) */}
-            {isNonVolunteerAccount ? (
-              <p className="mt-2 text-sm text-heading/50">
-                Only volunteer accounts can join opportunities.
-              </p>
-            ) : !isGuest && !hasJoined && !isRegistrationOpen ? (
-              <p className="mt-2 text-sm text-heading/50">{registrationClosedReason}</p>
-            ) : isGuest ? (
-              <p className="mt-2 text-sm text-heading/50">
-                You'll need to create an account or sign in to join this opportunity.
-              </p>
-            ) : null}
+        {/* رسالة توضيحية واحدة بحسب سبب التعطيل/الحالة — أولوية حساب
+            المنظمة أولًا (أوضح سبب)، ثم إغلاق التسجيل، ثم الزائر
+            (نص دائم وغير قابل للإغلاق، بلا رابط أو زر داخله — فقط
+            إعلام إنه محتاج حساب) */}
+        {isNonVolunteerAccount ? (
+          <p className="mt-2 text-sm text-heading/50">
+            Only volunteer accounts can join opportunities.
+          </p>
+        ) : !isGuest && !hasJoined && !isRegistrationOpen ? (
+          <p className="mt-2 text-sm text-heading/50">{registrationClosedReason}</p>
+        ) : isGuest ? (
+          <p className="mt-2 text-sm text-heading/50">
+            You'll need to create an account or sign in to join this opportunity.
+          </p>
+        ) : null}
 
-            {joinError ? (
-              <p className="mt-2 rounded-lg border border-danger bg-danger/5 px-3 py-2 text-sm text-danger">
-                {joinError}
-              </p>
-            ) : null}
-          </div>
+        {joinError ? (
+          <p className="mt-2 rounded-lg border border-danger bg-danger/5 px-3 py-2 text-sm text-danger">
+            {joinError}
+          </p>
+        ) : null}
+      </div>
 
-          {/* max-h-105 احترازي: يمنع aspect-video من فرض ارتفاع ضخم لو
+      {/* Grid بعمودين متوازنين: الأيسر (minmax(0,1fr)) أوسع وفيه كل تفاصيل
+          الفرصة (صورة، منظمة، موقع/تاريخ/ساعات، تقدم، مهارات، Organized
+          by، والوصف)، والأيمن (lg:20rem ثابت) فيه بس OpportunityLifecycleCard.
+          items-start + كون الاثنين أول عنصر بنفس صف الـ grid يضمن محاذاة
+          أعلى الـ sidebar تمامًا مع أعلى الصورة (بدل أعلى العنوان). تحت lg
+          يرجعوا عمودي واحد تحت بعض (grid-cols-1 الافتراضي) */}
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_20rem] gap-8 lg:gap-10 items-start">
+        <div className="min-w-0">
+          {/* max-h-96 احترازي: يمنع aspect-video من فرض ارتفاع ضخم لو
               صار عرض هالعمود كبير (خصوصًا تحت lg وين العمود الأيمن
               بيرجع تحته وهالعمود ياخد عرض الصفحة الكامل) */}
-          <div className="w-full aspect-video max-h-105 rounded-4xl overflow-hidden bg-heading/5 flex items-center justify-center mb-6">
-            {opportunity.image ? (
+          <div className="w-full aspect-video max-h-96 rounded-3xl overflow-hidden bg-heading/5 flex items-center justify-center mb-6">
+            {opportunity.image && !coverImageFailed ? (
               <img
                 src={opportunity.image}
                 alt={opportunity.title}
+                onError={() => setCoverImageFailed(true)}
                 className="w-full h-full object-cover"
               />
             ) : (
@@ -348,7 +346,7 @@ export default function OpportunityDetailsPage() {
         {/* العمود الأيمن: بس How this works + Withdrawal Policy، بدون
             sticky (يبقى بموقعه الطبيعي بتدفق الصفحة)، وبدون أي بوكس
             تصنيفات (CategorySidebar انحذف بمهمة سابقة، ما إله أي أثر هون) */}
-        <div className="lg:w-80 shrink-0">
+        <div>
           <OpportunityLifecycleCard />
         </div>
       </div>

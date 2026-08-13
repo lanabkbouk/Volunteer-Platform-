@@ -282,17 +282,24 @@ export async function fetchOrganizationDashboard(organizationId) {
       maxVolunteers: Number(opportunity.maxVolunteers) || 0,
     }))
 
-    // نبني قائمة نشاطات موحّدة (طلب مشاركة لكل متقدّم) ونرتّبها بالأحدث أولًا
+    // نبني قائمة نشاطات موحّدة — بس الطلبات يلي لسا بانتظار مراجعة المنظمة
+    // (PENDING)، مش كل طلب بغض النظر عن حالته — "أحدث النشاطات" بالداشبورد
+    // المقصود منها تلفت نظر المنظمة للي محتاج فعل منها فعليًا، مش سجل عام
+    // بيتضمّن طلبات مقبولة/مرفوضة خلص انتهى أمرها. الفلترة قبل الـ slice(0,5)
+    // (مش بعده) عشان نضمن آخر 5 طلبات pending فعليًا، مش آخر 5 طلبات
+    // بأي حالة يصير منها pending بالصدفة أقل من 5
     const recentActivity = opportunities
       .flatMap((opportunity, index) =>
-        applicantsPerOpportunity[index].map((applicant) => ({
-          id: applicant.id,
-          volunteerName: applicant.volunteer?.name || 'A volunteer',
-          opportunityTitle: opportunity.title,
-          opportunityId: opportunity.id,
-          status: applicant.status,
-          date: applicant.participatedAt,
-        })),
+        applicantsPerOpportunity[index]
+          .filter((applicant) => applicant.status === PARTICIPATION_STATUS.PENDING)
+          .map((applicant) => ({
+            id: applicant.id,
+            volunteerName: applicant.volunteer?.name || 'A volunteer',
+            opportunityTitle: opportunity.title,
+            opportunityId: opportunity.id,
+            status: applicant.status,
+            date: applicant.participatedAt,
+          })),
       )
       .sort((a, b) => new Date(b.date) - new Date(a.date))
       .slice(0, 5)

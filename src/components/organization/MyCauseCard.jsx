@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import Card from "../ui/Card";
 import Chip from "../ui/Chip";
 import Button from "../ui/Button";
+import ConfirmModal from "../common/ConfirmModal";
 import OpportunityStatusBadge from "../opportunity/OpportunityStatusBadge";
 import { OPPORTUNITY_STATUS } from "../../constants/opportunityStatus";
 import { CATEGORY_COLORS, CATEGORY_ICONS, getCategoryLabel } from "../../utils/categoryStyles";
@@ -18,7 +19,18 @@ function formatVolunteerProgress(current, max) {
   return { safeCurrent, safeMax, percentage };
 }
 
-export default function MyCauseCard({ opportunity, onDelete, onToggleStatus, isVerified = true }) {
+// isHighlighted و ref: مجرد "مفتاح تشغيل" بصري + مقبض DOM، بدون أي قرار
+// متى/ليش نميّز أو نمرّر — القرار (وقت التمييز، مدته، هل نمرّر أصلًا)
+// كله بصفحة MyCauses فقط (راجع myCauses.jsx)، حتى يضل هالكارد قابل
+// لإعادة الاستخدام بأي سياق تاني بدون ما يحمل منطق خاص بصفحة وحدة
+export default function MyCauseCard({
+  opportunity,
+  onDelete,
+  onToggleStatus,
+  isVerified = true,
+  isHighlighted = false,
+  ref,
+}) {
   const navigate = useNavigate();
   const categoryName = opportunity.category?.name;
   const categoryStyle = CATEGORY_COLORS[categoryName] || CATEGORY_COLORS.Social;
@@ -40,35 +52,31 @@ export default function MyCauseCard({ opportunity, onDelete, onToggleStatus, isV
   const [togglingStatus, setTogglingStatus] = useState(false);
   const busy = deleting || togglingStatus;
 
-  const handleDelete = async () => {
-    const confirmed = window.confirm(
-      `Delete "${opportunity.title}"? This can't be undone.`,
-    );
-    if (!confirmed) return;
+  // مودال تأكيد موحّد (ConfirmModal) بدل window.confirm() السابق — نافذة
+  // المتصفح الافتراضية كانت مختلفة بصريًا عن باقي نوافذ التأكيد بالمشروع
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [isToggleConfirmOpen, setIsToggleConfirmOpen] = useState(false);
 
+  const handleConfirmDelete = async () => {
     setDeleting(true);
     await onDelete?.(opportunity.id);
     // لا داعي لإعادة setDeleting(false) في حال النجاح: الكارد بينحذف من القائمة فورًا
     // بس نرجعها لو صار خطأ ورجع الكارد يظهر من جديد
     setDeleting(false);
+    setIsDeleteConfirmOpen(false);
   };
 
   // تبديل يدوي بين تسجيل مفتوح/منتهي — منفصل تمامًا عن الإغلاق التلقائي
   // عند اكتمال العدد أو تجاوز تاريخ نهاية التسجيل (يُحسب تلقائيًا)
-  const handleToggleStatus = async () => {
+  const handleConfirmToggleStatus = async () => {
     const nextStatus = isRegistrationClosed
       ? OPPORTUNITY_STATUS.REGISTRATION_OPEN
       : OPPORTUNITY_STATUS.REGISTRATION_CLOSED;
-    const confirmed = window.confirm(
-      isRegistrationClosed
-        ? `Reopen registration for "${opportunity.title}"?`
-        : `Close registration for "${opportunity.title}" early?`,
-    );
-    if (!confirmed) return;
 
     setTogglingStatus(true);
     await onToggleStatus?.(opportunity.id, nextStatus);
     setTogglingStatus(false);
+    setIsToggleConfirmOpen(false);
   };
 
   const imageFallback = (
@@ -78,7 +86,13 @@ export default function MyCauseCard({ opportunity, onDelete, onToggleStatus, isV
   );
 
   return (
-    <Card imageSrc={opportunity.image} imageAlt={opportunity.title} imageFallback={imageFallback}>
+    <Card
+      ref={ref}
+      imageSrc={opportunity.image}
+      imageAlt={opportunity.title}
+      imageFallback={imageFallback}
+      className={isHighlighted ? "ring-2 ring-primary" : ""}
+    >
       <div className="flex items-start justify-between gap-3 mb-2">
         <h3 className="font-bold text-2xl text-heading">{opportunity.title}</h3>
         <OpportunityStatusBadge status={opportunity.status} />
@@ -156,7 +170,7 @@ export default function MyCauseCard({ opportunity, onDelete, onToggleStatus, isV
             disabled={busy || !isVerified}
             isLoading={togglingStatus}
             loadingText="Updating..."
-            onClick={handleToggleStatus}
+            onClick={() => setIsToggleConfirmOpen(true)}
             aria-label={isRegistrationClosed ? "Reopen registration" : "Close registration early"}
             title={
               !isVerified
@@ -175,7 +189,7 @@ export default function MyCauseCard({ opportunity, onDelete, onToggleStatus, isV
           disabled={busy || !isVerified}
           isLoading={deleting}
           loadingText="Deleting..."
-          onClick={handleDelete}
+          onClick={() => setIsDeleteConfirmOpen(true)}
           className="text-danger hover:bg-danger/10 border-danger/20"
           aria-label="Delete this cause"
           title={!isVerified ? "Available once your organization is verified" : undefined}
@@ -183,6 +197,33 @@ export default function MyCauseCard({ opportunity, onDelete, onToggleStatus, isV
           <Trash2 size={18} />
         </Button>
       </div>
+
+      <ConfirmModal
+        open={isDeleteConfirmOpen}
+        onClose={() => setIsDeleteConfirmOpen(false)}
+        onConfirm={handleConfirmDelete}
+        title={`Delete "${opportunity.title}"?`}
+        description="This can't be undone."
+        confirmLabel="Delete"
+        confirmVariant="danger"
+        isLoading={deleting}
+        loadingText="Deleting..."
+      />
+
+      <ConfirmModal
+        open={isToggleConfirmOpen}
+        onClose={() => setIsToggleConfirmOpen(false)}
+        onConfirm={handleConfirmToggleStatus}
+        title={
+          isRegistrationClosed
+            ? `Reopen registration for "${opportunity.title}"?`
+            : `Close registration for "${opportunity.title}" early?`
+        }
+        confirmLabel={isRegistrationClosed ? "Reopen" : "Close"}
+        confirmVariant="primary"
+        isLoading={togglingStatus}
+        loadingText="Updating..."
+      />
     </Card>
   );
 }

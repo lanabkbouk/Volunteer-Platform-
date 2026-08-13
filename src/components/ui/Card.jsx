@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { ImageOff } from 'lucide-react'
 import Button from './Button'
 import Typography from './Typography'
@@ -21,6 +22,19 @@ export default function Card({
   mediaClassName = '',
   ...props
 }) {
+  // رابط صورة صحيح شكليًا بس معطوب/محذوف (404) كان يطلع أيقونة المتصفح
+  // المكسورة الافتراضية بدل fallback الـ ImageOff الجاهز أصلًا تحت.
+  // تصفير الحالة بيصير مباشرة أثناء الـ render (نمط React الموصى فيه
+  // لضبط state حسب تغيّر prop) بدل useEffect، تفاديًا لـ render إضافي
+  const [imageFailed, setImageFailed] = useState(false)
+  const [lastImageSrc, setLastImageSrc] = useState(imageSrc)
+  if (imageSrc !== lastImageSrc) {
+    setLastImageSrc(imageSrc)
+    setImageFailed(false)
+  }
+
+  const showImage = imageSrc && !imageFailed
+
   return (
     <Component
       className={[
@@ -34,10 +48,11 @@ export default function Card({
       {/* الصورة */}
       <div className={['relative w-full overflow-hidden rounded-t-2xl', mediaClassName].join(' ')}>
         {badge && <div className="absolute top-3 left-3 z-10">{badge}</div>}
-        {imageSrc ? (
+        {showImage ? (
           <img
             src={imageSrc}
             alt={imageAlt || title || 'Project image'}
+            onError={() => setImageFailed(true)}
             className="w-full aspect-video object-cover block"
           />
         ) : imageFallback ? (

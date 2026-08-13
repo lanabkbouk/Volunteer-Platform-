@@ -46,7 +46,7 @@ function AdminOrganizationsSkeleton() {
 }
 
 export default function AdminOrganizationsReview() {
-  const { data: organizationsData, isPending } = useAdminOrganizationsQuery()
+  const { data: organizationsData, isPending, isError, error, refetch } = useAdminOrganizationsQuery()
   // ⚠️ مو `data: organizations = []` (قيمة افتراضية بالتفكيك) — هاي
   // بترجع مصفوفة `[]` *جديدة كل Render* طالما data لسا undefined، ما
   // بتضل بنفس المرجع، وبتكسر useShowMore (كانت تسبب "Too many
@@ -199,7 +199,11 @@ export default function AdminOrganizationsReview() {
             <Badge label={`Pending ${totals.pending}`} tone="warning" />
             <Badge label={`Approved ${totals.approved}`} tone="success" />
             <Badge label={`Rejected ${totals.rejected}`} tone="danger" />
-            <Badge label={`Suspended ${totals.suspended}`} tone="danger" />
+            {/* tone="neutral" مش "danger" — نفس تمييز الرمادي/الأحمر
+                المعتمد أصلًا بـ ORGANIZATION_STATUS_META (badgeClassName)
+                بين "معلّق مؤقتًا" (رمادي) و"مرفوض" (أحمر)، حتى يسهل تمييز
+                الحالتين بنظرة سريعة بصف الإجماليات */}
+            <Badge label={`Suspended ${totals.suspended}`} tone="neutral" />
           </div>
         </div>
 
@@ -217,6 +221,16 @@ export default function AdminOrganizationsReview() {
 
       {isPending ? (
         <AdminOrganizationsSkeleton />
+      ) : isError ? (
+        // هاي أهم صفحة عمل بلوحة الأدمن (قائمة التحقق) — فشل الجلب لازم
+        // يظهر كخطأ صريح مع إعادة محاولة، مش كقائمة فاضية تُفهم غلط
+        // كـ"لا يوجد منظمات مسجّلة"
+        <div className="flex flex-col items-start gap-3 rounded-lg border border-danger bg-danger/5 px-4 py-3 text-sm text-danger">
+          <p>{error?.message || 'Failed to load organizations'}</p>
+          <Button variant="danger" size="small" onClick={() => refetch()}>
+            Retry
+          </Button>
+        </div>
       ) : filteredOrganizations.length === 0 ? (
         <EmptyState
           icon={ShieldCheck}

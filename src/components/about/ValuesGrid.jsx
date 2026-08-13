@@ -1,12 +1,7 @@
 import { motion } from "framer-motion";
 import Typography from "../ui/Typography";
 import { PANEL_SURFACE } from "../../utils/surfaceStyles";
-
-const VALUES = [
-  { title: "Community", desc: "Building stronger communities through collective action" },
-  { title: "Transparency", desc: "Open communication and clear impact tracking" },
-  { title: "Inclusion", desc: "Everyone has something to contribute" },
-];
+import { ABOUT_VALUES } from "../../constants/aboutContent";
 
 export default function ValuesGrid() {
   return (
@@ -21,7 +16,7 @@ export default function ValuesGrid() {
       </Typography>
 
       <div className="grid md:grid-cols-3 gap-6">
-        {VALUES.map((value) => (
+        {ABOUT_VALUES.map((value) => (
           <div
             key={value.title}
             className={`${PANEL_SURFACE} p-6 hover:border-primary transition-colors`}

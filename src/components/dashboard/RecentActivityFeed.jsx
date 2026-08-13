@@ -1,6 +1,7 @@
 
-// قائمة "أحدث النشاطات": آخر طلبات مشاركة وصلت على فرص المنظمة، كل
-// عنصر بيوضّح مين تقدّم، على أي فرصة، وشو حالة طلبه — نفس مكوّن شارة
+// قائمة "أحدث النشاطات": طلبات المشاركة يلي لسا بانتظار مراجعة المنظمة
+// (status === PENDING بس — راجع services/dashboard.js) على فرصها، كل
+// عنصر بيوضّح على أي فرصة، مين المتقدّم، وشو حالة طلبه — نفس مكوّن شارة
 // الحالة (ParticipationStatusBadge) المستخدم أصلًا بقائمة المتقدمين،
 // بدون تكرار منطق الألوان.
 //
@@ -28,19 +29,26 @@ function formatDate(dateString) {
 export default function RecentActivityFeed({ activity = [] }) {
   return (
     <div className={`${PANEL_SURFACE} p-6 md:p-8`}>
-      <Typography variant="h4" gutterBottom>
-        Recent Activity
-      </Typography>
+      <div className="mb-5">
+        <Typography variant="h4">Recent Activity</Typography>
+        <Typography variant="caption" color="muted" className="mt-1 block">
+          Requests awaiting your review
+        </Typography>
+      </div>
 
       {activity.length === 0 ? (
         <EmptyState
           icon={Users}
-          title="No recent activity yet"
-          description="New volunteer applications will show up here as they come in."
+          title="No pending requests"
+          description="New applications awaiting your review will show up here."
         />
       ) : (
         <ul className="flex flex-col divide-y divide-heading/10">
           {activity.map((item) => {
+            // "Opportunity name، Volunteer name، status، والتاريخ": عنوان
+            // الفرصة صار السطر الأساسي (هو محور القسم — "أي فرصة محتاجة
+            // مراجعة")، واسم المتطوع + التاريخ سطر ثانوي تحته، والشارة
+            // بنفس سطر العنوان لأنها بصريًا جزء من "حالة الفرصة" مش المتطوع
             const rowContent = (
               <>
                 <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
@@ -48,30 +56,31 @@ export default function RecentActivityFeed({ activity = [] }) {
                 </span>
 
                 <div className="min-w-0 flex-1">
-                  <Typography variant="bodySm" color="heading" className="leading-snug">
-                    <span className="font-medium">{item.volunteerName}</span> applied to{" "}
-                    <span className="font-medium">{item.opportunityTitle}</span>
-                  </Typography>
-                  <Typography variant="caption" color="muted">
+                  <div className="flex items-start justify-between gap-2">
+                    <Typography variant="bodySm" color="heading" weight="medium" truncate className="leading-snug">
+                      {item.opportunityTitle}
+                    </Typography>
+                    <ParticipationStatusBadge participation={{ status: item.status }} className="shrink-0" />
+                  </div>
+                  <Typography variant="caption" color="muted" className="mt-0.5 block truncate">
+                    {item.volunteerName ? `${item.volunteerName} · ` : ""}
                     {formatDate(item.date)}
                   </Typography>
                 </div>
-
-                <ParticipationStatusBadge participation={{ status: item.status }} />
               </>
             );
 
             return (
-              <li key={item.id} className="py-3 first:pt-0 last:pb-0">
+              <li key={item.id} className="first:pt-0 last:pb-0">
                 {item.opportunityId ? (
                   <Link
                     to={`${ROUTES.APPLICANTS}/${item.opportunityId}`}
-                    className="flex items-start gap-3 rounded-lg transition-colors hover:bg-primary/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                    className="flex items-start gap-3 rounded-lg px-2 py-3 -mx-2 transition-colors hover:bg-primary/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                   >
                     {rowContent}
                   </Link>
                 ) : (
-                  <div className="flex items-start gap-3">{rowContent}</div>
+                  <div className="flex items-start gap-3 px-2 py-3 -mx-2">{rowContent}</div>
                 )}
               </li>
             );

@@ -21,6 +21,7 @@ export default function ApplicantsToolbar({
       <Input
         name="applicantSearch"
         placeholder="Search by volunteer name..."
+        aria-label="Search applicants by volunteer name"
         icon={Search}
         fullWidth
         value={search}
@@ -34,6 +35,7 @@ export default function ApplicantsToolbar({
           value={statusFilter}
           onChange={onStatusFilterChange}
           triggerLabel="All statuses"
+          ariaLabel="Filter by status"
           fullWidth={false}
           className="w-full sm:w-44"
         />
@@ -42,6 +44,7 @@ export default function ApplicantsToolbar({
           value={sortOrder}
           onChange={onSortOrderChange}
           triggerLabel="Newest first"
+          ariaLabel="Sort order"
           fullWidth={false}
           className="w-full sm:w-40"
         />

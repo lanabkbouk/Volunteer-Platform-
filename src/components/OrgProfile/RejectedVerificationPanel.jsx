@@ -34,17 +34,22 @@ export default function RejectedVerificationPanel({ organizationId, rejectionRea
   };
 
   return (
+    // نفس لوحة الألوان القانونية المستخدمة أصلًا لحالة "rejected" بـ
+    // ORGANIZATION_STATUS_META (bannerClassName: red-50/red-200/red-800) —
+    // بدل إضافة درجات red إضافية (100/400/500/600/900) ما بتظهر بأي
+    // مكان تاني بالمشروع. اللمسات الإضافية (أيقونات، حدود hover) تعتمد
+    // على توكن danger/dangerHover الموحّد بدل درجات red خام جديدة
     <div
       role="alert"
-      className="mb-8 rounded-3xl border border-red-200 bg-red-50 p-6 md:p-8 text-red-900"
+      className="mb-8 rounded-3xl border border-red-200 bg-red-50 p-6 md:p-8 text-red-800"
     >
       <div className="flex items-start gap-4">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-red-100 text-red-600">
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-danger/10 text-danger">
           <XCircle size={24} aria-hidden="true" />
         </div>
 
         <div className="min-w-0 flex-1">
-          <Typography variant="h4" className="text-red-900">
+          <Typography variant="h4" className="text-red-800">
             Verification rejected
           </Typography>
           <p className="mt-1 text-sm text-red-800/90 leading-relaxed">
@@ -53,24 +58,24 @@ export default function RejectedVerificationPanel({ organizationId, rejectionRea
           </p>
 
           {rejectionReason && (
-            <div className="mt-4 flex items-start gap-2 rounded-xl border border-red-200 bg-white/60 px-4 py-3">
-              <ShieldOff size={16} className="mt-0.5 shrink-0 text-red-500" aria-hidden="true" />
+            <div className="mt-4 flex items-start gap-2 rounded-xl border border-red-200 bg-field/60 px-4 py-3">
+              <ShieldOff size={16} className="mt-0.5 shrink-0 text-danger" aria-hidden="true" />
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-red-600">Reason from the admin</p>
-                <p className="mt-1 text-sm text-red-900 italic">"{rejectionReason}"</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-danger">Reason from the admin</p>
+                <p className="mt-1 text-sm text-red-800 italic">"{rejectionReason}"</p>
               </div>
             </div>
           )}
 
-          <div className="mt-5 rounded-2xl border border-red-200 bg-white/60 p-4">
-            <p className="text-sm font-semibold text-red-900">Upload a new verification document</p>
+          <div className="mt-5 rounded-2xl border border-red-200 bg-field/60 p-4">
+            <p className="text-sm font-semibold text-red-800">Upload a new verification document</p>
             <p className="mt-1 text-xs text-red-800/80">
               Replace the rejected document with a clearer one. Submitting will send your account back to pending
               review automatically.
             </p>
 
-            <label className="mt-3 flex w-full cursor-pointer items-center gap-4 rounded-xl border border-red-200 bg-white px-4 py-3 transition-colors hover:border-red-400">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-red-100 bg-red-50 text-red-400">
+            <label className="mt-3 flex w-full cursor-pointer items-center gap-4 rounded-xl border border-red-200 bg-field px-4 py-3 transition-colors hover:border-dangerHover">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-danger/20 bg-danger/5 text-danger/60">
                 {document.previewUrl ? (
                   <img src={document.previewUrl} alt="New verification document preview" className="h-full w-full object-cover" />
                 ) : (

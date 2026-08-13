@@ -21,7 +21,7 @@ export default function Button({
     // نفس فكرة ghost بس مصمم لخلفية غامقة (Hero، أقسام سوداء) — حدود
     // وخط أبيض بدل الداكن، حتى ما نحتاج overrides يدوية بكل استخدام
     outlineLight: "bg-transparent border border-white/70 text-white hover:bg-white/10",
-    success: "bg-green-600 text-white hover:bg-green-700",
+    success: "bg-success text-white hover:bg-successHover",
     danger: "bg-danger text-white hover:bg-dangerHover",
   };
 

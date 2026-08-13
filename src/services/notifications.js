@@ -18,11 +18,11 @@ import { fetchVolunteerAchievements } from './achievements'
 import { fetchMyParticipations, fetchApplicantsForOpportunity } from './participations'
 import { fetchOrganizationProfile } from './organization'
 import { fetchMyOpportunities } from './opportunities'
-import { getSeenAchievementIds } from '../utils/achievementSeenTracker'
-import { getSeenHoursMap } from '../utils/hoursSeenTracker'
-import { getSeenStatusMap } from '../utils/participationStatusSeenTracker'
-import { getSeenOrganizationStatusMap } from '../utils/organizationVerificationSeenTracker'
-import { getSeenApplicantStatusMap } from '../utils/organizationApplicantSeenTracker'
+import { getSeenAchievementIds, markAchievementIdsSeen } from '../utils/achievementSeenTracker'
+import { getSeenHoursMap, markHoursSeen } from '../utils/hoursSeenTracker'
+import { getSeenStatusMap, markStatusSeen } from '../utils/participationStatusSeenTracker'
+import { getSeenOrganizationStatusMap, markOrganizationStatusSeen } from '../utils/organizationVerificationSeenTracker'
+import { getSeenApplicantStatusMap, markApplicantStatusSeen } from '../utils/organizationApplicantSeenTracker'
 import { PARTICIPATION_STATUS } from '../constants/participationStatus'
 import { ORGANIZATION_STATUS } from '../constants/organizationStatus'
 import { ACCOUNT_TYPES } from '../constants/auth/accountTypes'
@@ -44,6 +44,10 @@ function buildAchievementItems(achievements, seenAchievements) {
       // ينقل مباشرة لصفحة My Journey (pages/volunteerJourney.jsx) — الإنجازات
       // صارت قسم فيها بدل صفحة مستقلة
       href: ROUTES.MY_JOURNEY,
+      // تعليم صريح كـ"مقروء" (من الـ Bell أو صفحة /notifications) —
+      // بيدمج مع أي إنجازات اتعلّمت مسبقًا بدل ما يفقدها (markAchievementIdsSeen
+      // بتكتب الـ Set كاملة، مش عنصر واحد)
+      onDismiss: () => markAchievementIdsSeen(new Set([...seenAchievements, achievement.id])),
     }))
 }
 
@@ -67,6 +71,7 @@ function buildParticipationItems(participations, seenHours, seenStatus) {
         title: 'Hours confirmed',
         description: `${opportunityTitle}: ${participation.hoursLogged} hrs`,
         href: ROUTES.MY_VOLUNTEERING,
+        onDismiss: () => markHoursSeen(participation.id, participation.hoursLogged),
       })
     }
 
@@ -87,6 +92,7 @@ function buildParticipationItems(participations, seenHours, seenStatus) {
             : 'Your request was declined',
         description: opportunityTitle,
         href: ROUTES.MY_VOLUNTEERING,
+        onDismiss: () => markStatusSeen(participation.id, participation.status),
       })
     }
   })
@@ -118,6 +124,7 @@ function buildOrganizationVerificationItems(organization, seenStatus) {
         ? 'You can now post opportunities and use all organization features.'
         : organization.rejectionReason || 'Upload a new verification document to request another review.',
       href: ROUTES.ORGANIZATION_PROFILE,
+      onDismiss: () => markOrganizationStatusSeen(organization.id, organization.status),
     },
   ]
 }
@@ -175,6 +182,7 @@ async function buildWithdrawalItems(seenApplicantStatus) {
         title: 'A volunteer withdrew',
         description: `${applicant.volunteer?.name || 'A volunteer'} withdrew from "${opportunity.title}"`,
         href: `${ROUTES.APPLICANTS}/${opportunity.id}`,
+        onDismiss: () => markApplicantStatusSeen(applicant.id, PARTICIPATION_STATUS.WITHDRAWN),
       })
     })
   })
@@ -245,6 +253,7 @@ export async function fetchRecentNotifications({ accountType, organizationId } =
       description: item.description || item.message || '',
       href: item.href || item.link || ROUTES.HOME,
       seen: Boolean(item.seen),
+      onDismiss: () => apiClient.post(`/notifications/${item.id}/read`),
     }))
   } catch (error) {
     throw new Error(getApiErrorMessage(error, 'Failed to load notifications'), { cause: error })

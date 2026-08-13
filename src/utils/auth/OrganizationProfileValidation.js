@@ -15,23 +15,15 @@
  */
 
 import { z } from 'zod'
+import { SYRIAN_GOVERNORATES } from '../../services/syrianGovernorates'
 
-// const SYRIA_GOVERNORATES = [
-//   'Damascus',
-//   'Rif Dimashq',
-//   'Aleppo',
-//   'Homs',
-//   'Hama',
-//   'Latakia',
-//   'Tartus',
-//   'Idlib',
-//   'Raqqa',
-//   'Deir ez-Zor',
-//   'Al-Hasakah',
-//   'Daraa',
-//   'As-Suwayda',
-//   'Quneitra',
-// ]
+// نفس تحويل nameEn -> value المستخدم فعليًا بالـ select (راجع GOVERNORATE_ITEMS
+// بـ components/OrgProfile/ProfileForm.jsx) — "Rural Damascus" بيترسل كـ
+// "Rif Dimashq"، فلازم قائمة التحقق تطابق القيم الحقيقية يلي الفورم بيرسلها
+// تمامًا، بدل نسخة ثانية يدوية ممكن تنحرف عنها بالمستقبل (متل ما صار هون).
+const SYRIA_GOVERNORATES = SYRIAN_GOVERNORATES.map(({ nameEn }) =>
+  nameEn === 'Rural Damascus' ? 'Rif Dimashq' : nameEn,
+)
 
 const requiredSelect = (options, message) =>
   z

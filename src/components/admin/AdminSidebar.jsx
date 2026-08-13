@@ -175,7 +175,7 @@ export default function AdminSidebar({ isMobileOpen = false, onCloseMobile }) {
 
   return (
     <>
-      <aside className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-40 lg:flex lg:w-72 lg:flex-col lg:border-r lg:border-heading/10 lg:bg-white xl:w-80">
+      <aside className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-40 lg:flex lg:w-72 lg:flex-col lg:border-r lg:border-heading/10 lg:bg-bg xl:w-80">
         <SidebarContent />
       </aside>
 

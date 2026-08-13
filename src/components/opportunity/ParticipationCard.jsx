@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Building2, CalendarClock, Clock, MapPin, LogOut, PlayCircle, Info } from "lucide-react";
 import Button from "../ui/Button";
 import Modal from "../ui/Modal";
+import ConfirmModal from "../common/ConfirmModal";
 import ParticipationStatusBadge from "./ParticipationStatusBadge";
 import { useWithdrawParticipationMutation } from "../../hooks/queries/useWithdrawParticipationMutation";
 import { PARTICIPATION_STATUS } from "../../constants/participationStatus";
@@ -18,6 +19,9 @@ export default function ParticipationCard({ participation }) {
   const withdrawMutation = useWithdrawParticipationMutation();
   const [error, setError] = useState("");
   const [isReasonOpen, setIsReasonOpen] = useState(false);
+  // مودال تأكيد موحّد (ConfirmModal) بدل window.confirm() السابق —
+  // نافذة المتصفح الافتراضية كانت مختلفة بصريًا عن باقي نوافذ التأكيد
+  const [isWithdrawConfirmOpen, setIsWithdrawConfirmOpen] = useState(false);
 
   // نفس الدالة الموحّدة المستخدمة بالضبط بـ
   // buildUpcomingOpportunityReminderItems (services/notifications.js)
@@ -49,17 +53,13 @@ export default function ParticipationCard({ participation }) {
     status === PARTICIPATION_STATUS.PENDING || status === PARTICIPATION_STATUS.ACCEPTED;
   const canWithdraw = canWithdrawParticipation(participation);
 
-  const handleWithdraw = async () => {
-    const confirmed = window.confirm(
-      `Withdraw from "${opportunity.title}"? This can't be undone.`,
-    );
-    if (!confirmed) return;
-
+  const handleConfirmWithdraw = async () => {
     setError("");
     const result = await withdrawMutation.mutateAsync(participation.id);
     if (!result.success) {
       setError(result.error || "Failed to withdraw from this opportunity");
     }
+    setIsWithdrawConfirmOpen(false);
   };
 
   return (
@@ -110,9 +110,9 @@ export default function ParticipationCard({ participation }) {
             <Clock size={14} className="text-primary" aria-hidden="true" />
             {hoursLabel}
           </span>
-          <span className="text-heading/40">Joined {joinedDate}</span>
+          <span className="text-heading/55">Joined {joinedDate}</span>
           {status === PARTICIPATION_STATUS.WITHDRAWN && withdrawnDate && (
-            <span className="text-heading/40">· Withdrew {withdrawnDate}</span>
+            <span className="text-heading/55">· Withdrew {withdrawnDate}</span>
           )}
         </div>
 
@@ -133,7 +133,7 @@ export default function ParticipationCard({ participation }) {
             <Button
               variant="ghost"
               size="small"
-              onClick={handleWithdraw}
+              onClick={() => setIsWithdrawConfirmOpen(true)}
               disabled={withdrawMutation.isPending}
               title="Available until this opportunity's registration closes"
               className="flex min-h-11 items-center gap-1 !px-3 !text-sm text-danger hover:bg-danger/10"
@@ -150,7 +150,7 @@ export default function ParticipationCard({ participation }) {
           بدون هذا السطر، اختفاء الزر بدون تفسير قد يبدو خطأ بالواجهة
           للمتطوع، بدل قاعدة منصة مقصودة */}
       {!canWithdraw && isWithdrawEligibleStatus && (
-        <p className="mt-2 text-xs text-heading/40">
+        <p className="mt-2 text-xs text-heading/55">
           Withdrawal is no longer available — registration for this opportunity has closed.
         </p>
       )}
@@ -169,6 +169,18 @@ export default function ParticipationCard({ participation }) {
       >
         {rejectionReason || "No reason was provided by the organization for this decision."}
       </Modal>
+
+      <ConfirmModal
+        open={isWithdrawConfirmOpen}
+        onClose={() => setIsWithdrawConfirmOpen(false)}
+        onConfirm={handleConfirmWithdraw}
+        title={`Withdraw from "${opportunity.title}"?`}
+        description="This can't be undone."
+        confirmLabel="Withdraw"
+        confirmVariant="danger"
+        isLoading={withdrawMutation.isPending}
+        loadingText="Withdrawing..."
+      />
     </div>
   );
 }

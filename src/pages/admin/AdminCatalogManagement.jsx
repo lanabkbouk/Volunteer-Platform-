@@ -244,6 +244,9 @@ export default function AdminCatalogManagement() {
         onAdd={openCreateCategoryModal}
         items={filteredCategories}
         isLoading={categoriesQuery.isPending}
+        isError={categoriesQuery.isError}
+        errorMessage={categoriesQuery.error?.message || 'Failed to load categories'}
+        onRetry={() => categoriesQuery.refetch()}
         emptyIcon={Tags}
         emptyTitle={categorySearchTerm ? 'No matching categories' : 'No categories yet'}
         emptyDescription={
@@ -307,6 +310,9 @@ export default function AdminCatalogManagement() {
         onAdd={openCreateSkillModal}
         items={filteredSkills}
         isLoading={skillsQuery.isPending}
+        isError={skillsQuery.isError}
+        errorMessage={skillsQuery.error?.message || 'Failed to load skills'}
+        onRetry={() => skillsQuery.refetch()}
         emptyIcon={Sparkles}
         emptyTitle={skillSearchTerm ? 'No matching skills' : 'No skills yet'}
         emptyDescription={

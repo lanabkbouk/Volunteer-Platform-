@@ -6,13 +6,7 @@
 import { motion } from "framer-motion";
 import Typography from "../ui/Typography";
 import { PANEL_SURFACE } from "../../utils/surfaceStyles";
-
-const GOALS = [
-  "Expand volunteer opportunities across diverse sectors.",
-  "Strengthen partnerships with organizations.",
-  "Provide transparent tracking of contributions.",
-  "Encourage youth engagement and community initiatives.",
-];
+import { ABOUT_GOALS } from "../../constants/aboutContent";
 
 export default function VisionGoals() {
   return (
@@ -42,7 +36,7 @@ export default function VisionGoals() {
             Our Goals
           </Typography>
           <ul className="space-y-3 text-body">
-            {GOALS.map((goal) => (
+            {ABOUT_GOALS.map((goal) => (
               <li key={goal} className="flex items-start gap-3">
                 <span className="text-primary text-xl leading-none">•</span>
                 {goal}

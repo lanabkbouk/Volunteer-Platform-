@@ -17,6 +17,12 @@ export default function CatalogSection({
   onAdd,
   items,
   isLoading,
+  // فشل الجلب (اختياري) — لو ما تم تمريره، السلوك القديم يضل تمامًا
+  // كما هو (isError افتراضيًا false، فما في أي تأثير على أي استخدام
+  // ما بيمرر هالـ props الجديدة)
+  isError = false,
+  errorMessage = 'Failed to load items',
+  onRetry,
   emptyIcon,
   emptyTitle,
   emptyDescription,
@@ -48,6 +54,16 @@ export default function CatalogSection({
               <Skeleton className="h-4 w-2/3" />
             </div>
           ))}
+        </div>
+      ) : isError ? (
+        // فشل الجلب لازم يظهر كخطأ صريح مع إعادة محاولة، مش كقائمة فاضية
+        <div className="flex flex-col items-start gap-3 rounded-lg border border-danger bg-danger/5 px-4 py-3 text-sm text-danger">
+          <p>{errorMessage}</p>
+          {onRetry && (
+            <Button variant="danger" size="small" onClick={onRetry}>
+              Retry
+            </Button>
+          )}
         </div>
       ) : items.length === 0 ? (
         <EmptyState icon={emptyIcon} title={emptyTitle} description={emptyDescription} />

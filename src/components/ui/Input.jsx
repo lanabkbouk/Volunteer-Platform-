@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { ChevronDown, Eye, EyeOff } from 'lucide-react'
+import { FIELD_SURFACE, FIELD_PLACEHOLDER } from '../../utils/fieldStyles'
 
 export default function Input({
   label,
@@ -33,12 +34,17 @@ export default function Input({
     large: 'px-5 py-4 text-lg',
   }
 
+  // default وfilled متطابقان عمدًا حاليًا (ما في تصميم "filled" مميّز
+  // بعد) — نبنيهم من fieldStyles.js المشترك بدل تكرار نفس الـ Tailwind
+  // classes هون من جديد (نفس الثوابت يلي Textarea.jsx وDropdown.jsx
+  // بيستخدموها أصلًا)
+  const sharedFieldStyle = `${FIELD_SURFACE} text-heading ${FIELD_PLACEHOLDER} rounded-xl focus:border-primary`
   const variantStyles = {
-    default: "bg-field border border-heading/10 text-heading placeholder-body/60 rounded-xl focus:border-primary",
-    filled: "bg-field border border-heading/10 text-heading placeholder-body/60 rounded-xl focus:border-primary",
+    default: sharedFieldStyle,
+    filled: sharedFieldStyle,
     underline: "border-0 border-b-2 border-heading/20 bg-transparent text-heading placeholder-body/60 rounded-none focus:border-primary",
     danger: "w-full px-4 py-3 border border-danger bg-danger/5 text-danger rounded-lg transition focus:border-dangerHover",
-    success: "border border-green-600 bg-green-50 text-green-700 rounded-xl focus:border-green-700"
+    success: "border border-success bg-success/5 text-success rounded-xl focus:border-successHover"
   }
 
   const appliedVariant = error ? 'danger' : success ? 'success' : variant

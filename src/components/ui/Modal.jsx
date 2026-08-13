@@ -47,8 +47,35 @@ export default function Modal({
   useEffect(() => {
     if (!open) return undefined;
 
+    // Focus Trap: بدون هاد، Tab/Shift+Tab كانوا يقدروا "يهرّبوا" الفوكس
+    // برا النافذة لعناصر الصفحة الخلفية وهي مفتوحة (خطر خصوصًا مع
+    // الـ overlay المعتم يلي بيوهم إنه محتوى الصفحة مش قابل للتفاعل)
+    function trapFocus(event) {
+      if (event.key !== "Tab" || !dialogRef.current) return;
+
+      const focusable = dialogRef.current.querySelectorAll(
+        'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      );
+      if (focusable.length === 0) return;
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+
     function handleKeyDown(event) {
-      if (event.key === "Escape") onClose?.();
+      if (event.key === "Escape") {
+        onClose?.();
+        return;
+      }
+      trapFocus(event);
     }
 
     document.addEventListener("keydown", handleKeyDown);

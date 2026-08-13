@@ -1,10 +1,15 @@
-import { useEffect, useRef, useState } from "react";
+import { useId, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { FIELD_LABEL, FIELD_ERROR } from "../../utils/fieldStyles";
+import useClickOutside from "../../hooks/useClickOutside";
 
 export default function Dropdown({
   label = "",
+  // اسم وصولي بدون عرض label مرئي فوق الحقل — لتوليبار مضغوطة (مثل
+  // فلاتر الحالة/الفرز بقائمة المتقدمين) ما بتحتمل سطر label إضافي بصريًا،
+  // لكن لازم اسم واضح لقارئات الشاشة برضو
+  ariaLabel = "",
   triggerLabel = "Select",
   items = [],
   onItemClick,
@@ -19,17 +24,37 @@ export default function Dropdown({
   className = "",
 }) {
   const [isOpen, setIsOpen] = useState(false);
-  const rootRef = useRef(null);
+  const generatedLabelId = useId();
+  const labelId = label ? generatedLabelId : undefined;
+  // نفس hook الإغلاق عند الضغط خارجًا المستخدم أصلًا بـ StatCard/
+  // StatusLegendPopover — بدل تكرار نفس منطق mousedown/contains يدويًا
+  const rootRef = useClickOutside(isOpen, () => setIsOpen(false));
 
-  useEffect(() => {
-    function handleClickOutside(e) {
-      if (rootRef.current && !rootRef.current.contains(e.target)) {
-        setIsOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  const handleTriggerKeyDown = (event) => {
+    // Escape يغلق القائمة — نفس سلوك Modal.jsx، بدل ما يبقى Dropdown
+    // الوحيد بالمشروع ما بيستجيب لهاد المفتاح المتوقّع
+    if (event.key === "Escape") setIsOpen(false);
+  };
+
+  // تنقّل بالسهم/Home/End بين عناصر القائمة — بدون هاد، مستخدم الكيبورد
+  // كان مضطر يعمل Tab لكل عنصر لحاله بدل معيار listbox المتوقّع
+  const handleMenuKeyDown = (event) => {
+    if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return;
+    event.preventDefault();
+
+    const options = Array.from(event.currentTarget.querySelectorAll('[role="option"]'));
+    if (options.length === 0) return;
+
+    const currentIndex = options.indexOf(document.activeElement);
+
+    let nextIndex;
+    if (event.key === "Home") nextIndex = 0;
+    else if (event.key === "End") nextIndex = options.length - 1;
+    else if (event.key === "ArrowDown") nextIndex = currentIndex < options.length - 1 ? currentIndex + 1 : 0;
+    else nextIndex = currentIndex > 0 ? currentIndex - 1 : options.length - 1;
+
+    options[nextIndex].focus();
+  };
 
   const isSelectionMode = typeof onChange === "function";
   const selectedItem = isSelectionMode
@@ -51,7 +76,7 @@ export default function Dropdown({
   return (
     <div className={`flex flex-col gap-1 ${fullWidth ? "w-full" : ""}`}>
       {label && (
-        <label className={FIELD_LABEL}>
+        <label id={labelId} className={FIELD_LABEL}>
           {label}
           {required && <span className="text-primary ml-1">*</span>}
         </label>
@@ -62,8 +87,11 @@ export default function Dropdown({
         <button
           type="button"
           onClick={() => setIsOpen((prev) => !prev)}
+          onKeyDown={handleTriggerKeyDown}
           aria-haspopup="listbox"
           aria-expanded={isOpen}
+          aria-labelledby={labelId}
+          aria-label={!label && ariaLabel ? ariaLabel : undefined}
           className={`flex items-center justify-between w-full gap-2
             px-4 py-3 rounded-xl bg-field
             transition-colors duration-200
@@ -98,6 +126,7 @@ export default function Dropdown({
         >
           <ul
             role="listbox"
+            onKeyDown={handleMenuKeyDown}
             className="py-2 px-1 space-y-1 text-sm font-medium
               rounded-xl backdrop-blur-md bg-field/95
               border border-heading/10 shadow-lg max-h-64 overflow-y-auto"
@@ -107,6 +136,8 @@ export default function Dropdown({
                 <li key={item.name} role="presentation">
                   <NavLink
                     to={item.href}
+                    role="option"
+                    aria-selected="false"
                     onClick={() => handleItemClick(item)}
                     className="block px-4 py-3 hover:bg-primary hover:text-white rounded-md transition-colors"
                   >

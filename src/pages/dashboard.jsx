@@ -25,8 +25,11 @@ import { getOrganizationId } from "../utils/auth/getOrganizationId";
 function DashboardSkeleton() {
   return (
     <div>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {Array.from({ length: 4 }).map((_, index) => (
+      {/* نفس شبكة DashboardStatsGrid بالضبط (5 بطاقات، نفس breakpoints) —
+          وإلا يصير قفزة تخطيط واضحة (عدد أعمدة وبطاقات مختلف) لحظة
+          انتهاء التحميل واستبدال الـ Skeleton بالمحتوى الحقيقي */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6 mb-8">
+        {Array.from({ length: 5 }).map((_, index) => (
           <div key={index} className={`${CARD_SURFACE} p-8 flex flex-col items-center gap-3`}>
             <Skeleton className="h-9 w-16" />
             <Skeleton className="h-4 w-24" />

@@ -128,6 +128,7 @@ export default function SkillsSelector({
                             <button
                               key={skill.id}
                               type="button"
+                              aria-pressed={isSelected}
                               onClick={() =>
                                 onChange(
                                   isSelected

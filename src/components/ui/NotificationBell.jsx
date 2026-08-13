@@ -4,30 +4,10 @@
 // وأيقونة مختلفة لكل نوع تحديث — بدل نقطة حمراء صامتة أو نص فاضي.
 
 import { Link } from "react-router-dom";
-import { Bell, Trophy, Clock3, CalendarClock, CheckCircle2, XCircle, PartyPopper, LogOut } from "lucide-react";
+import { Bell, PartyPopper, ArrowRight } from "lucide-react";
 import useClickOutside from "../../hooks/useClickOutside";
-
-const TYPE_ICONS = {
-  achievement: Trophy,
-  hours: Clock3,
-  "status-accepted": CheckCircle2,
-  "status-rejected": XCircle,
-  "org-verified": CheckCircle2,
-  "org-rejected": XCircle,
-  "applicant-withdrawn": LogOut,
-  "opportunity-reminder": CalendarClock,
-};
-
-const TYPE_ICON_COLORS = {
-  achievement: "text-amber-500",
-  hours: "text-primary",
-  "status-accepted": "text-emerald-500",
-  "status-rejected": "text-red-500",
-  "org-verified": "text-emerald-500",
-  "org-rejected": "text-red-500",
-  "applicant-withdrawn": "text-heading/50",
-  "opportunity-reminder": "text-sky-500",
-};
+import NotificationListItem from "../notifications/NotificationListItem";
+import { ROUTES } from "../../constants/paths";
 
 export default function NotificationBell({ items, isOpen, onToggle, onClose, triggerClassName }) {
   const rootRef = useClickOutside(isOpen, onClose);
@@ -69,31 +49,21 @@ export default function NotificationBell({ items, isOpen, onToggle, onClose, tri
               <p className="text-sm text-heading/50">You're all caught up.</p>
             </div>
           ) : (
-            <div className="flex flex-col max-h-80 overflow-y-auto">
-              {items.map((update) => {
-                const Icon = TYPE_ICONS[update.type] || Bell;
-                const iconColor = TYPE_ICON_COLORS[update.type] || "text-primary";
-                return (
-                  <Link
-                    key={update.id}
-                    to={update.href}
-                    onClick={onClose}
-                    className="flex items-start gap-3 px-4 py-3 hover:bg-heading/5 transition border-b border-heading/5 last:border-b-0"
-                  >
-                    <span
-                      className={`shrink-0 mt-0.5 h-8 w-8 rounded-full bg-heading/5 flex items-center justify-center ${iconColor}`}
-                    >
-                      <Icon size={16} aria-hidden="true" />
-                    </span>
-                    <span className="min-w-0">
-                      <p className="text-sm font-medium text-heading">{update.title}</p>
-                      <p className="text-xs text-heading/50 truncate">{update.description}</p>
-                    </span>
-                  </Link>
-                );
-              })}
+            <div className="flex max-h-80 flex-col overflow-y-auto">
+              {items.map((item) => (
+                <NotificationListItem key={item.id} item={item} onNavigate={onClose} />
+              ))}
             </div>
           )}
+
+          <Link
+            to={ROUTES.NOTIFICATIONS}
+            onClick={onClose}
+            className="flex items-center justify-center gap-1.5 border-t border-heading/10 px-4 py-3 text-xs font-semibold text-primary transition hover:bg-heading/5"
+          >
+            See all notifications
+            <ArrowRight size={13} aria-hidden="true" />
+          </Link>
         </div>
       )}
     </div>

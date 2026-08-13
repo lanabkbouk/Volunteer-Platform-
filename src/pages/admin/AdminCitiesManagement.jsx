@@ -149,6 +149,9 @@ export default function AdminCitiesManagement() {
         onAdd={openCreateModal}
         items={filteredCities}
         isLoading={citiesQuery.isPending}
+        isError={citiesQuery.isError}
+        errorMessage={citiesQuery.error?.message || 'Failed to load cities'}
+        onRetry={() => citiesQuery.refetch()}
         emptyIcon={MapPin}
         emptyTitle={searchTerm ? 'No matching cities' : 'No cities yet'}
         emptyDescription={

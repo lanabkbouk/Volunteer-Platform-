@@ -3,6 +3,7 @@ import { useForm, FormProvider, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate, useParams } from "react-router-dom";
 import Typography from "../components/ui/Typography";
+import Button from "../components/ui/Button";
 import CauseForm from "../components/organization/CauseForm";
 import OpportunityPreviewCard from "../components/opportunity/OpportunityPreviewCard";
 import Skeleton from "../components/ui/Skeleton";
@@ -145,6 +146,23 @@ export default function CreateEditCause() {
     ? categoriesQuery.isPending || skillsQuery.isPending || opportunityQuery.isPending
     : categoriesQuery.isPending || skillsQuery.isPending;
 
+  // فشل أي من طلبات التحميل (تصنيفات/مهارات/بيانات الفرصة بوضع التعديل)
+  // لازم يظهر كخطأ صريح — وإلا الفورم بيترندر فاضي بصمت (خصوصًا بوضع
+  // التعديل: useEffect المزامنة فوق بيتوقف عن التعبئة لو opportunity فشل)
+  const loadError = categoriesQuery.isError
+    ? categoriesQuery.error?.message || "Failed to load categories"
+    : skillsQuery.isError
+      ? skillsQuery.error?.message || "Failed to load skills"
+      : isEditMode && opportunityQuery.isError
+        ? opportunityQuery.error?.message || "Failed to load this cause"
+        : "";
+
+  const handleRetryLoad = () => {
+    categoriesQuery.refetch();
+    skillsQuery.refetch();
+    if (isEditMode) opportunityQuery.refetch();
+  };
+
   const onSubmit = async (values) => {
     const selectedCategory = categories.find((category) => category.id === values.categoryId);
     // حماية دفاعية: لو الحقل ما وصل مسجَّل لأي سبب (مثلاً فورم قديم بدون
@@ -191,6 +209,19 @@ export default function CreateEditCause() {
             <Skeleton className="h-12 w-40 rounded-xl" />
           </div>
           <Skeleton className="h-80 w-full rounded-2xl" />
+        </div>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <div className="flex flex-col items-start gap-3 rounded-lg border border-danger bg-danger/5 px-4 py-3 text-sm text-danger">
+          <p>{loadError}</p>
+          <Button variant="danger" size="small" onClick={handleRetryLoad}>
+            Retry
+          </Button>
         </div>
       </div>
     );

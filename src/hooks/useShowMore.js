@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 
 const DEFAULT_INITIAL_COUNT = 6
 
@@ -44,7 +44,12 @@ export function useShowMore(items, initialCount = DEFAULT_INITIAL_COUNT) {
   const hasMore = visibleCount < items.length
   const remainingCount = Math.max(items.length - visibleCount, 0)
 
-  const showMore = () => setVisibleCount((count) => count + initialCount)
+  // useCallback (مرجع ثابت) لا مجرد دالة عادية — استهلاك شائع لهاد الهوك
+  // هو تمرير showMore كـ dependency بـ useEffect بمكان تاني (مثلًا تمرير
+  // + تمييز فرصة قادمة من صفحة تانية بـ myCauses.jsx)، ولو تغيّر مرجعها
+  // كل render (بغض النظر عن أي شي فعلي تغيّر)، أي Effect زي هيك بيعيد
+  // التنفيذ بدون داعي — وممكن يمسح Timers مجدولة بمنتصف الطريق بالغلط
+  const showMore = useCallback(() => setVisibleCount((count) => count + initialCount), [initialCount])
 
   return { visibleItems, hasMore, remainingCount, showMore }
 }

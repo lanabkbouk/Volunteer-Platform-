@@ -11,11 +11,14 @@ import StatsGrid from "../components/about/StatsGrid";
 import ValuesGrid from "../components/about/ValuesGrid";
 import VisionGoals from "../components/about/VisionGoals";
 import GeometricDivider from "../components/common/GeometricDivider";
+import Button from "../components/ui/Button";
 
 export default function About() {
   const statsQuery = usePlatformStatsQuery();
   const isLoading = statsQuery.isPending;
   const stats = statsQuery.data?.success ? statsQuery.data.data : null;
+  // فشل جلب الإحصائيات كان يعرض 0 بطاقات بصمت بدون أي إشارة للمستخدم
+  const statsError = statsQuery.isError;
 
   const statsArray = stats
     ? [
@@ -37,7 +40,16 @@ export default function About() {
 
         <GeometricDivider />
 
-        <StatsGrid stats={statsArray} loading={isLoading} />
+        {statsError ? (
+          <div className="flex flex-col items-start gap-3 rounded-lg border border-danger bg-danger/5 px-4 py-3 text-sm text-danger">
+            <p>Failed to load platform statistics.</p>
+            <Button variant="danger" size="small" onClick={() => statsQuery.refetch()}>
+              Retry
+            </Button>
+          </div>
+        ) : (
+          <StatsGrid stats={statsArray} loading={isLoading} />
+        )}
 
         <GeometricDivider />
 

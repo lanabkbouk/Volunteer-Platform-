@@ -18,6 +18,7 @@ export const ROUTES = {
   OPPORTUNITIES: '/opportunities',
   OPPORTUNITY_DETAILS: '/opportunities/:id',
   ORGANIZATIONS: '/organizations',
+  NOTIFICATIONS: '/notifications',
 
   // Admin — مساحة العمل الإدارية
   ADMIN_DASHBOARD: '/admin',

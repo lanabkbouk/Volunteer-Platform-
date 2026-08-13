@@ -1,16 +1,15 @@
 
 // قسم "رسالتنا" + بطاقة عدد المتطوعين. الرقم يُمرَّر من الصفحة الأب
 // (قادم من services/stats.js)، هذا المكوّن لا يجلب بيانات بنفسه.
-// الرقم يظهر بعد تصاعدي (useCountUp) كحركة موحّدة مقصودة بالموقع.
+// بطاقة الرقم هي StatCard المشتركة نفسها المستخدمة أسفل هالصفحة بالضبط
+// بـ StatsGrid — بدل إعادة بناء نفس منطق العد التصاعدي (useCountUp)
+// والتنسيق يدويًا هون من جديد.
 
 import { motion } from "framer-motion";
-import { useCountUp } from "../../hooks/useCountUp";
 import Typography from "../ui/Typography";
-import { PANEL_SURFACE } from "../../utils/surfaceStyles";
+import StatCard from "../common/StatCard";
 
 export default function MissionSection({ volunteers }) {
-  const { displayValue, elementRef } = useCountUp(volunteers);
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 30 }}
@@ -30,12 +29,7 @@ export default function MissionSection({ volunteers }) {
         </Typography>
       </div>
 
-      <div ref={elementRef} className={`${PANEL_SURFACE} p-8 text-center`}>
-        <div className="text-6xl font-bold text-primary mb-2">
-          {displayValue}+
-        </div>
-        <Typography variant="body">Active Volunteers</Typography>
-      </div>
+      <StatCard number={volunteers} label="Active Volunteers" />
     </motion.div>
   );
 }

@@ -33,6 +33,7 @@ const OpportunitiesListPage = lazy(() => import('./pages/opportunities/Opportuni
 const OpportunityDetailsPage = lazy(() => import('./pages/opportunities/OpportunityDetailsPage'))
 const OrganizationsListPage = lazy(() => import('./pages/organization/OrganizationsListPage'))
 const OrganizationDetailsPage = lazy(() => import('./pages/organization/OrganizationDetailsPage'))
+const Notifications = lazy(() => import('./pages/notifications'))
 const Dashboard = lazy(() => import('./pages/dashboard'))
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'))
 const AdminOrganizationsReview = lazy(() => import('./pages/admin/AdminOrganizationsReview'))
@@ -62,6 +63,19 @@ const router = createBrowserRouter(
           <Route path={ROUTES.OPPORTUNITY_DETAILS} element={<OpportunityDetailsPage />} />
           <Route path={ROUTES.ORGANIZATIONS} element={<OrganizationsListPage />} />
           <Route path={`${ROUTES.ORGANIZATIONS}/:id`} element={<OrganizationDetailsPage />} />
+
+          {/* مشترك بين الأنواع الثلاثة (متطوع/منظمة/أدمن) — نفس فئات
+              الحسابات اللي أصلًا الـ NotificationBell ظاهر عندها بـ
+              Navbar.jsx وAdminTopbar.jsx */}
+          <Route
+            element={
+              <ProtectedRoute
+                allowedAccountTypes={[ACCOUNT_TYPES.VOLUNTEER, ACCOUNT_TYPES.ORGANIZATION, ACCOUNT_TYPES.ADMIN]}
+              />
+            }
+          >
+            <Route path={ROUTES.NOTIFICATIONS} element={<Notifications />} />
+          </Route>
 
           {/* Volunteer */}
           <Route element={<ProtectedRoute allowedAccountTypes={[ACCOUNT_TYPES.VOLUNTEER]} />}>

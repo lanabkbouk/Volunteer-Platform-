@@ -24,7 +24,7 @@ function FilterListItem({ label, count, selected, onSelect }) {
       }`}
     >
       <span className="min-w-0 flex-1 truncate">{label}</span>
-      {typeof count === "number" && <span className="shrink-0 text-xs text-heading/40">({count})</span>}
+      {typeof count === "number" && <span className="shrink-0 text-xs text-heading/55">({count})</span>}
     </button>
   );
 }

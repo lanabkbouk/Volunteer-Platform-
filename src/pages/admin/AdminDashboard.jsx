@@ -130,9 +130,20 @@ export default function AdminDashboard() {
       }
     >
       {errorMessage && (
-        <p className="rounded-2xl border border-danger bg-danger/5 px-4 py-3 text-sm text-danger">
-          {errorMessage}
-        </p>
+        <div className="flex flex-col items-start gap-3 rounded-2xl border border-danger bg-danger/5 px-4 py-3 text-sm text-danger">
+          <p>{errorMessage}</p>
+          <Button
+            variant="danger"
+            size="small"
+            onClick={() => {
+              platformStatsQuery.refetch()
+              categoriesQuery.refetch()
+              organizationsQuery.refetch()
+            }}
+          >
+            Retry
+          </Button>
+        </div>
       )}
 
       {loading ? (
