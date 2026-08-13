@@ -12,6 +12,7 @@ import {
   ChevronDown,
   Globe,
   Compass,
+  Building2,
 } from "lucide-react";
 
 import { ROUTES } from "../../constants/paths";
@@ -38,6 +39,12 @@ export default function Navbar({ role = "guest" }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isBellOpen, setIsBellOpen] = useState(false);
+
+  // أيقونة "الشخص" لا تعبّر عن حساب منظمة — نفس الأيقونة الموحّدة
+  // المستخدمة أصلًا كبديل شعار المنظمة (OrganizationCard.jsx،
+  // OrganizationDetailsPage.jsx)، بدل أيقونة شخصية عامة لا تناسبها
+  const AvatarFallbackIcon =
+    accountType === ACCOUNT_TYPES.ORGANIZATION ? Building2 : UserIcon;
 
   const handleLogout = () => {
     logout();
@@ -182,7 +189,7 @@ export default function Navbar({ role = "guest" }) {
                         />
                       ) : (
                         <div className="h-7 w-7 rounded-full bg-primary/20 border border-primary/40 flex items-center justify-center">
-                          <UserIcon className="h-4 w-4 text-primary" />
+                          <AvatarFallbackIcon className="h-4 w-4 text-primary" />
                         </div>
                       )}
                       <span className="text-sm sm:text-base">

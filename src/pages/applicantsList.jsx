@@ -53,13 +53,19 @@ export default function ApplicantsList() {
       : "";
   const { toast, showSuccess, showError, closeToast } = useToast();
 
-  // تعليم كل انسحاب ظاهر هلق كـ"مشاهَد" — بعد هالسطر، تنبيه "A volunteer
-  // withdrew" المقابل بيختفي من جرس الإشعارات (نفس فلسفة markStatusSeen
-  // المستخدمة بصفحة My Volunteering عند المتطوع، بس هون من منظور المنظمة)
+  // تعليم كل انضمام جديد (pending) أو انسحاب ظاهر هلق كـ"مشاهَد" — بعد
+  // هالسطر، تنبيه "New volunteer application" أو "A volunteer withdrew"
+  // المقابل بيختفي من جرس الإشعارات فور ما المنظمة تفتح هالصفحة فعليًا
+  // (نفس فلسفة markStatusSeen المستخدمة بصفحة My Volunteering عند
+  // المتطوع، بس هون من منظور المنظمة). راجع services/notifications.js
+  // → buildApplicantActivityItems لتوليد التنبيهين
   useEffect(() => {
     applicants.forEach((applicant) => {
-      if (applicant.status === PARTICIPATION_STATUS.WITHDRAWN) {
-        markApplicantStatusSeen(applicant.id, PARTICIPATION_STATUS.WITHDRAWN);
+      if (
+        applicant.status === PARTICIPATION_STATUS.PENDING ||
+        applicant.status === PARTICIPATION_STATUS.WITHDRAWN
+      ) {
+        markApplicantStatusSeen(applicant.id, applicant.status);
       }
     });
   }, [applicants]);

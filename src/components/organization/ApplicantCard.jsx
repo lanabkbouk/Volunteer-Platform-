@@ -2,7 +2,7 @@
 // اليسار، شارة الحالة والإجراء على اليمين، مع سطر مهارات مستقل تحته.
 
 import { useState } from "react";
-import { MapPin, Phone, Check, X, CheckCircle2, Clock3 } from "lucide-react";
+import { MapPin, Phone, Check, X, CheckCircle2, Clock3, UserIcon } from "lucide-react";
 import Button from "../ui/Button";
 import SkillChipsPreview from "../common/SkillChipsPreview";
 import ParticipationStatusBadge from "../opportunity/ParticipationStatusBadge";
@@ -47,10 +47,21 @@ export default function ApplicantCard({
   return (
     <div className={`${CARD_BASE} flex flex-col gap-4`}>
       <div className="flex flex-col sm:flex-row sm:items-start gap-4">
-        {/* الصورة الرمزية */}
-        <div className="h-12 w-12 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-lg shrink-0">
-          {volunteer.name?.charAt(0) || "?"}
-        </div>
+        {/* الصورة الرمزية — صورة المتطوع الحقيقية إن رفعها (volunteer.photo،
+            نفس الحقل المستخدم أصلًا بمودال المعاينة VolunteerProfilePreviewModal)،
+            وإلا أيقونة احتياطية بدل الحرف الأول — نفس نمط الدائرة الاحتياطية
+            المستخدم بالـ Navbar لحساب المنظمة (bg-primary/10 + border + أيقونة) */}
+        {volunteer.photo ? (
+          <img
+            src={volunteer.photo}
+            alt={volunteer.name}
+            className="h-12 w-12 rounded-full object-cover border border-primary/20 shrink-0"
+          />
+        ) : (
+          <div className="h-12 w-12 rounded-full bg-primary/10 border border-primary/20 text-primary flex items-center justify-center shrink-0">
+            <UserIcon className="h-5 w-5" aria-hidden="true" />
+          </div>
+        )}
 
         {/* المعلومات */}
         <div className="flex-1 min-w-0">

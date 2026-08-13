@@ -154,10 +154,15 @@ function buildUpcomingOpportunityReminderItems(participations) {
     }))
 }
 
-// يبني عناصر تنبيه من انسحاب متطوعين — لكل فرصة تخص المنظمة، نفحص
-// متقدّميها عن أي مشاركة WITHDRAWN لسا ما شافتها المنظمة (مقارنة بآخر
-// status محفوظ لنفس المشاركة، راجع organizationApplicantSeenTracker.js)
-async function buildWithdrawalItems(seenApplicantStatus) {
+// يبني عناصر تنبيه من نشاط المتقدّمين على فرص المنظمة — نوعين:
+// (1) "انضمام جديد": مشاركة pending لسا ما انشافتها المنظمة (متطوع
+//     جديد تقدّم على فرصة)
+// (2) "انسحاب": مشاركة withdrawn لسا ما انشافتها المنظمة
+// كلا النوعين بيعتمدوا على نفس آلية "آخر status انشافته المنظمة"
+// (organizationApplicantSeenTracker.js)، وبيشتركوا بنفس جلب الفرص
+// والمتقدّمين — دالة واحدة بدل دالتين متطابقتين تقريبًا، تفاديًا لتكرار
+// نفس طلبات الـ API مرتين لكل تحميل تنبيهات
+async function buildApplicantActivityItems(seenApplicantStatus) {
   const opportunities = await fetchMyOpportunities()
 
   const applicantsPerOpportunity = await Promise.all(
@@ -170,20 +175,31 @@ async function buildWithdrawalItems(seenApplicantStatus) {
 
   applicantsPerOpportunity.forEach(({ opportunity, applicants }) => {
     applicants.forEach((applicant) => {
-      const isNewWithdrawal =
-        applicant.status === PARTICIPATION_STATUS.WITHDRAWN &&
-        seenApplicantStatus.get(String(applicant.id)) !== PARTICIPATION_STATUS.WITHDRAWN
+      const isNewToOrganization = seenApplicantStatus.get(String(applicant.id)) !== applicant.status
+      if (!isNewToOrganization) return
 
-      if (!isNewWithdrawal) return
+      const volunteerName = applicant.volunteer?.name || 'A volunteer'
+      const dismiss = () => markApplicantStatusSeen(applicant.id, applicant.status)
 
-      items.push({
-        id: `withdrawal:${applicant.id}`,
-        type: 'applicant-withdrawn',
-        title: 'A volunteer withdrew',
-        description: `${applicant.volunteer?.name || 'A volunteer'} withdrew from "${opportunity.title}"`,
-        href: `${ROUTES.APPLICANTS}/${opportunity.id}`,
-        onDismiss: () => markApplicantStatusSeen(applicant.id, PARTICIPATION_STATUS.WITHDRAWN),
-      })
+      if (applicant.status === PARTICIPATION_STATUS.PENDING) {
+        items.push({
+          id: `new-applicant:${applicant.id}`,
+          type: 'applicant-new',
+          title: 'New volunteer application',
+          description: `${volunteerName} applied to "${opportunity.title}"`,
+          href: `${ROUTES.APPLICANTS}/${opportunity.id}`,
+          onDismiss: dismiss,
+        })
+      } else if (applicant.status === PARTICIPATION_STATUS.WITHDRAWN) {
+        items.push({
+          id: `withdrawal:${applicant.id}`,
+          type: 'applicant-withdrawn',
+          title: 'A volunteer withdrew',
+          description: `${volunteerName} withdrew from "${opportunity.title}"`,
+          href: `${ROUTES.APPLICANTS}/${opportunity.id}`,
+          onDismiss: dismiss,
+        })
+      }
     })
   })
 
@@ -212,14 +228,14 @@ export async function fetchRecentNotifications({ accountType, organizationId } =
       ? buildOrganizationVerificationItems(profileResult.data, getSeenOrganizationStatusMap())
       : []
 
-    // انسحاب المتطوعين متاح فقط لمنظمة موثّقة فعليًا (غير موثّقة أصلًا
-    // ما إلها فرص منشورة أو متقدّمين حقيقيين لتنسحب منهم)
-    const withdrawalItems =
+    // نشاط المتقدّمين (انضمام جديد/انسحاب) متاح فقط لمنظمة موثّقة فعليًا
+    // (غير موثّقة أصلًا ما إلها فرص منشورة أو متقدّمين حقيقيين)
+    const applicantActivityItems =
       profileResult.success && profileResult.data?.status === ORGANIZATION_STATUS.VERIFIED
-        ? await buildWithdrawalItems(getSeenApplicantStatusMap())
+        ? await buildApplicantActivityItems(getSeenApplicantStatusMap())
         : []
 
-    return [...verificationItems, ...withdrawalItems]
+    return [...verificationItems, ...applicantActivityItems]
   }
 
   if (MOCK_MODE) {

@@ -5,7 +5,7 @@
 // صفحة /notifications (pages/notifications.jsx) لبناء تابات الفلترة
 // وعرض نفس الأيقونة/اللون بكل مكان بالمشروع.
 
-import { Trophy, Clock3, CalendarClock, CheckCircle2, XCircle, LogOut, Bell } from "lucide-react";
+import { Trophy, Clock3, CalendarClock, CheckCircle2, XCircle, LogOut, UserPlus, Bell } from "lucide-react";
 
 export const NOTIFICATION_TYPE_ICONS = {
   achievement: Trophy,
@@ -14,6 +14,7 @@ export const NOTIFICATION_TYPE_ICONS = {
   "status-rejected": XCircle,
   "org-verified": CheckCircle2,
   "org-rejected": XCircle,
+  "applicant-new": UserPlus,
   "applicant-withdrawn": LogOut,
   "opportunity-reminder": CalendarClock,
 };
@@ -25,6 +26,7 @@ export const NOTIFICATION_TYPE_ICON_COLORS = {
   "status-rejected": "text-red-500",
   "org-verified": "text-emerald-500",
   "org-rejected": "text-red-500",
+  "applicant-new": "text-primary",
   "applicant-withdrawn": "text-heading/50",
   "opportunity-reminder": "text-sky-500",
 };
@@ -38,6 +40,7 @@ export const NOTIFICATION_TYPE_LABELS = {
   "status-rejected": "Declined",
   "org-verified": "Verification",
   "org-rejected": "Verification",
+  "applicant-new": "New Applications",
   "applicant-withdrawn": "Withdrawals",
   "opportunity-reminder": "Reminders",
 };

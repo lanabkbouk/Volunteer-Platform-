@@ -1,8 +1,8 @@
 // نقطة واحدة لتتبّع آخر status شافته *المنظمة* لكل مشاركة من مشاركات
 // فرصها (عكس participationStatusSeenTracker.js يلي من منظور المتطوع
-// نفسه). حاليًا يُستخدم فقط لاكتشاف "انسحاب جديد" (WITHDRAWN لسا ما
-// انشاف)، لكن نفس البنية تصلح لاحقًا لأي حالة تانية تحتاج تنبيه
-// المنظمة فيها (مثلاً "متقدّم جديد" مستقبلاً).
+// نفسه). يُستخدم لاكتشاف نشاط جديد لسا ما انشاف: "متقدّم جديد"
+// (pending) أو "انسحاب" (withdrawn) — راجع services/notifications.js
+// → buildApplicantActivityItems
 
 const SEEN_KEY = "organization:seenApplicantStatus";
 
