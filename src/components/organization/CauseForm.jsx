@@ -1,5 +1,6 @@
 import { useFormContext, Controller } from "react-hook-form";
-import { MapPin, Tag, ImagePlus } from "lucide-react";
+import { Link } from "react-router-dom";
+import { MapPin, Tag, ImagePlus, AlertTriangle } from "lucide-react";
 import Input from "../ui/Input";
 import Dropdown from "../ui/Dropdown";
 import Textarea from "../ui/Textarea";
@@ -8,6 +9,7 @@ import Typography from "../ui/Typography";
 import SkillsSelector from "../common/SkillsSelector";
 import { SYRIAN_GOVERNORATES } from "../../services/syrianGovernorates";
 import { getCategoryLabel } from "../../utils/categoryStyles";
+import { ROUTES } from "../../constants/paths";
 
 const GOVERNORATE_ITEMS = SYRIAN_GOVERNORATES.map(({ nameEn }) => ({
   name: nameEn,
@@ -44,6 +46,9 @@ export default function CauseForm({
   imagePreview,
   onImageChange,
   imageError,
+  // تحذير غير مانع بس (مو خطأ) — بروفايل المنظمة (وصف/مدينة) ناقص، فمنطقيًا
+  // بيأثر على شكل ظهور الفرصة بصفحتها العامة. لا يعطّل الزر ولا يمنع الحفظ.
+  profileIncomplete = false,
 }) {
   const {
     register,
@@ -283,6 +288,24 @@ export default function CauseForm({
           </div>
         </label>
       </FormSection>
+
+      {/* تحذير غير مانع: بروفايل المنظمة ناقص (وصف أو مدينة) — بلون تحذيري
+          (عنبري) مش أحمر، وبدون تعطيل زر الحفظ إطلاقًا */}
+      {profileIncomplete && (
+        <div
+          role="alert"
+          className="flex items-start gap-3 rounded-xl border border-yellow-200 bg-yellow-50 px-4 py-3 text-yellow-800"
+        >
+          <AlertTriangle size={18} className="mt-0.5 shrink-0" />
+          <p className="text-sm">
+            Your organization profile is incomplete. We recommend{" "}
+            <Link to={ROUTES.ORGANIZATION_PROFILE} className="font-medium underline underline-offset-2">
+              completing your profile
+            </Link>{" "}
+            first so this cause displays fully on its public page.
+          </p>
+        </div>
+      )}
 
       <Button
         type="submit"

@@ -5,7 +5,7 @@
 
 import Modal from "../ui/Modal";
 import SkillChipsPreview from "../common/SkillChipsPreview";
-import { MapPin, Phone, GraduationCap, Cake, Clock3, Trophy, CheckCircle2 } from "lucide-react";
+import { MapPin, Phone, Mail, GraduationCap, Cake, Clock3, Trophy, CheckCircle2 } from "lucide-react";
 import { calculateAge } from "../../utils/validators";
 
 // بطاقة إحصائية صغيرة مُعاد استخدامها 3 مرات بالمودال (ساعات/إنجازات/
@@ -101,14 +101,27 @@ export default function VolunteerProfilePreviewModal({ open, onClose, volunteer 
         </div>
       )}
 
-      {volunteer.phone && (
-        <a
-          href={`tel:${volunteer.phone}`}
-          className="flex items-center gap-2 text-sm text-body hover:text-primary w-fit mb-5 rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-        >
-          <Phone size={14} className="text-primary shrink-0" aria-hidden="true" />
-          {volunteer.phone}
-        </a>
+      {(volunteer.phone || volunteer.email) && (
+        <div className="flex flex-wrap gap-x-5 gap-y-2 mb-5">
+          {volunteer.phone && (
+            <a
+              href={`tel:${volunteer.phone}`}
+              className="flex items-center gap-2 text-sm text-body hover:text-primary w-fit rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+            >
+              <Phone size={14} className="text-primary shrink-0" aria-hidden="true" />
+              {volunteer.phone}
+            </a>
+          )}
+          {volunteer.email && (
+            <a
+              href={`mailto:${volunteer.email}`}
+              className="flex items-center gap-2 text-sm text-body hover:text-primary w-fit rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+            >
+              <Mail size={14} className="text-primary shrink-0" aria-hidden="true" />
+              {volunteer.email}
+            </a>
+          )}
+        </div>
       )}
 
       {volunteer.skills?.length > 0 ? (

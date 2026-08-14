@@ -18,6 +18,7 @@ import { useSaveOpportunityMutation } from "../hooks/queries/useSaveOpportunityM
 import { useImageUpload } from "../hooks/useImageUpload";
 import { useToast } from "../hooks/useToast";
 import { opportunitySchema } from "../utils/opportunityValidation";
+import { isOrganizationProfileComplete } from "../utils/auth/profileCompletion";
 import { ROUTES } from "../constants/paths";
 import { getOrganizationId } from "../utils/auth/getOrganizationId";
 import { PANEL_SURFACE } from "../utils/surfaceStyles";
@@ -76,7 +77,7 @@ export default function CreateEditCause() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const organizationId = getOrganizationId(user);
-  const { status, rejectionReason, isVerified, hasLoadError } = useOrganizationVerification();
+  const { status, rejectionReason, isVerified, hasLoadError, organization } = useOrganizationVerification();
 
   // نفس هوك التصنيفات المستخدم بصفحتي الفرص — كاش مشترك، ما بينجلب مرتين
   const categoriesQuery = useCategoriesQuery();
@@ -259,6 +260,7 @@ export default function CreateEditCause() {
               imagePreview={imagePreview}
               imageError={imageError}
               onImageChange={handleFileChange}
+              profileIncomplete={Boolean(organization) && !isOrganizationProfileComplete(organization)}
             />
             {!isVerified && (
               <p className="text-sm text-heading/50 mt-4">

@@ -27,3 +27,19 @@ export function isVolunteerProfileComplete(user) {
   // interests وabout اختياريان بالـ schema، فما منشترطهم هون
   return hasEducationLevel && hasDateOfBirth && hasGender && hasCity && hasSkills
 }
+
+// نقطة واحدة لتحديد هل بروفايل المنظمة "مكتمل" أو لأ — تذكير غير مانع بس،
+// ومش مرتبط بـ RequireCompleteProfile (هاد المكوّن خاص بالمتطوع حصرًا ولا
+// يُستخدم مع المنظمة إطلاقًا).
+//
+// ⚠️ القائمة هون لازم تبقى مطابقة تمامًا للحقول الإجبارية بـ
+// organizationProfileSchema (utils/auth/OrganizationProfileValidation.js)
+// ما عدا website (اختياري بالـ schema، فما منشترطه هون).
+export function isOrganizationProfileComplete(organization) {
+  if (!organization) return false
+
+  const hasDescription = Boolean(organization.description)
+  const hasCity = Boolean(organization.city)
+
+  return hasDescription && hasCity
+}

@@ -33,9 +33,15 @@ export function useOrganizationVerification() {
   // الحقيقة إنه فشل تحميل الحالة ولازم يظهر خطأ واضح للمستخدم
   const hasLoadError = Boolean(data && data.success === false);
 
+  // كائن المنظمة الكامل (description, city...) — مطلوب لتذكير اكتمال
+  // البروفايل (isOrganizationProfileComplete) بدون أي طلب شبكة إضافي،
+  // لأنه أصلًا محمّل ومخزّن بكاش useOrganizationProfileQuery
+  const organization = data?.success ? data.data : null;
+
   return {
     status,
     rejectionReason,
+    organization,
     loading: isLoading,
     hasLoadError,
     isVerified: status === ORGANIZATION_STATUS.VERIFIED,

@@ -11,6 +11,7 @@ import Typography from "../components/ui/Typography";
 import Skeleton from "../components/ui/Skeleton";
 import EmptyState from "../components/common/EmptyState";
 import VerificationStatusBanner from "../components/OrgProfile/VerificationStatusBanner";
+import ProfileCompletionReminderBanner from "../components/OrgProfile/ProfileCompletionReminderBanner";
 import DashboardStatsGrid from "../components/dashboard/DashboardStatsGrid";
 import OrganizationAnalyticsCharts from "../components/dashboard/OrganizationAnalyticsCharts";
 import OpportunitiesBreakdownChart from "../components/dashboard/OpportunitiesBreakdownChart";
@@ -18,6 +19,7 @@ import RecentActivityFeed from "../components/dashboard/RecentActivityFeed";
 import { useOrganizationDashboardQuery } from "../hooks/queries/useOrganizationDashboardQuery";
 import { useAuth } from "../context/AuthContext";
 import { useOrganizationVerification } from "../hooks/useOrganizationVerification";
+import { isOrganizationProfileComplete } from "../utils/auth/profileCompletion";
 import { PANEL_SURFACE, CARD_SURFACE } from "../utils/surfaceStyles";
 import { ROUTES } from "../constants/paths";
 import { getOrganizationId } from "../utils/auth/getOrganizationId";
@@ -74,7 +76,8 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const organizationId = getOrganizationId(user);
-  const { status, rejectionReason, isVerified, hasLoadError } = useOrganizationVerification();
+  const { status, rejectionReason, isVerified, hasLoadError, organization, loading: verificationLoading } =
+    useOrganizationVerification();
 
   const dashboardQuery = useOrganizationDashboardQuery(organizationId);
   // isLoading (isPending && isFetching) مش isPending لحالها: isPending
@@ -95,6 +98,13 @@ export default function Dashboard() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       <VerificationStatusBanner status={status} rejectionReason={rejectionReason} hasLoadError={hasLoadError} />
+
+      {/* تذكير غير مانع لإكمال البروفايل — يظهر بس بعد ما تنجلي بيانات
+          المنظمة فعليًا، وإلا كان رح يظهر لحظيًا وبشكل خاطئ أثناء التحميل
+          (organization لسا null قبل وصول الاستجابة) */}
+      {!verificationLoading && organization && !isOrganizationProfileComplete(organization) && (
+        <ProfileCompletionReminderBanner />
+      )}
 
       <Typography variant="sectionTitle" className="mb-2">
         Dashboard

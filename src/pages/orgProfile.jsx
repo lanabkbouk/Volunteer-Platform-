@@ -18,10 +18,12 @@ import OrgProfileForm from "../components/OrgProfile/ProfileForm";
 import OrgProfilePreview from "../components/OrgProfile/ProfilePreview";
 import VerificationStatusBanner from "../components/OrgProfile/VerificationStatusBanner";
 import RejectedVerificationPanel from "../components/OrgProfile/RejectedVerificationPanel";
+import ProfileCompletionReminderBanner from "../components/OrgProfile/ProfileCompletionReminderBanner";
 import Skeleton from "../components/ui/Skeleton";
 import Toast from "../components/common/Toast";
 import { useToast } from "../hooks/useToast";
 import { getOrganizationId } from "../utils/auth/getOrganizationId";
+import { isOrganizationProfileComplete } from "../utils/auth/profileCompletion";
 
 export default function OrgProfile() {
   const { user, updateUser } = useAuth();
@@ -176,6 +178,13 @@ export default function OrgProfile() {
             status={organization?.status}
             rejectionReason={organization?.rejectionReason}
           />
+        )}
+
+        {/* تذكير غير مانع لإكمال البروفايل — مستقل تمامًا عن حالة التوثيق
+            (pending/rejected)، فبيظهر جنب أي بانر تاني فوق لو الوصف أو
+            المدينة ناقصين */}
+        {organization && !isOrganizationProfileComplete(organization) && (
+          <ProfileCompletionReminderBanner />
         )}
 
         <OrgProfileHeader

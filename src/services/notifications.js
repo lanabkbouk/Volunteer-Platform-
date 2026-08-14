@@ -214,7 +214,7 @@ async function buildApplicantActivityItems(seenApplicantStatus) {
  * محليًا كـ"مشاهَد".
  *
  * @param {{accountType?: string, organizationId?: string|number}} [context]
- * @returns {Promise<Array<{id:string, type:string, title:string, description:string, href:string, seen:boolean}>>}
+ * @returns {Promise<Array<{id:string, type:string, title:string, description:string, href:string}>>}
  */
 export async function fetchRecentNotifications({ accountType, organizationId } = {}) {
   // مسار المنظمة منفصل تمامًا: fetchOrganizationProfile أصلًا بتتعامل
@@ -256,21 +256,27 @@ export async function fetchRecentNotifications({ accountType, organizationId } =
   }
 
   try {
-    const response = await apiClient.get('/notifications')
+    // نرسل ?unread=true تحسّبًا لدعم الباك اند لها مستقبلًا (فلترة من
+    // السيرفر مباشرة أوفر) — نفس نمط fetchOrganizations بـ organizations.js
+    // (?status=verified). بغض النظر عن دعم الباك اند لها فعليًا، الفلترة
+    // الدفاعية تحت بتضمن دايمًا وصول غير المقروءة فقط
+    const response = await apiClient.get('/notifications', { params: { unread: true } })
     const data = Array.isArray(response.data) ? response.data : []
 
-    // تطبيع دفاعي: لو الباك اند رجّع أسماء حقول مختلفة شوي عن المتوقع،
-    // هالسطر بيضمن إنه NotificationBell ما ينكسر لحد ما يتفق الفريقين
-    // نهائيًا على الشكل النهائي للـ endpoint
-    return data.map((item) => ({
-      id: item.id,
-      type: item.type || 'update',
-      title: item.title || 'New update',
-      description: item.description || item.message || '',
-      href: item.href || item.link || ROUTES.HOME,
-      seen: Boolean(item.seen),
-      onDismiss: () => apiClient.post(`/notifications/${item.id}/read`),
-    }))
+    // فلترة دفاعية: لو الباك اند تجاهل ?unread= فوق (أو لسا ما بيدعمها)
+    // ورجّع كل الإشعارات مقروءة وغير مقروءة معًا، هالسطر يضمن إنه العداد
+    // وقائمة الـ Bell يعرضوا فقط غير المقروءة — تمامًا متل فرع Mock فوق
+    // يلي أصلًا ما بيرجّع إلا العناصر غير "المشاهَدة" (راجع getSeen*Map)
+    return data
+      .filter((item) => !item.seen)
+      .map((item) => ({
+        id: item.id,
+        type: item.type || 'update',
+        title: item.title || 'New update',
+        description: item.description || item.message || '',
+        href: item.href || item.link || ROUTES.HOME,
+        onDismiss: () => apiClient.post(`/notifications/${item.id}/read`),
+      }))
   } catch (error) {
     throw new Error(getApiErrorMessage(error, 'Failed to load notifications'), { cause: error })
   }

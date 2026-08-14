@@ -40,6 +40,8 @@ import { apiClient, getApiErrorMessage } from './api/client'
 import { isMockMode } from './api/mockMode'
 import { wait } from './api/delay'
 import { ORGANIZATION_STATUS } from '../constants/organizationStatus'
+import { ACCOUNT_TYPES } from '../constants/auth/accountTypes'
+import { loadMockUsers } from './mock/mockUserStore'
 
 const MOCK_MODE = isMockMode()
 
@@ -144,6 +146,43 @@ function isVerifiedOrStatusUnavailable(raw) {
 }
 
 /**
+ * يحوّل حساب منظمة مسجَّل فعليًا (mockUsers) لنفس شكل عناصر
+ * MOCK_ORGANIZATIONS بالضبط — نفس أسماء الحقول يلي services/organization.js
+ * (المفرد، بروفايل "منظمتي") بيقرأها/يكتبها من نفس سجل mockUsers، حتى
+ * القيم تبقى متطابقة بين الدليل العام وبروفايل المنظمة نفسها.
+ * @param {object} mockUser
+ */
+function mapMockUserToOrganization(mockUser) {
+  return {
+    id: mockUser.organizationId,
+    name: mockUser.orgName || '',
+    description: mockUser.description || '',
+    city: mockUser.city || '',
+    phone: mockUser.phone || '',
+    website: mockUser.website || '',
+    contactPerson: mockUser.contactPerson || '',
+    profileImageUrl: mockUser.imageUrl || null,
+    status: mockUser.status || ORGANIZATION_STATUS.PENDING,
+  }
+}
+
+/**
+ * MOCK_ORGANIZATIONS الثابتة + أي منظمة اتسجّلت فعليًا عبر صفحة
+ * Register (مخزّنة بـ mockUsers، راجع services/auth.js registerUser).
+ * بدون هذا الدمج، منظمة جديدة كانت تختفي تمامًا من الدليل العام
+ * وصفحة تفاصيلها (/organizations/:id) رغم إنها فعليًا مسجَّلة وعندها
+ * organizationId صالح — راجع services/organization.js يلي بيقرأ نفس
+ * سجل mockUsers هذا لبروفايل "منظمتي".
+ */
+function getAllMockOrganizations() {
+  const registeredOrganizations = loadMockUsers()
+    .filter((user) => user.accountType === ACCOUNT_TYPES.ORGANIZATION && user.organizationId)
+    .map(mapMockUserToOrganization)
+
+  return [...MOCK_ORGANIZATIONS, ...registeredOrganizations]
+}
+
+/**
  * يحوّل استجابة OrganizationResource الخام (snake_case، owner متداخل)
  * لنفس شكل بيانات الـ mock تمامًا — نقطة واحدة، بدل ما كل Component
  * يعرف تفاصيل تسمية الباك اند.
@@ -178,11 +217,11 @@ export async function fetchOrganizations({ search = '' } = {}) {
   if (MOCK_MODE) {
     await wait()
 
-    // بوضع mock الحقل status موجود ومضمون دايمًا (بيانات محلية ثابتة)،
-    // فالفلترة هون مباشرة وأكيدة 100% — بعكس وضع real تحت يلي بيحتاج
-    // فحص دفاعي لأن الباك اند لسا ما بيرجّع status حقيقي (راجع الملاحظة
-    // أعلى الملف)
-    const verifiedOrganizations = MOCK_ORGANIZATIONS.filter(
+    // بوضع mock الحقل status موجود ومضمون دايمًا (بيانات محلية ثابتة أو
+    // مُدارة عبر admin.js reviewOrganization)، فالفلترة هون مباشرة وأكيدة
+    // 100% — بعكس وضع real تحت يلي بيحتاج فحص دفاعي لأن الباك اند لسا ما
+    // بيرجّع status حقيقي (راجع الملاحظة أعلى الملف)
+    const verifiedOrganizations = getAllMockOrganizations().filter(
       (organization) => organization.status === ORGANIZATION_STATUS.VERIFIED,
     )
 
@@ -228,7 +267,7 @@ export async function fetchOrganizations({ search = '' } = {}) {
 export async function fetchOrganizationById(id) {
   if (MOCK_MODE) {
     await wait()
-    return MOCK_ORGANIZATIONS.find((organization) => organization.id === id) || null
+    return getAllMockOrganizations().find((organization) => organization.id === id) || null
   }
 
   try {

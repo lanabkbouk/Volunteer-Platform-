@@ -24,9 +24,17 @@ export default function NotificationListItem({
   const Icon = NOTIFICATION_TYPE_ICONS[item.type] || DEFAULT_NOTIFICATION_ICON;
   const iconColor = NOTIFICATION_TYPE_ICON_COLORS[item.type] || "text-primary";
 
+  // فتح الإشعار (التنقل لصفحته) بيعلّمه كمقروء ضمنيًا — نفس آلية
+  // onDismiss المستخدمة أصلًا بزر X، بس بدون ما يحتاج المستخدم ضغطتين
+  // منفصلتين (وحدة للفتح ووحدة للتعليم كمقروء)
+  const handleNavigate = () => {
+    item.onDismiss?.();
+    onNavigate?.();
+  };
+
   return (
     <div className="group flex items-start gap-2 border-b border-heading/5 px-4 py-3 transition last:border-b-0 hover:bg-heading/5">
-      <Link to={item.href} onClick={onNavigate} className="flex min-w-0 flex-1 items-start gap-3">
+      <Link to={item.href} onClick={handleNavigate} className="flex min-w-0 flex-1 items-start gap-3">
         <span
           className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-heading/5 ${iconColor}`}
         >

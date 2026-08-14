@@ -2,7 +2,7 @@
 // اليسار، شارة الحالة والإجراء على اليمين، مع سطر مهارات مستقل تحته.
 
 import { useState } from "react";
-import { MapPin, Phone, Check, X, CheckCircle2, Clock3, UserIcon } from "lucide-react";
+import { MapPin, Phone, Mail, Check, X, CheckCircle2, Clock3, UserIcon } from "lucide-react";
 import Button from "../ui/Button";
 import SkillChipsPreview from "../common/SkillChipsPreview";
 import ParticipationStatusBadge from "../opportunity/ParticipationStatusBadge";
@@ -88,6 +88,12 @@ export default function ApplicantCard({
                   <span className="flex items-center gap-1">
                     <Phone size={13} className="text-primary shrink-0" aria-hidden="true" />
                     {volunteer.phone}
+                  </span>
+                )}
+                {volunteer.email && (
+                  <span className="flex items-center gap-1">
+                    <Mail size={13} className="text-primary shrink-0" aria-hidden="true" />
+                    {volunteer.email}
                   </span>
                 )}
                 <span className="text-heading/40">Applied {participatedAt}</span>
