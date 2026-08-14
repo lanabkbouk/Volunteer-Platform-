@@ -28,7 +28,10 @@ export default function VolunteerProfilePreviewModal({ open, onClose, volunteer 
   const unlockedAchievements = achievements.filter((achievement) => achievement.unlocked);
 
   return (
-    <Modal open={open} onClose={onClose} title="Volunteer profile" scrollBody>
+    // ⚠️ عنوان المودال هو اسم المتقدّم نفسه (وليس نص عام مثل "Volunteer
+    // profile")، لأنه هذا المودال أصلًا يُفتح من داخل بطاقة متقدّم واحد
+    // بعينه، فاسمه هو أوضح عنوان مناسب للسياق
+    <Modal open={open} onClose={onClose} title={volunteer.name || "Volunteer profile"} scrollBody>
       <div className="flex items-center gap-3 mb-5">
         {volunteer.photo ? (
           <img
@@ -41,15 +44,12 @@ export default function VolunteerProfilePreviewModal({ open, onClose, volunteer 
             {volunteer.name?.charAt(0) || "?"}
           </div>
         )}
-        <div className="min-w-0">
-          <p className="font-semibold text-heading truncate">{volunteer.name}</p>
-          {volunteer.city && (
-            <span className="flex items-center gap-1 text-sm text-body">
-              <MapPin size={13} className="text-primary shrink-0" aria-hidden="true" />
-              {volunteer.city}
-            </span>
-          )}
-        </div>
+        {volunteer.city && (
+          <span className="flex items-center gap-1 text-sm text-body">
+            <MapPin size={13} className="text-primary shrink-0" aria-hidden="true" />
+            {volunteer.city}
+          </span>
+        )}
       </div>
 
       {/* إحصائيات سريعة — الساعات والفرص المكتملة محسوبة "لدى هالمنظمة
@@ -101,8 +101,10 @@ export default function VolunteerProfilePreviewModal({ open, onClose, volunteer 
         </div>
       )}
 
+      {/* بيانات التواصل — هاتف وإيميل، كل وحد رابط مباشر (tel: / mailto:)
+          يفتح تطبيق الاتصال أو البريد مباشرة بدل نسخ يدوي */}
       {(volunteer.phone || volunteer.email) && (
-        <div className="flex flex-wrap gap-x-5 gap-y-2 mb-5">
+        <div className="flex flex-col gap-2 mb-5">
           {volunteer.phone && (
             <a
               href={`tel:${volunteer.phone}`}

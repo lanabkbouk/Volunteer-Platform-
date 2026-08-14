@@ -6,12 +6,11 @@
 // القبول/الرفض عنهم (راجع ApplicantCard) ويظهر مؤشر "Decision completed"
 // بدلها. الفلترة بالأعلى اختيارية بيد المستخدم، مش حذف فعلي للبيانات.
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useShowMore } from "../hooks/useShowMore";
-import { useParams, Link } from "react-router-dom";
+import { useParams, useLocation, Link } from "react-router-dom";
 import { ArrowLeft, Users } from "lucide-react";
 import Typography from "../components/ui/Typography";
-import Button from "../components/ui/Button";
 import ApplicantCard from "../components/organization/ApplicantCard";
 import ApplicantsSummaryStats from "../components/organization/ApplicantsSummaryStats";
 import ApplicantsToolbar from "../components/organization/ApplicantsToolbar";
@@ -44,28 +43,15 @@ export default function ApplicantsList() {
   const opportunity = opportunityQuery.data?.opportunity ?? null;
   const applicants = useMemo(() => applicantsQuery.data ?? [], [applicantsQuery.data]);
   const loading = opportunityQuery.isPending || applicantsQuery.isPending;
-  // فشل جلب الفرصة أو المتقدمين لازم يظهر كخطأ صريح — وإلا القائمة الفاضية
-  // بتنعرض كـ"لا يوجد متقدمين بعد" وهي فعليًا خطأ شبكة/سيرفر
-  const error = opportunityQuery.isError
-    ? opportunityQuery.error?.message || "Failed to load this cause"
-    : applicantsQuery.isError
-      ? applicantsQuery.error?.message || "Failed to load applicants"
-      : "";
   const { toast, showSuccess, showError, closeToast } = useToast();
 
-  // تعليم كل انضمام جديد (pending) أو انسحاب ظاهر هلق كـ"مشاهَد" — بعد
-  // هالسطر، تنبيه "New volunteer application" أو "A volunteer withdrew"
-  // المقابل بيختفي من جرس الإشعارات فور ما المنظمة تفتح هالصفحة فعليًا
-  // (نفس فلسفة markStatusSeen المستخدمة بصفحة My Volunteering عند
-  // المتطوع، بس هون من منظور المنظمة). راجع services/notifications.js
-  // → buildApplicantActivityItems لتوليد التنبيهين
+  // تعليم كل انسحاب ظاهر هلق كـ"مشاهَد" — بعد هالسطر، تنبيه "A volunteer
+  // withdrew" المقابل بيختفي من جرس الإشعارات (نفس فلسفة markStatusSeen
+  // المستخدمة بصفحة My Volunteering عند المتطوع، بس هون من منظور المنظمة)
   useEffect(() => {
     applicants.forEach((applicant) => {
-      if (
-        applicant.status === PARTICIPATION_STATUS.PENDING ||
-        applicant.status === PARTICIPATION_STATUS.WITHDRAWN
-      ) {
-        markApplicantStatusSeen(applicant.id, applicant.status);
+      if (applicant.status === PARTICIPATION_STATUS.WITHDRAWN) {
+        markApplicantStatusSeen(applicant.id, PARTICIPATION_STATUS.WITHDRAWN);
       }
     });
   }, [applicants]);
@@ -166,6 +152,46 @@ export default function ApplicantsList() {
   // وإلا لو فلترت لـ 3 نتائج بس، بيضل زر "Show more" ظاهر بالغلط
   const { visibleItems: pagedApplicants, hasMore, remainingCount, showMore } = useShowMore(visibleApplicants);
 
+  // ————— تمييز متقدّم محدد قادم من رابط خارجي (راجع RecentActivityFeed) —————
+  // الرابط بيوصل بصيغة #applicant-{participationId}. لو المتقدّم المستهدف
+  // موجود بالقائمة المفلترة بس مخفي وراء "Show more"، منوسّع تلقائيًا
+  // لحد ما يظهر، وبعدين نعمل Scroll إله + تمييز مؤقت يختفي لحاله
+  const { hash } = useLocation();
+  const targetApplicantId = hash?.startsWith("#applicant-") ? hash.replace("#applicant-", "") : null;
+  const [highlightedApplicantId, setHighlightedApplicantId] = useState(null);
+  const hasScrolledToTargetRef = useRef(false);
+
+  useEffect(() => {
+    if (!targetApplicantId || hasScrolledToTargetRef.current) return;
+
+    const targetIndex = visibleApplicants.findIndex((applicant) => applicant.id === targetApplicantId);
+    if (targetIndex === -1) return; // مو موجود بالفلترة الحالية (أو لسا القائمة ما حمّلت) — منتظر
+
+    // لسا مخفي وراء "Show more"؟ وسّع القائمة الظاهرة لحد ما يشمله
+    if (targetIndex >= pagedApplicants.length) {
+      showMore();
+      return;
+    }
+
+    hasScrolledToTargetRef.current = true;
+    const element = document.getElementById(`applicant-${targetApplicantId}`);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+
+    // مؤجّلين استدعاء setState لخارج جسم الـ effect المباشر (setTimeout
+    // ولو بدون تأخير فعلي) — نفس نمط Toast.jsx (onClose عبر setTimeout)،
+    // تفاديًا لـ Cascading renders غير مضبوطة
+    const highlightTimeoutId = setTimeout(() => setHighlightedApplicantId(targetApplicantId), 0);
+    // التمييز المؤقت بيختفي لحاله بعد ثواني قليلة — مش تمييز دائم
+    const clearTimeoutId = setTimeout(() => setHighlightedApplicantId(null), 2500);
+
+    return () => {
+      clearTimeout(highlightTimeoutId);
+      clearTimeout(clearTimeoutId);
+    };
+  }, [targetApplicantId, visibleApplicants, pagedApplicants.length, showMore]);
+
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       <VerificationStatusBanner status={status} rejectionReason={rejectionReason} hasLoadError={hasLoadError} />
@@ -199,20 +225,6 @@ export default function ApplicantsList() {
               <Skeleton className="h-9 w-24 rounded-xl" />
             </div>
           ))}
-        </div>
-      ) : error ? (
-        <div className="flex flex-col items-start gap-3 rounded-lg border border-danger bg-danger/5 px-4 py-3 text-sm text-danger">
-          <p>{error}</p>
-          <Button
-            variant="danger"
-            size="small"
-            onClick={() => {
-              opportunityQuery.refetch();
-              applicantsQuery.refetch();
-            }}
-          >
-            Retry
-          </Button>
         </div>
       ) : !hasAnyApplicants ? (
         <EmptyState
@@ -249,6 +261,7 @@ export default function ApplicantsList() {
                     isUpdating={updatingId === applicant.id}
                     isVerified={isVerified}
                     opportunityHasEnded={opportunityHasEnded}
+                    isHighlighted={highlightedApplicantId === applicant.id}
                     onAccept={(applicantId) =>
                       handleStatusChange(applicantId, PARTICIPATION_STATUS.ACCEPTED)
                     }

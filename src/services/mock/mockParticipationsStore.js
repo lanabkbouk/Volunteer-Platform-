@@ -67,20 +67,26 @@ export const MOCK_PARTICIPATIONS = [
 
 // بروفايل كل متطوع — مفتاح المصفوفة هلق volunteerId (مش participation
 // id)، لأنه بروفايل يخص شخص، مش طلب مشاركة واحد بعينه
+//
+// ⚠️ email مضاف هون عمدًا لكل بروفايل — بالباك اند الحقيقي (Laravel)
+// حقل الإيميل موجود دايمًا ضمن VolunteerResource (user.email، إلزامي
+// بجدول users)، فمينيك أي بروفايل متطوع حقيقي بيوصل بدونه. بيانات
+// الـ Mock هون لازم تطابق هالواقع وإلا نختبر شاشة بشكل مختلف عن شكلها
+// الحقيقي بعد ربط الـ API
 export const MOCK_VOLUNTEER_PROFILES = {
   v1: {
     volunteerId: 'v1', name: 'Lama Haddad', photo: null, city: 'Damascus',
-    skills: ['First Aid', 'Communication'], phone: '+963911111111',
+    skills: ['First Aid', 'Communication'], phone: '+963911111111', email: 'lama.haddad@example.com',
     educationLevel: "Bachelor's Degree", dateOfBirth: '2001-03-14', gender: 'female',
   },
   v2: {
     volunteerId: 'v2', name: 'Omar Khalil', photo: null, city: 'Aleppo',
-    skills: ['Teaching'], phone: '+963922222222',
+    skills: ['Teaching'], phone: '+963922222222', email: 'omar.khalil@example.com',
     educationLevel: "Master's Degree", dateOfBirth: '1997-09-02', gender: 'male',
   },
   v3: {
     volunteerId: 'v3', name: 'Maya Saleh', photo: null, city: 'Damascus',
-    skills: ['Photography'], phone: '+963955555555',
+    skills: ['Photography'], phone: '+963955555555', email: 'maya.saleh@example.com',
     educationLevel: 'High School', dateOfBirth: '2004-11-20', gender: 'female',
   },
 }

@@ -27,7 +27,7 @@ export default function OrgProfilePreview({ email, phone }) {
         {/* Description — نفس تنسيق قسم "About" بمعاينة بروفايل المتطوع بالضبط */}
         <div className="pt-2 border-t border-heading/10">
           <Typography variant="h5" className="mb-2">Description</Typography>
-          <p className="text-sm text-heading/80 leading-relaxed">
+          <p className="text-sm text-heading/80 leading-relaxed wrap-break-word">
             {values.description || "Write something about your organization to appear here."}
           </p>
         </div>

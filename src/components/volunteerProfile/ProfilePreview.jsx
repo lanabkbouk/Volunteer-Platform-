@@ -90,7 +90,7 @@ export default function ProfilePreview({ fullName, email, phone, availableSkills
         {/* About */}
         <div className="pt-2 border-t border-heading/10">
           <Typography variant="h5" className="mb-2">About</Typography>
-          <p className="text-sm text-heading/80 leading-relaxed">
+          <p className="text-sm text-heading/80 leading-relaxed wrap-break-word">
             {values.about || "Write something about yourself to appear here."}
           </p>
         </div>

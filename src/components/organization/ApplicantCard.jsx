@@ -2,7 +2,7 @@
 // اليسار، شارة الحالة والإجراء على اليمين، مع سطر مهارات مستقل تحته.
 
 import { useState } from "react";
-import { MapPin, Phone, Mail, Check, X, CheckCircle2, Clock3, UserIcon } from "lucide-react";
+import { MapPin, Phone, Mail, Check, X, CheckCircle2, Clock3 } from "lucide-react";
 import Button from "../ui/Button";
 import SkillChipsPreview from "../common/SkillChipsPreview";
 import ParticipationStatusBadge from "../opportunity/ParticipationStatusBadge";
@@ -21,6 +21,10 @@ export default function ApplicantCard({
   // فقط لما الفرصة انتهت فعليًا (تاريخ) — محسوبة بالصفحة الأم
   // (applicantsList.jsx) من opportunity.endDate الحقيقي
   opportunityHasEnded = false,
+  // true لثوانٍ قليلة فقط لما نوصل هالبطاقة عبر رابط خارجي (راجع
+  // RecentActivityFeed + applicantsList.jsx) — حلقة تمييز مؤقتة حول
+  // البطاقة، تختفي لحالها بدون أي إجراء من المستخدم
+  isHighlighted = false,
 }) {
   const { volunteer, status, participatedAt, committedHours, hoursLogged } = applicant;
   const isPending = status === PARTICIPATION_STATUS.PENDING;
@@ -45,23 +49,17 @@ export default function ApplicantCard({
   if (!volunteer) return null;
 
   return (
-    <div className={`${CARD_BASE} flex flex-col gap-4`}>
+    <div
+      id={`applicant-${applicant.id}`}
+      className={`${CARD_BASE} flex flex-col gap-4 scroll-mt-24 transition-shadow duration-500 ${
+        isHighlighted ? "ring-2 ring-primary ring-offset-2 ring-offset-bg" : ""
+      }`}
+    >
       <div className="flex flex-col sm:flex-row sm:items-start gap-4">
-        {/* الصورة الرمزية — صورة المتطوع الحقيقية إن رفعها (volunteer.photo،
-            نفس الحقل المستخدم أصلًا بمودال المعاينة VolunteerProfilePreviewModal)،
-            وإلا أيقونة احتياطية بدل الحرف الأول — نفس نمط الدائرة الاحتياطية
-            المستخدم بالـ Navbar لحساب المنظمة (bg-primary/10 + border + أيقونة) */}
-        {volunteer.photo ? (
-          <img
-            src={volunteer.photo}
-            alt={volunteer.name}
-            className="h-12 w-12 rounded-full object-cover border border-primary/20 shrink-0"
-          />
-        ) : (
-          <div className="h-12 w-12 rounded-full bg-primary/10 border border-primary/20 text-primary flex items-center justify-center shrink-0">
-            <UserIcon className="h-5 w-5" aria-hidden="true" />
-          </div>
-        )}
+        {/* الصورة الرمزية */}
+        <div className="h-12 w-12 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-lg shrink-0">
+          {volunteer.name?.charAt(0) || "?"}
+        </div>
 
         {/* المعلومات */}
         <div className="flex-1 min-w-0">
@@ -90,10 +88,13 @@ export default function ApplicantCard({
                     {volunteer.phone}
                   </span>
                 )}
+                {/* الإيميل بس بالبطاقة (مش رابط mailto: هون) — تفاديًا لازدحام
+                    بصري بصف واحد كتير، رابط الإيميل الفعلي موجود بالمودال
+                    الكامل (VolunteerProfilePreviewModal) عند فتح البروفايل */}
                 {volunteer.email && (
-                  <span className="flex items-center gap-1">
+                  <span className="flex items-center gap-1 truncate max-w-[200px]">
                     <Mail size={13} className="text-primary shrink-0" aria-hidden="true" />
-                    {volunteer.email}
+                    <span className="truncate">{volunteer.email}</span>
                   </span>
                 )}
                 <span className="text-heading/40">Applied {participatedAt}</span>
@@ -135,10 +136,8 @@ export default function ApplicantCard({
                 variant="success"
                 size="small"
                 disabled={isUpdating || !isVerified}
-                isLoading={isUpdating}
-                loadingText="Accepting..."
                 onClick={() => onAccept(applicant.id)}
-                className="flex min-h-11 items-center gap-1 !px-3 !text-sm"
+                className="flex items-center gap-1 !px-3 !py-1.5 !text-sm"
                 title={!isVerified ? "Available once your organization is verified" : undefined}
               >
                 <Check size={14} />
@@ -149,7 +148,7 @@ export default function ApplicantCard({
                 size="small"
                 disabled={isUpdating || !isVerified}
                 onClick={() => setIsRejectModalOpen(true)}
-                className="flex min-h-11 items-center gap-1 !px-3 !text-sm text-danger hover:bg-danger/10"
+                className="flex items-center gap-1 !px-3 !py-1.5 !text-sm text-danger hover:bg-danger/10"
                 title={!isVerified ? "Available once your organization is verified" : undefined}
               >
                 <X size={14} />
@@ -174,7 +173,7 @@ export default function ApplicantCard({
                   variant="secondary"
                   size="small"
                   onClick={() => onManageHours(applicant)}
-                  className="flex min-h-11 items-center gap-1 !px-3 !text-sm"
+                  className="flex items-center gap-1 !px-3 !py-1.5 !text-sm"
                 >
                   <Clock3 size={14} />
                   {hasConfirmedHours ? "Edit hours" : "Manage hours"}

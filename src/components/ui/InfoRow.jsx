@@ -6,7 +6,7 @@ export default function InfoRow({ label, value }) {
       <Typography
         variant="bodySm"
         color="muted"
-        className="whitespace-nowrap"
+        className="whitespace-nowrap shrink-0"
       >
         {label}
       </Typography>
@@ -15,7 +15,7 @@ export default function InfoRow({ label, value }) {
         variant="bodySm"
         color="heading"
         weight="medium"
-        className="truncate text-left"
+        className="min-w-0 flex-1 truncate text-left"
       >
         {value || "—"}
       </Typography>

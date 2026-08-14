@@ -479,12 +479,29 @@ export async function deleteOpportunity(id) {
 export async function createOpportunity({ imageFile, ...payload }) {
   if (MOCK_MODE) {
     await wait()
+
+    // ⚠️ كانت هون قيمة ثابتة "My Organization" بدل اسم المنظمة الحقيقية
+    // المسجّلة دخولها — أي فرصة تنشئها أي منظمة (بغض النظر عن اسمها
+    // الفعلي) كانت تظهر بنفس الاسم العام هذا لكل المتطوعين. نجيب بيانات
+    // المنظمة الحقيقية من نفس الجلسة، بنفس نمط fetchOrganizationProfile
+    // بـ services/organization.js (getCurrentSessionEmail + loadMockUsers).
+    // id يبقى MOCK_MY_ORGANIZATION_ID الثابت (مش mockUser.organizationId)
+    // عمدًا — fetchMyOpportunities/fetchOpportunitiesByOrganization تحته
+    // بالفلترة، وتغييره هون كان رح يكسرهم بدون داعٍ لإصلاح مشكلة الاسم فقط
+    const email = getCurrentSessionEmail()
+    const mockUser = email ? loadMockUsers().find((user) => user.email === email) : null
+
     const newOpportunity = {
       ...payload,
       id: `o${Date.now()}`,
       registrationClosedManually: false,
       currentVolunteers: 0,
-      organization: { id: MOCK_MY_ORGANIZATION_ID, name: 'My Organization', phone: '+31600000000', imageUrl: null },
+      organization: {
+        id: MOCK_MY_ORGANIZATION_ID,
+        name: mockUser?.orgName || 'My Organization',
+        phone: mockUser?.phone || '+31600000000',
+        imageUrl: mockUser?.imageUrl || null,
+      },
       image: imageFile ? URL.createObjectURL(imageFile) : null,
     }
     // تُضاف مباشرة لنفس المصدر الموحّد، فتظهر فورًا بصفحة التصفح العامة
