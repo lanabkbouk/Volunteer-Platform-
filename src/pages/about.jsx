@@ -3,6 +3,7 @@
 // صفحة "About": تجلب إحصائيات المنصة عبر usePlatformStatsQuery (React
 // Query)، وتمرّرها للمكوّنات. حالات التحميل/الخطأ معالجة بشكل بسيط.
 
+import { Users, Building2, Heart, MapPin } from "lucide-react";
 import { usePlatformStatsQuery } from "../hooks/queries/usePlatformStatsQuery";
 import { SYRIAN_GOVERNORATES_COUNT } from "../services/syrianGovernorates";
 import MissionSection from "../components/about/MissionSection";
@@ -20,12 +21,15 @@ export default function About() {
   // فشل جلب الإحصائيات كان يعرض 0 بطاقات بصمت بدون أي إشارة للمستخدم
   const statsError = statsQuery.isError;
 
+  // StatCard أصلًا بيدعم أيقونة بخلفية برتقالية فاتحة (bg-primary/10) —
+  // نفس الأيقونات المستخدمة بقسم إحصائيات الصفحة الرئيسية (HomeStatsSection)
+  // حتى يبقى نفس الرقم بنفس الرمز البصري بكل مكان يظهر فيه بالموقع
   const statsArray = stats
     ? [
-        { number: stats.volunteersCount, label: "Active Volunteers" },
-        { number: stats.organizationsCount, label: "Organizations" },
-        { number: stats.opportunitiesCount, label: "Opportunities" },
-        { number: SYRIAN_GOVERNORATES_COUNT, label: "Governorates Covered" },
+        { number: stats.volunteersCount, label: "Active Volunteers", icon: Users },
+        { number: stats.organizationsCount, label: "Organizations", icon: Building2 },
+        { number: stats.opportunitiesCount, label: "Opportunities", icon: Heart },
+        { number: SYRIAN_GOVERNORATES_COUNT, label: "Governorates Covered", icon: MapPin },
       ]
     : [];
 

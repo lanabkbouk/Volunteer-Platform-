@@ -6,6 +6,7 @@
 // والتنسيق يدويًا هون من جديد.
 
 import { motion } from "framer-motion";
+import { Users } from "lucide-react";
 import Typography from "../ui/Typography";
 import StatCard from "../common/StatCard";
 
@@ -29,7 +30,9 @@ export default function MissionSection({ volunteers }) {
         </Typography>
       </div>
 
-      <StatCard number={volunteers} label="Active Volunteers" />
+      {/* استخدام لإمكانية icon الموجودة أصلًا بـ StatCard — نفس رمز
+          "Active Volunteers" المستخدم بباقي الصفحة تحت */}
+      <StatCard icon={Users} number={volunteers} label="Active Volunteers" />
     </motion.div>
   );
 }

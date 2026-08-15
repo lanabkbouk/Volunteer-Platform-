@@ -88,15 +88,18 @@ export default function NavbarDropdown({
               const isLogout = item.name === "Logout";
 
               const baseClasses =
-                "w-full flex items-center gap-3 px-4 py-2 text-sm transition rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-inset";
+                "group w-full flex items-center gap-3 px-4 py-2 text-sm transition rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-inset";
 
+              // hover بلون primary خفيف للعناصر العادية (بدل رمادي محايد) —
+              // نفس لغة hover المستخدمة بعناصر Dropdown.jsx القابلة للنقر.
+              // Logout يبقى بلون danger لوحده (تحذير لإجراء حسّاس، مش تنقّل عادي)
               const textClasses = isLogout
                 ? "text-danger hover:bg-danger/10"
-                : "text-heading hover:bg-heading/5";
+                : "text-heading hover:bg-primary/10 hover:text-primary";
 
               const iconClasses = isLogout
                 ? "w-4 h-4 text-danger"
-                : "w-4 h-4 text-heading/70";
+                : "w-4 h-4 text-heading/70 transition-colors group-hover:text-primary";
 
               const content = (
                 <>

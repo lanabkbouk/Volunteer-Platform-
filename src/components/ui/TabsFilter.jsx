@@ -152,7 +152,10 @@ export default function TabsFilter({ tabs, activeTab, onTabChange, ariaLabel = "
                     onKeyDown={(event) => handleKeyDown(event, index)}
                     onClick={() => selectTab(tab.id)}
                     className={`flex min-h-11 w-full items-center justify-between gap-2 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
-                      isActive ? "bg-primary/10 text-primary" : "text-heading/60 hover:bg-heading/5 hover:text-heading"
+                      // hover بلون primary خفيف (بدل رمادي محايد) — نفس لغة
+                      // hover المستخدمة بعناصر Dropdown القابلة للنقر، بس
+                      // أخف من حالة active (primary/10) حتى يضلوا متمايزين
+                      isActive ? "bg-primary/10 text-primary" : "text-heading/60 hover:bg-primary/5 hover:text-heading"
                     }`}
                   >
                     <span className="flex min-w-0 items-center gap-1.5">

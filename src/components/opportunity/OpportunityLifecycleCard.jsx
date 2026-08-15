@@ -59,23 +59,35 @@ function StepChip({ label, meta }) {
 export default function OpportunityLifecycleCard() {
   return (
     <div className={`${PANEL_SURFACE} p-5 mb-8`}>
-      <Typography variant="h5" className="mb-3">
+      <Typography variant="h5" className="mb-4">
         How this works
       </Typography>
-      <ol className="flex flex-wrap items-center gap-x-1.5 gap-y-2 mb-5">
-        {LIFECYCLE_STEPS.map((step, index) => (
-          <li key={step.label} className="flex items-center gap-1.5">
-            <StepChip label={step.label} meta={step.meta} />
-            {index < LIFECYCLE_STEPS.length - 1 && (
-              <span className="text-heading/20" aria-hidden="true">
-                →
-              </span>
-            )}
-          </li>
-        ))}
+      {/* Stepper عمودي: عمود ثابت (دائرة الرقم + الخط الواصل) بجانب
+          عمود المحتوى (الشارة الملوّنة). align-items الافتراضي (stretch)
+          بالـflex يخلّي عمود الدائرة/الخط ياخد نفس ارتفاع صف المحتوى
+          تلقائيًا، فالخط (flex-1) بيمتد بالضبط لحد الدائرة يلي بعده
+          بدون أي حساب ارتفاع يدوي أو absolute positioning */}
+      <ol className="mb-5">
+        {LIFECYCLE_STEPS.map((step, index) => {
+          const isLastStep = index === LIFECYCLE_STEPS.length - 1;
+
+          return (
+            <li key={step.label} className="flex gap-3">
+              <div className="flex flex-col items-center">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-heading/5 text-xs font-semibold text-heading/60">
+                  {index + 1}
+                </span>
+                {!isLastStep && <span className="w-px flex-1 bg-heading/10" aria-hidden="true" />}
+              </div>
+              <div className={isLastStep ? "pb-0.5" : "pb-5"}>
+                <StepChip label={step.label} meta={step.meta} />
+              </div>
+            </li>
+          );
+        })}
       </ol>
 
-      <Typography variant="h6" className="mb-2">
+      <Typography variant="h6" className="mb-2 pt-4 border-t border-heading/10">
         Withdrawal Policy
       </Typography>
       {/* تكديس عمودي (شارة بسطر، وصف تحتها) بدل صف أفقي — تسميات طويلة

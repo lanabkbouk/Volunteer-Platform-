@@ -33,9 +33,12 @@ export const CARD_PADDING = "p-5";
 export const CARD_BASE = `${CARD_SURFACE} ${CARD_ELEVATION} ${CARD_PADDING}`;
 
 // ————————————————————————————————
-// Panels: لوحات غائرة ثابتة (رأس بروفايل، لوحة معاينة، لوحة نموذج...)
-// بدون Hover Elevation لأنها مو تفاعلية — خلفية تظليل خفيفة بدل خلفية
-// بيضاء مرتفعة، عكس الكارد تمامًا بالمعنى البصري.
+// Panels: لوحات ثابتة (رأس بروفايل، لوحة معاينة، لوحة نموذج...) — نفس
+// خلفية Card البيضاء الصافية (bg-field) بالضبط، حتى تتمايز فعليًا عن
+// canvas الرمادي الفاتح بدل الاعتماد على فرق لوني ضئيل (bg-heading/5
+// القديمة كانت قريبة جدًا من حدود الإدراك البصري فوق canvas الجديدة).
+// الفرق الوحيد المتبقي بينها وبين Card: بدون Hover Elevation، لأنها
+// مو عنصر تفاعلي (Card فقط عندها hover:shadow-lg + hover:-translate-y-1)
 // ————————————————————————————————
 
-export const PANEL_SURFACE = "rounded-3xl bg-heading/5 border border-heading/10";
+export const PANEL_SURFACE = "rounded-3xl bg-field border border-heading/10 shadow-sm";

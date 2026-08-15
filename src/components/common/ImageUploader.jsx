@@ -31,7 +31,7 @@ export default function ImageUploader({
   return (
     <div className="relative inline-block">
       <div
-        className={`${SIZE_CLASSES[size]} ${SHAPE_CLASSES[shape]} overflow-hidden border border-heading/10 flex items-center justify-center`}
+        className={`${SIZE_CLASSES[size]} ${SHAPE_CLASSES[shape]} overflow-hidden border border-heading/10 flex items-center justify-center ${!previewUrl ? 'bg-primary/10' : ''}`}
       >
         {previewUrl ? (
           <img

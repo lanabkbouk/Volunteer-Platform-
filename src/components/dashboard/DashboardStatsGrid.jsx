@@ -4,17 +4,20 @@
 // الموحّد أصلًا بالمشروع (نفس البطاقة المستخدمة بصفحتي Home وAbout)
 // بدل إنشاء بطاقة جديدة تؤدي نفس الوظيفة.
 
-import { BellRing } from "lucide-react";
+import { BellRing, Users, Heart, TrendingUp, Clock3 } from "lucide-react";
 import StatCard from "../common/StatCard";
 
 export default function DashboardStatsGrid({ data }) {
+  // StatCard أصلًا بيدعم أيقونة بخلفية برتقالية فاتحة — قبل كان "New
+  // Requests" بس عندها أيقونة، فبقية البطاقات كانت رقم/نص عاري. نفس
+  // رموز Users/Heart المستخدمة بإحصائيات Home للاتساق البصري بكل الموقع
   const stats = [
-    { number: data.totalVolunteers, label: "Total Volunteers" },
-    { number: data.totalOpportunities, label: "Published Opportunities" },
+    { number: data.totalVolunteers, label: "Total Volunteers", icon: Users },
+    { number: data.totalOpportunities, label: "Published Opportunities", icon: Heart },
     // العنصر الوحيد اللي يستاهل انتباه فوري فعلي (طلبات جديدة بانتظار
     // مراجعة) — أيقونة مميزة تفرزه بصريًا عن باقي الإحصائيات الوصفية البحتة
     { number: data.pendingRequests, label: "New Requests", icon: BellRing },
-    { number: data.completionRate, label: "Completion Rate", suffix: "%" },
+    { number: data.completionRate, label: "Completion Rate", suffix: "%", icon: TrendingUp },
     // مجموع "الالتزام"، مش الساعات المؤكدة نهائيًا لكل فرصة — راجع
     // التعليق بـ services/dashboard.js لتوضيح الفرق بين committedHours
     // وhoursLogged. التلميح هون يعكس نفس التوضيح للمستخدم نفسه، مش
@@ -23,6 +26,7 @@ export default function DashboardStatsGrid({ data }) {
       number: data.totalHoursPledged,
       label: "Hours Pledged",
       suffix: "",
+      icon: Clock3,
       hint: "Hours volunteers committed to when they joined — not yet confirmed by you after each opportunity ends.",
     },
   ];

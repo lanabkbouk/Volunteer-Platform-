@@ -37,7 +37,7 @@ export default function StatsGrid({ stats = [], loading = false, className = "" 
       className={gridClasses}
     >
       {(stats || []).map((stat) => (
-        <StatCard key={stat.label} number={stat.number} label={stat.label} />
+        <StatCard key={stat.label} number={stat.number} label={stat.label} icon={stat.icon} />
       ))}
     </motion.div>
   );

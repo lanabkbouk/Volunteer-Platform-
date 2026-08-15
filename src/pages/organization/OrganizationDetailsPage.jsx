@@ -89,7 +89,12 @@ export default function OrganizationDetailsPage() {
       // الخطأ والمحتوى الفعلي تحت بالضبط حتى ما يصير Layout Shift عند التحميل
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <Skeleton className="h-9 w-1/2 mb-4" />
-        <Skeleton className="w-full aspect-[3/1] rounded-3xl mb-6" />
+        {/* نفس تخطيط المحتوى الفعلي تحت (صورة أصغر محاذية لليسار، اسم/
+            مدينة تحتها) — بدون هيك كان رح يصير Layout Shift واضح لحظة
+            انتهاء التحميل */}
+        <Skeleton className="w-full md:w-1/2 aspect-3/2 rounded-3xl mb-6" />
+        <Skeleton className="h-8 w-2/3 mb-2" />
+        <Skeleton className="h-4 w-1/3 mb-6" />
         <Skeleton className="h-4 w-full mb-2" />
         <Skeleton className="h-4 w-5/6 mb-8" />
         {/* 3 أعمدة على lg (مو 2) — نفس شبكة كاردات الفرص المستخدمة
@@ -134,8 +139,9 @@ export default function OrganizationDetailsPage() {
         <span className="text-heading">{organization.name}</span>
       </nav>
 
-      {/* غلاف علوي: صورة/شعار + الاسم + المدينة + شارة التوثيق */}
-      <div className="w-full aspect-[3/1] rounded-4xl overflow-hidden bg-primary/10 flex items-center justify-center mb-6">
+      {/* غلاف علوي: صورة/شعار (أصغر، محاذية لليسار من md فأكبر) + الاسم
+          + المدينة + شارة التوثيق تحتها بنفس الترتيب الأصلي */}
+      <div className="w-full md:w-1/2 aspect-3/2 rounded-3xl overflow-hidden bg-primary/10 flex items-center justify-center mb-6">
         {organization.profileImageUrl && !logoFailed ? (
           <img
             src={organization.profileImageUrl}
@@ -188,7 +194,6 @@ export default function OrganizationDetailsPage() {
           {organization.contactPerson ? (
             <div className="flex items-center gap-2 text-sm text-heading">
               <User size={16} className="text-primary shrink-0" aria-hidden="true" />
-              <span className="text-heading/50">Contact person:</span>
               {organization.contactPerson}
             </div>
           ) : null}

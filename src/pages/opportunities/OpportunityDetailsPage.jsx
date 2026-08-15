@@ -11,6 +11,7 @@ import OpportunityStatusBadge from "../../components/opportunity/OpportunityStat
 import StatusLegendPopover from "../../components/ui/StatusLegendPopover";
 import ParticipateHoursModal from "../../components/opportunity/ParticipateHoursModal";
 import Skeleton from "../../components/ui/Skeleton";
+import Avatar from "../../components/common/Avatar";
 import { PANEL_SURFACE } from "../../utils/surfaceStyles";
 import { useOpportunityDetailsQuery } from "../../hooks/queries/useOpportunityDetailsQuery";
 import { useParticipateMutation } from "../../hooks/queries/useParticipateMutation";
@@ -322,27 +323,36 @@ export default function OpportunityDetailsPage() {
           ) : null}
 
           <div className={`${PANEL_SURFACE} p-6 mb-8`}>
-            <p className="text-sm text-heading/50 mb-1">Organized by</p>
-            {opportunity.organization?.id ? (
-              <Link
-                to={`${ROUTES.ORGANIZATIONS}/${opportunity.organization.id}`}
-                className="font-semibold text-heading hover:text-primary rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-              >
-                {opportunity.organization.name}
-              </Link>
-            ) : (
-              <p className="font-semibold text-heading">{opportunity.organization.name}</p>
-            )}
+            <p className="text-sm text-heading/50 mb-2">Organized by</p>
+            <div className="flex items-center gap-3">
+              <Avatar
+                src={opportunity.organization?.imageUrl}
+                name={opportunity.organization?.name}
+                size="sm"
+              />
+              <div className="min-w-0">
+                {opportunity.organization?.id ? (
+                  <Link
+                    to={`${ROUTES.ORGANIZATIONS}/${opportunity.organization.id}`}
+                    className="text-lg font-semibold text-heading hover:text-primary rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                  >
+                    {opportunity.organization.name}
+                  </Link>
+                ) : (
+                  <p className="text-lg font-semibold text-heading">{opportunity.organization.name}</p>
+                )}
 
-            {opportunity.organization?.phone ? (
-              <a
-                href={`tel:${opportunity.organization.phone}`}
-                className="mt-2 flex items-center gap-2 text-sm text-body hover:text-primary w-fit rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-              >
-                <Phone size={14} className="text-primary shrink-0" aria-hidden="true" />
-                {opportunity.organization.phone}
-              </a>
-            ) : null}
+                {opportunity.organization?.phone ? (
+                  <a
+                    href={`tel:${opportunity.organization.phone}`}
+                    className="mt-1 flex items-center gap-2 text-sm text-body hover:text-primary w-fit rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                  >
+                    <Phone size={14} className="text-primary shrink-0" aria-hidden="true" />
+                    {opportunity.organization.phone}
+                  </a>
+                ) : null}
+              </div>
+            </div>
           </div>
 
           <Typography variant="h4" className="mb-3">

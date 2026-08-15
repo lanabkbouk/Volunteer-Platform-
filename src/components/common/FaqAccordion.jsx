@@ -23,7 +23,7 @@ export default function FaqAccordion({ items, showCategoryBadge = false, classNa
           <div
             key={item.question}
             className={`rounded-2xl bg-field shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden border ${
-              isOpen ? "border-primary/20 border-l-4 border-l-primary bg-primary/5" : "border-heading/5"
+              isOpen ? "border-primary/20 border-l-4 border-l-primary bg-primary/5" : "border-heading/10"
             }`}
           >
             <button

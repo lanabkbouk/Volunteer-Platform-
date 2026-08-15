@@ -161,6 +161,7 @@ export async function registerUser(payload) {
       ...payload,
       accountType,
       email: normalizedEmail,
+      createdAt: new Date().toISOString(),
       // بدون backend، ما في حدا يولّد organizationId — لازم نعمله محليًا
       // هون وإلا organizationId بيضل غير موجود للأبد بوضع Mock، وبالتالي
       // useOrganizationProfileQuery (enabled: Boolean(organizationId))
@@ -214,9 +215,19 @@ export async function loginUser(payload) {
     // بيضل ما يظهر أبدًا — مش لأنه الحالة مش موجودة، لأنه الطلب نفسه
     // ما بيصير. منولّدها هون مرة وحدة ونحفظها بصمت، فباقي الجلسة (وكل
     // جلسة جاية) تشتغل صح بدون ما تحتاج المستخدمة تمسح الحساب وتسجّل من جديد.
+    // نفس المنطق لـ createdAt: حسابات اتسجّلت قبل ما صار registerUser
+    // يخزّنه بيضلوا يطلعوا "Registered" فاضي بمودال تفاصيل المنظمة بالأدمن
+    // للأبد بدون هالترقيع — تاريخ اليوم أقرب تقدير معقول بدون بيانات أصلية.
     let userForSession = existingUser
+    const patch = {}
     if (existingUser.accountType === ACCOUNT_TYPES.ORGANIZATION && !existingUser.organizationId) {
-      userForSession = { ...existingUser, organizationId: `org-${Date.now()}` }
+      patch.organizationId = `org-${Date.now()}`
+    }
+    if (!existingUser.createdAt) {
+      patch.createdAt = new Date().toISOString()
+    }
+    if (Object.keys(patch).length > 0) {
+      userForSession = { ...existingUser, ...patch }
       const index = mockUsers.findIndex((user) => user.email === normalizedEmail)
       mockUsers[index] = userForSession
       saveMockUsers(mockUsers)

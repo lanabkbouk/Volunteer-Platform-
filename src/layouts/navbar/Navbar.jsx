@@ -12,6 +12,7 @@ import {
   ChevronDown,
   Globe,
   Compass,
+  Building2
 } from "lucide-react";
 
 import { ROUTES } from "../../constants/paths";
@@ -51,7 +52,9 @@ export default function Navbar({ role = "guest" }) {
   // تحميله ونستنى onError؛ نتعامل معه كـ"فاشل" فورًا من أول render
   const isStaleBlobUrl = user?.avatarUrl?.startsWith("blob:");
   const avatarLoadFailed = isStaleBlobUrl || failedAvatarUrl === user?.avatarUrl;
-
+  const isOrganization = accountType === ACCOUNT_TYPES.ORGANIZATION;
+  const FallbackIcon = isOrganization ? Building2 : UserIcon;  
+  
   const handleLogout = () => {
     logout();
     navigate(ROUTES.HOME);
@@ -196,7 +199,7 @@ export default function Navbar({ role = "guest" }) {
                         />
                       ) : (
                         <div className="h-7 w-7 rounded-full bg-primary/20 border border-primary/40 flex items-center justify-center">
-                          <UserIcon className="h-4 w-4 text-primary" />
+                          <FallbackIcon className="h-4 w-4 text-primary" />
                         </div>
                       )}
                       <span className="text-sm sm:text-base">
