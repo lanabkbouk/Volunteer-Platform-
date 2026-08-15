@@ -1,27 +1,11 @@
 // جلب وتحديث بروفايل المنظمة الحالية.
 //
-// ⚠️ تصحيح مهم (بعد فحص الباك اند الفعلي على GitHub):
-// لا يوجد أي مسار "/organizations/me" في الباك اند. الراوت الحقيقي هو
-// GET/PUT /organizations/{organization} مع Route Model Binding حقيقي —
-// يعني الـ id في الـ URL يحدد فعليًا أي منظمة سيتم جلبها/تعديلها.
-// لذلك أي استدعاء هون لازم يستقبل organizationId معرّف (قادم من
-// AuthContext → user.organization.id الذي يصل ضمن استجابة login/register).
-//
 // GET /api/organizations/{id}   → بروفايل منظمة واحدة (فيها status)
 // PUT /api/organizations/{id}   → تحديث بيانات نصية فقط (JSON عادي)
 //
-// ⚠️ ملاحظتان مهمتان مؤكّدتان من كود الباك اند (OrganizationController):
-// 1) حقل "verification_document" (وثيقة توثيق أنها منظمة حقيقية) يُرفع
-//    مرة وحدة بس عند إنشاء الحساب من صفحة Register — وهو غير مرتبط
-//    إطلاقًا بصورة/شعار البروفايل. بعد الإنشاء يبقى read-only هون.
-// 2) الباك اند حاليًا (OrganizationController::update) لا يعالج رفع أي
-//    صورة/شعار جديد عند التحديث (الكود الفعلي فيه فقط $organization
-//    ->update($request->validated()) بدون أي addMediaFromRequest).
-//    لذلك ما منرسل logo ضمن هذا التحديث حاليًا، ومنعرض هذا الحقل
-//    كـ "قريبًا" بالواجهة لحد ما يضيفه فريق الباك اند.
-//
-// TODO: لما يجهز الباك اند رفع الشعار بالتحديث، رجّعي منطق FormData
-// + verification_document handling كان موجود سابقًا بهالملف.
+// بوضع mock، الشعار هلق بينحفظ فعليًا (Data URL بـ localStorage، نفس
+// نمط services/volunteer.js) حتى تجربة الاختبار المحلي تعكس الميزة
+// الكاملة بانتظار دعم الباك اند بالتحديث.
 
 import { apiClient, getApiErrorMessage } from './api/client'
 import { isMockMode } from './api/mockMode'
@@ -30,6 +14,7 @@ import { ORGANIZATION_STATUS } from '../constants/organizationStatus'
 import { AUTH_STORAGE_KEY } from '../constants/auth/storage'
 import { loadMockUsers, updateMockUser } from './mock/mockUserStore'
 import { validateOrganizationProfileResponse } from '../utils/api/apiResponseSchemas'
+import { readFileAsDataUrl } from './api/fileToDataUrl'
 
 const MOCK_MODE = isMockMode()
 
@@ -117,29 +102,45 @@ export async function fetchOrganizationProfile(organizationId) {
 }
 
 /**
- * تحديث البيانات النصية للمنظمة فقط (بدون صور — راجع الملاحظة (2) بالأعلى).
- * الحقول تطابق OrganizationRequest بالضبط: name, description, city,
+ * تحديث بروفايل المنظمة (بيانات نصية + شعار اختياري).
+ * الحقول النصية تطابق OrganizationRequest بالضبط: name, description, city,
  * website, contact_person. لا يوجد "email" ضمن جدول organizations.
  *
+ * ⚠️ الشعار (photoFile/removePhoto): بوضع Mock بينحفظ فعليًا (راجع تعليق
+ * الملف بالأعلى، الملاحظة 2، وservices/api/fileToDataUrl.js لسبب استخدام
+ * Data URL بدل Blob URL). بوضع real ما بينرسل إطلاقًا حاليًا — الباك اند
+ * لسا ما بيعالج رفع ملف بهالـ endpoint (نفس الملاحظة). لو photoFile
+ * وصل بوضع real، منتجاهله بصمت (مش خطأ) حتى ما تنكسر تجربة المستخدم
+ * لحد ما يُضاف الدعم فعليًا بالباك اند.
+ *
+ * نفس شكل الاستدعاء بالضبط المستخدم بـ updateVolunteerProfile
+ * (services/volunteer.js) — {values, photoFile, removePhoto} — عمدًا،
+ * حتى orgProfile.jsx وvolunteerProfile.jsx يستخدموا نفس النمط تمامًا.
+ *
  * @param {number|string} organizationId
- * @param {{ name: string, description: string, city: string, website?: string, contactPerson: string }} profileData
+ * @param {{ values: {name: string, description: string, city: string, website?: string, contactPerson: string}, photoFile?: File, removePhoto?: boolean }} payload
  */
-export async function updateOrganizationProfile(organizationId, profileData) {
+export async function updateOrganizationProfile(organizationId, { values, photoFile, removePhoto } = {}) {
   if (MOCK_MODE) {
     await wait()
 
+    // ⚠️ Data URL هون، مش URL.createObjectURL — نفس سبب services/volunteer.js
+    // بالضبط: بيتخزّن بـ localStorage وازم يضل صالح بعد أي reload
+    const imageUrl = photoFile ? await readFileAsDataUrl(photoFile) : undefined
     const email = getCurrentSessionEmail()
+
     if (email) {
       updateMockUser(email, {
-        orgName: profileData.name || '',
-        description: profileData.description || '',
-        city: profileData.city || '',
-        website: profileData.website || '',
-        contactPerson: profileData.contactPerson || '',
+        orgName: values?.name || '',
+        description: values?.description || '',
+        city: values?.city || '',
+        website: values?.website || '',
+        contactPerson: values?.contactPerson || '',
+        ...(imageUrl ? { imageUrl } : removePhoto ? { imageUrl: '' } : {}),
       })
     }
 
-    return { success: true, data: {} }
+    return { success: true, data: { imageUrl: imageUrl ?? (removePhoto ? '' : undefined) } }
   }
 
   if (!organizationId) {
@@ -147,16 +148,40 @@ export async function updateOrganizationProfile(organizationId, profileData) {
   }
 
   try {
-    // لا حاجة لـ FormData/multipart هون: التحديث الحالي بالباك اند لا يقبل
-    // أي ملف، فقط حقول نصية عادية → نرسل JSON بسيط.
-    const response = await apiClient.put(`/organizations/${organizationId}`, {
-      name: profileData.name,
-      description: profileData.description,
-      city: profileData.city,
-      website: profileData.website || '',
-      contact_person: profileData.contactPerson,
+    // ⚠️ multipart/form-data (مو JSON) هلق — نفس نمط services/volunteer.js
+    // بالضبط (POST + _method: PUT، لأن PHP ما بيقرأ ملفات بـ PUT مباشر).
+    // الباك اند حاليًا (OrganizationController::update) لسا ما بيعالج
+    // hasFile('photo') إطلاقًا (بعكس VolunteerController::update يلي
+    // جاهز) — لسا مطلوب Backend action لإضافتها هناك (راجع
+    // docs/Backend-Requirements-Addendum.pdf). لحد ما تُضاف، الباك اند
+    // ببساطة بيتجاهل حقل الملف ويحدّث بس الحقول النصية — آمن 100%،
+    // بس الشعار مش رح ينحفظ فعليًا لحد ما يُضاف الدعم هناك
+    const formData = new FormData()
+    formData.append('name', values?.name || '')
+    formData.append('description', values?.description || '')
+    formData.append('city', values?.city || '')
+    formData.append('website', values?.website || '')
+    formData.append('contact_person', values?.contactPerson || '')
+    if (photoFile) {
+      formData.append('photo', photoFile)
+    } else if (removePhoto) {
+      // ⚠️ كانت ناقصة تمامًا هون (موجودة بـ services/volunteer.js بس) —
+      // بدون إشارة صريحة، الباك اند ما إله طريقة يفرّق "ما لمسنا الشعار"
+      // عن "بدنا نمسحه". Backend action: حقل remove_photo="1" لسا مش
+      // موثّق ولا مُتحقَّق منه — نفس ملاحظة services/volunteer.js تمامًا
+      // (راجع docs/Backend-Requirements-Addendum.pdf لإضافته لاحقًا)
+      formData.append('remove_photo', '1')
+    }
+    formData.append('_method', 'PUT')
+
+    const response = await apiClient.post(`/organizations/${organizationId}`, formData, {
+      headers: { 'Content-Type': undefined }, // يخلي المتصفح يحدد الـ boundary تلقائيًا
     })
-    return { success: true, data: response.data }
+
+    // ⚠️ الباك اند بيرجّع الحقل باسم profile_image (راجع
+    // OrganizationResource.php)، مش imageUrl — نطبّعه هون بنقطة وحدة
+    // بدل ما orgProfile.jsx يعرف شكل استجابة الباك اند الخام
+    return { success: true, data: { ...response.data, imageUrl: response.data?.profile_image ?? undefined } }
   } catch (error) {
     return { success: false, error: getApiErrorMessage(error, 'Failed to save organization profile') }
   }

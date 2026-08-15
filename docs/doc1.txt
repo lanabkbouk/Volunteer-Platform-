@@ -1,0 +1,1065 @@
+8/9/26, 2:41 PM        Backend Requirements Document
+
+title: Backend Requirements Document -- Volunteer Platform
+
+Backend Requirements Document
+
+Volunteer Organization Platform -- Frontend  Laravel API Handoff
+
+Source of truth: static analysis of the React/Vite frontend codebase only ( c:\Users\hp\Desktop\volunteer-organization ).
+Every requirement below is derived from actual frontend code -- services, hooks, validation schemas, constants, and components
+-- not assumptions. File citations ( path:line ) are given for load-bearing facts so the backend team can verify against source.
+
+Legend used throughout:
+
+Tag                    Meaning
+                       Inline code comments confirm this already exists and works on the real Laravel backend
+ Confirmed built       Inline code comments confirm the backend controller/route/column does not exist yet
+ Not implemented       Needed by the frontend; no evidence either way -- assume it must be built
+ New requirement       Frontend calls this path defensively but marks it TODO / assumed convention
+ Unconfirmed path      Frontend expects this as a derived value; must not be a manually-written column
+ Computed, not stored
+
+      1. Tech Stack Context
+
+        React 19 + Vite 8, React Router v7 (data router), TanStack React Query v5, React Hook Form + Zod v4, Axios, Tailwind v4. No Redux
+        -- global state is a single AuthContext (session only) plus React Query for all server data. ( package.json )
+        The app runs in two modes controlled by one env var: VITE_API_MODE=real hits the live Laravel API; anything else (including
+        unset) uses an in-memory/localStorage mock layer that mirrors the intended real contract ( src/services/api/mockMode.js:12-
+        14 ). Every service function branches on this flag, so the mock code is effectively executable documentation of the intended
+        API contract -- it is the primary source for the request/response shapes in this document.
+
+      2. Global API Conventions
+
+        All requests go through one Axios instance ( src/services/api/client.js ):
+             Base URL: VITE_API_BASE_URL env var ( client.js:5 ).
+             Auth header: every request reads localStorage['auth_session'] , parses it, and if .token is a non-empty string, sets
+              Authorization: Bearer {token} ( client.js:13-27 ). The frontend never manages the token in memory/state -- it re-
+             reads storage per request.
+             Response envelope: if a response body is a non-array object with a data key (Laravel API Resource shape {data, meta?,
+             links?} ), the client unwraps it -- response.data becomes the inner data , and meta / links are hoisted onto the
+             response ( client.js:29-45 ). Every endpoint should either return a bare JSON body, or this Resource envelope -- not
+             something else.
+             401 handling: any 401 response clears the stored session and hard-redirects to /login (loop-guarded) ( client.js:50-
+             64 ). No refresh-token flow exists anywhere in the codebase.
+
+file:///C:/Users/hp/AppData/Local/Temp/claude/c--Users-hp-Desktop-volunteer-organization/d89c1356-99cd-412a-9659-94a60bfb05e2/scratchpa... 1/22
+8/9/26, 2:41 PM                        Backend Requirements Document
+
+Error contract expected:
+
+      422 validation errors: { message, errors: { field: [msg, ...] } } -- standard Laravel form-request shape
+     ( client.js:80-94 , getApiFieldErrors ).
+     All other errors: a top-level message or error string ( client.js:66-74 , getApiErrorMessage ).
+
+Service-layer return shape (frontend-internal, not literally what Laravel must return): every service function normalizes both
+mock and real results into { success: boolean, data?, error?, fieldErrors? } before handing it to a hook/component.
+This means the backend does not need to literally return success: true -- the frontend derives it from HTTP status/axios
+success -- but it does mean every mutation's success response should include the created/updated resource in the body
+so the frontend can populate data .
+File uploads / updates: any endpoint that both accepts a file and is a resource update must accept POST with a spoofed
+method -- FormData.append('_method', 'PUT') -- because PHP cannot parse $_FILES on a true PUT multipart request
+( src/services/api/mediaUpload.js:29-41 , confirmed pattern reused in opportunities.js , volunteer.js ,
+organization.js ).
+
+3. Entities & Relationships
+
+Field lists below are the union of every field the frontend reads or writes, reconstructed from mock stores, Zod validation
+schemas, and service payload builders. camelCase = frontend-side name; where the real API uses snake_case, both are shown.
+
+3.1 User (base) -- users table
+
+Field            Type           Notes
+ id
+ email           string/number
+ password
+                 string         unique, login identifier
+ phone /
+ phone_number    string         hashed server-side; never returned to client ( sanitizeUser , src/services/auth.js:29-
+ roles                          34 )
+
+                 string         required at registration for both account types
+
+                 string[]       Spatie-style; must be present on login/register response for role resolution
+                                ( src/services/auth.js:81-98 )
+
+file:///C:/Users/hp/AppData/Local/Temp/claude/c--Users-hp-Desktop-volunteer-organization/d89c1356-99cd-412a-9659-94a60bfb05e2/scratchpa... 2/22
+8/9/26, 2:41 PM                                      Backend Requirements Document
+
+3.2 Volunteer profile (extends User)
+
+Field              Type    Notes
+ firstName /       string  required at registration
+ first_name
+ lastName /        string required at registration
+ last_name
+ educationLevel /  enum     No Formal Education, High School, Diploma, Bachelor's Degree, Master's
+ education_level   date    Degree, PhD ( src/utils/auth/VolunteerProfileValidation.js:18-25 )
+ dateOfBirth /
+ birth_date                must yield age  18 ( VolunteerProfileValidation.js:53-59 )
+ gender / gendre
+                   enum    schema only allows Female, Male (backend validates lowercase in:male,female per code
+ city                      comment -- note the misspelled gendre param name, src/services/volunteer.js:34-35 )
+ skillIds /
+ skill_ids         enum one of 14 Syrian governorates
+ interests
+ about             string[]  1 required
+ photo
+                   string  optional, free text
+                   string  optional, free text
+                   file    optional, media collection profile_photo
+
+file:///C:/Users/hp/AppData/Local/Temp/claude/c--Users-hp-Desktop-volunteer-organization/d89c1356-99cd-412a-9659-94a60bfb05e2/scratchpa... 3/22
+8/9/26, 2:41 PM                           Backend Requirements Document
+
+3.3 Organization -- organizations table
+
+Field                      Type           Notes
+ id                        string/number
+ name / organization_name  string         2-255 chars
+ email                     string
+                                           derived from owner.email , not a column on organizations
+contactPerson /            string
+contact_person                            ( src/utils/api/apiResponseSchemas.js:73-115 )
+description                string         required
+city                       enum
+website                    string          10 chars
+phone                      string         one of 14 governorates
+                                          optional, must be valid URL if present
+imageUrl / profile_image   file URL
+verificationDocumentUrl /  file URL        exists on users.phone_number but OrganizationResource never
+verification_document
+                           enum           returns it -- always undefined today
+status                                    ( src/services/organizations.js:24-28 )
+                                          logo
+rejectionReason            string|null    uploaded once at registration
+
+reviewedAt                 datetime        column does not exist on organizations table yet -- API always
+requestedAt / created_at   datetime
+owner                       {id, name,    returns null , frontend fakes 'pending' as a stopgap
+                           email} | null  ( apiResponseSchemas.js:70-72,83,109,160 )
+
+                                           concept doesn't exist in backend yet -- always null in real mode
+
+                                          ( apiResponseSchemas.js:110-113 )
+                                          admin decision timestamp
+
+file:///C:/Users/hp/AppData/Local/Temp/claude/c--Users-hp-Desktop-volunteer-organization/d89c1356-99cd-412a-9659-94a60bfb05e2/scratchpa... 4/22
+8/9/26, 2:41 PM                                Backend Requirements Document
+
+3.4 Opportunity -- opportunities table
+
+Field                        Type              Notes
+ id                          string/number
+ title                       string            3-255 chars
+ description                 string             20 chars
+ status                      enum
+                                                computed, see §7 -- registration_open | registration_closed
+ registrationClosedManually  boolean
+ startDate / start_date      date              | in_progress | completed
+ endDate / end_date          date              the only manually-writable status-adjacent field (org toggle)
+ registerStartAt             date
+ registerEndAt               date              must be  startDate
+ location / city             string
+ minHours , maxHours         number            must be  registerStartAt ,  startDate
+ totalHours                  number            governorate
+ minVolunteers ,             integer            maxHours  minHours , both  1
+ maxVolunteers                                  1
+ currentVolunteers /                            maxVolunteers  minVolunteers , both  1
+ current_volu
+                             integer            computed live = count of participations with status = accepted ;
+ isGroup
+ category                    boolean           must not be a manually incremented/decremented counter
+ skills                       {id, name}       ( src/services/opportunities.js:42-60 )
+ organization                 [{id, name}]     default false ; feeds an achievement rule (§13)
+                              {id, name,       FK
+ image                       imageUrl, phone,  many-to-many
+ createdAt                   status}           nested
+                             file URL
+                             datetime          cover image
+                                               needed for dashboard analytics bucketing (§15)
+
+Removed field (explicit backend decision): minAge / maxAge -- age restriction on opportunities was fully removed per backend
+team request ( src/utils/opportunityValidation.js:4-5 ).
+
+file:///C:/Users/hp/AppData/Local/Temp/claude/c--Users-hp-Desktop-volunteer-organization/d89c1356-99cd-412a-9659-94a60bfb05e2/scratchpa... 5/22
+8/9/26, 2:41 PM                         Backend Requirements Document
+
+3.5 Participation -- opportunity_volunteer pivot table
+
+Field             Type           Notes
+ id
+ volunteerId ,    string/number
+ opportunityId
+ status           FK
+
+ committedHours   enum           stored: pending | accepted | rejected | withdrawn . expired is  display-
+ hoursLogged      number
+                  number|null    only, never stored (§8)
+ joinedDate /     date
+ participatedAt                  set at apply time, bounded to [opportunity.minHours, opportunity.maxHours]
+ rejectionReason
+ withdrawnDate                    column does not exist yet -- new nullable column required
+ canWithdraw
+                                 ( src/services/participations.js:216-222 )
+
+                  string         only set when status = rejected
+                  date
+                  boolean        only set when status = withdrawn
+                                 optional explicit server override; if present the frontend trusts it over local computation
+                                 ( src/utils/participationPolicy.js:27 )
+
+3.6 Category -- categories table
+
+id, name (unique), description, opportunitiesCount ( computed via withCount('opportunities') ).  Confirmed
+
+built already ( src/services/categories.js:56-61 ).
+
+3.7 Skill -- skills table
+
+id, name (unique), categoryId , category object embedded in responses (not just FK id -- see §18).  SkillController is
+
+entirely unimplemented and the skills table currently only has id + timestamps ( src/services/skills.js:96-104 ).
+
+3.8 Governorate/City
+
+ id, nameEn (required, unique), nameAr (required in data model, but no frontend form field collects it -- see
+§23), slug (auto-derived from nameEn) . Currently 100% static frontend data in 4 duplicated locations (§23) -- no live GET
+endpoint wired anywhere yet.
+
+3.9 Achievement -- platform-wide, not org-scoped
+
+id, name, description, unlocked (boolean), earnedDate (date|null), progress: {current, target}|null . Rules must
+be evaluated entirely server-side (§13).
+
+3.10 Notification --  not built at all
+
+id, type, title, description, href, seen (boolean) .
+
+file:///C:/Users/hp/AppData/Local/Temp/claude/c--Users-hp-Desktop-volunteer-organization/d89c1356-99cd-412a-9659-94a60bfb05e2/scratchpa... 6/22
+8/9/26, 2:41 PM                                                Backend Requirements Document
+
+Entity-relationship summary
+
+   User 1:1 Volunteer profile
+   User 1:1 Organization (owner)
+   Organization 1:N Opportunity
+   Opportunity N:1 Category
+   Opportunity N:N Skill
+   Category 1:N Skill
+   Volunteer N:N Opportunity (through Participation / opportunity_volunteer)
+   Volunteer N:N Achievement (platform-wide unlock state)
+
+4. User Roles & Permissions
+
+Three account types ( src/constants/auth/accountTypes.js:1-7 ): volunteer , organization , admin . Admin has no public
+registration screen -- it must be pre-assigned via a Spatie role directly in the backend (comment, accountTypes.js:4-6 ). Role
+resolution priority when a user carries multiple roles: admin > organization > volunteer ( src/services/auth.js:88-90 ).
+
+Capability                                                     Public/Guest  Volunteer        Organization           Admin
+Browse opportunities & organizations (public listing/details)
+View/edit own volunteer profile                                                                                      
+Apply / withdraw from opportunities                                          
+View own participation history & hours summary                 -                              -                      -
+View achievements                                              -                              -                      -
+View/edit own organization profile                             -                              -                      -
+Resubmit verification document                                 -                              -                      -
+Create / edit / delete own opportunities                       -             -                                       -
+Toggle own opportunity registration open/closed                -             -                                       -
+View/accept/reject applicants, log final hours                 -             -                 (only when rejected)  -
+View organization dashboard/analytics                          -             -                                       -
+CRUD categories, skills, governorates                          -             -                 (only if verified)    -
+Review/verify/reject/suspend organizations                     -             -                 (only if verified)    -
+View platform-wide stats dashboard                             -             -                
+Manage own admin profile/password                              -             -                                       
+                                                               -             -                -                      
+                                                               -             -                -                      
+                                                                                              -                      
+                                                                                              -
+
+Route-level enforcement is via ProtectedRoute ( src/app/routes/ProtectedRoute.jsx:5-18 ): unauthenticated  redirect
+/login ; authenticated but wrong role  redirect / (home), not a 403 page. The backend must independently re-enforce
+every one of these boundaries -- the frontend guard is UI-only.
+
+      5. Authentication & Authorization
+
+       5.1 Token
+
+             Bearer token, attached as Authorization: Bearer {token} on every request (§2).
+file:///C:/Users/hp/AppData/Local/Temp/claude/c--Users-hp-Desktop-volunteer-organization/d89c1356-99cd-412a-9659-94a60bfb05e2/scratchpa... 7/22
+8/9/26, 2:41 PM                                         Backend Requirements Document
+
+Stored client-side in localStorage['auth_session'] as { user, token, accountType } -- no isAuthenticated flag
+persisted (derived at load).
+
+Undetermined (needs backend decision, §24): token lifetime/expiry and refresh strategy are not modeled anywhere in the
+frontend -- assume Sanctum personal access tokens with no client-side refresh flow unless backend specifies otherwise.
+
+Logout is 100% client-side -- clears storage + React Query cache; no server call is made
+( src/context/AuthContext.jsx:70-76 ). If the backend wants server-side token revocation, a logout endpoint is a new
+requirement to raise with the frontend team (not currently called).
+
+5.2 Register -- POST /register
+
+Always sent as multipart FormData, even without a file (because organization registration includes one)
+( src/services/auth.js:121-146,179 ).
+
+Field (snake_case sent)                                 Volunteer                                        Organization
+ account_type
+ email , password , password_confirmation (= password)                                                   
+ phone_number                                                                                            
+ first_name , last_name                                                                                  
+ organization_name , contact_person                     
+ verification_document (file, required)                                                                  -
+                                                        -
+                                                        -                                                
+                                                                                                         
+
+Response must be { user: {id, email, ...}, token: non-empty string } , ideally with roles[] on the user object.
+Validated by authResponseSchema -- mismatch produces a generic error, not a crash
+( src/utils/api/apiResponseSchemas.js:23-57 ).
+
+5.3 Login -- POST /login
+
+Plain JSON { email, password } . Same response contract as register.
+
+5.4 Password reset --  paths unconfirmed (Fortify/Breeze convention assumed)
+
+      POST /forgot-password { email } -- must always return generic success regardless of whether the email exists (anti-
+     enumeration; explicit frontend requirement, src/services/auth.js:320-323 ).
+      POST /reset-password { token, email, password, password_confirmation } -- token should be single-use, ~1 hour TTL
+     (mirrors the mock implementation exactly, src/services/mock/mockPasswordResetStore.js:5 ).
+
+5.5 Admin self-service --  paths unconfirmed
+
+      PUT /admin/profile { name, email, phone, bio }
+      PUT /admin/password { currentPassword, newPassword }
+
+5.6 Field-error mapping (Laravel snake_case  form field)
+
+ phone_numberphone, first_namefirstName, last_namelastName, organization_nameorgName,
+contact_personcontactPerson, verification_documentverificationImage, password_confirmationconfirmPassword
+( src/services/auth.js:47-57 ). Any 422 the backend returns on these fields will surface correctly on the matching form input --
+using a different field name will silently fail to bind.
+
+file:///C:/Users/hp/AppData/Local/Temp/claude/c--Users-hp-Desktop-volunteer-organization/d89c1356-99cd-412a-9659-94a60bfb05e2/scratchpa... 8/22
+8/9/26, 2:41 PM                                    Backend Requirements Document
+
+5.7 Volunteer profile-completion gate
+
+Applies globally, to every route inside the main layout (public pages included), for authenticated volunteers only. If ALL of
+educationLevel , dateOfBirth , gender , city , skillIds.length  1 aren't set, the volunteer is force-redirected to their
+profile page and cannot navigate anywhere else, including Home ( src/app/routes/RequireCompleteProfile.jsx ,
+src/utils/auth/profileCompletion.js:18-29 ). This is enforced client-side only today -- flagged in §24 as worth backend-side
+enforcement too if the profile-edit endpoint is hit directly (e.g. via API tooling bypassing the SPA).
+
+6. Route Map (frontend reference)
+
+  Path                                                            Access          Page
+   / /about /participates /opportunities /opportunities/:id       Public
+   /organizations /organizations/:id                                              Home, About, Success stories,
+   /volunteer-profile /explore /my-volunteering                   Volunteer only  listings, details
+
+   /organization-profile /dashboard /my-causes /my-causes/create  Organization    Profile, opportunities (aliased),
+   /my-causes/:id/edit /applicants/:id                            only            participations
+   /admin/dashboard /admin/organizations /admin/categories        Admin only
+   /admin/cities /admin/profile /admin/settings                                   Profile, dashboard, opportunity
+   /login /register /forgot-password /reset-password              Guest (outside  CRUD, applicants
+                                                                  layout)
+( src/App.jsx:56-130 )                                                            Platform stats, org review,
+                                                                                  catalog CRUD, profile
+
+                                                                                  Auth flows
+
+7. Opportunity Lifecycle
+
+7.1 Status values ( src/constants/opportunityStatus.js:14-19 )
+
+registration_open , registration_closed , in_progress , completed -- this replaced an older 2-state model per an explicit
+prior backend requirement (comment, same file lines 1-19).
+
+7.2 Computation rule --  must be computed server-side, not stored
+
+( src/utils/opportunityStatus.js:16-39 )
+
+if now > end_date:                                  completed
+elif now >= start_date:                             in_progress
+elif current_volu >= max_volu
+                                                     registration_closed
+         OR now > register_end_at                    registration_open
+         OR registration_closed_manually == true:
+else:
+
+current_volu itself must be a live count of accepted participations, never a manually maintained counter (§3.4).
+
+file:///C:/Users/hp/AppData/Local/Temp/claude/c--Users-hp-Desktop-volunteer-organization/d89c1356-99cd-412a-9659-94a60bfb05e2/scratchpa... 9/22
+8/9/26, 2:41 PM                                      Backend Requirements Document
+
+7.3 Transitions                Trigger               Actor         Notes
+                               New opportunity
+  From  To                                           Organization POST /opportunities (multipart)
+  (create) 
+   registration_open / closed  Manual toggle         Organization   PATCH /opportunities/{id}/status {status} --
+   registration_open                                               button only enabled pre- in_progress , and only for
+   registration_closed         Auto: full, or                      verified orgs
+                               registration window
+  any  registration_closed     passed                System        computed, no write
+                               Auto: now 
+  any  in_progress             start_date            System        computed, no write
+                               Auto: now >
+  any  completed               end_date              System        computed, no write
+                               Organization deletes
+  (any)  (deleted)             Organization edits    Organization DELETE /opportunities/{id}
+  (any)  (edited)
+                                                     Organization   POST /opportunities/{id} + _method=PUT ,
+                                                                   multipart
+
+isSuccessfulOpportunity = status == completed AND current_volu  min_volu -- used to decide "Success Story" eligibility
+(§17.4); this is stricter than status=completed alone, and the real-mode success-stories call currently only filters by
+status=completed -- flagged as a contract gap in §23.
+
+8. Participation (Application) Lifecycle
+
+8.1 Stored status values ( src/constants/participationStatus.js:19-25 )
+
+pending , accepted , rejected , withdrawn -- confirmed as the only 4 values actually persisted (comment, lines 3-10).
+
+8.2 Computed-only values (never written to DB)
+
+      expired -- display substitute when status = pending and now  opportunity.start_date (org never decided in time)
+     ( participationStatus.js:54-61 ).
+      active / completed (display projection) -- when status = accepted , shown as active if the opportunity is
+      in_progress , or completed if the opportunity is completed ; the stored value never changes from accepted
+     ( src/utils/participationDisplayStatus.js:28-37 ).
+
+file:///C:/Users/hp/AppData/Local/Temp/claude/c--Users-hp-Desktop-volunteer-organization/d89c1356-99cd-412a-9659-94a60bfb05e2/scratchp... 10/22
+8/9/26, 2:41 PM                                           Backend Requirements Document
+
+8.3 Full transition table
+
+From                       To            Trigger Actor                  Guard
+(none)                      pending
+                                         Apply            Volunteer     Opportunity must be registration_open ;
+                                                                         committedHours within [minHours, maxHours] ; no
+                                                                        existing active ( pending / accepted ) participation by this
+                                                                        volunteer for this opportunity
+
+pending                    accepted      Decision         Organization  Org must be verified; final, irreversible, no confirmation dialog
+                                                                        in UI
+
+pending                    rejected      Decision Organization Org must be verified; reason is mandatory; final, irreversible
+pending / accepted         withdrawn
+                                         Withdraw Volunteer              canWithdraw = opportunity registration still open (NOT
+                                                                        based on start date -- see below)
+
+rejected / withdrawn        pending      Re-apply Volunteer             Explicitly allowed -- these are terminal-but-not-blocking states
+                           (new                                         ( src/services/opportunities.js:578-581 )
+                           application)
+
+Row is never deleted on withdrawal -- this was an explicit design change: withdrawal used to hard-delete the pivot row, which
+silently erased the applicant from the org's view with no explanation; now it's kept as status = withdrawn , distinct from
+rejected , so both sides retain a transparent history ( src/constants/participationStatus.js:12-18 ).
+
+canWithdraw guard precisely ( src/utils/participationPolicy.js:26-33 ): the deciding factor is the opportunity's
+registration status, not its start date -- once registration closes (full, window passed, or manually closed by the org), withdrawal
+is blocked immediately even if the opportunity itself is weeks from starting. If the backend returns an explicit canWithdraw
+boolean on the participation object, the frontend trusts it directly over recomputing.
+
+8.4 Endpoints
+
+      POST /opportunities/{id}/participate { committed_hours }
+      PUT /participations/{id} { status, rejection_reason? } -- accept/reject
+      PUT /participations/{id} { status: 'withdrawn' } -- withdraw
+
+    PATCH /participations/{id}/hours { hours } --  not built; requires new hours_logged column (§3.5, §9)
+
+9. Hours Management
+
+Two distinct numbers per participation, never conflated:
+
+Field               Set by           When                                       Bound
+ committedHours     Volunteer        At apply time
+                                                                                 [opportunity.minHours,
+ hoursLogged        Organization     After opportunity ends, only for accepted  opportunity.maxHours] inclusive
+                                     participations
+                                                                                  0 , no upper bound (org can log more or less than
+                                                                                committed)
+
+Commit-time validation message expected server-side too: "Please commit to a number between {min} and {max}
+hours." (mirrors mock, src/services/opportunities.js:553-559 ).
+Org's "Manage/Edit hours" action is only reachable once status = accepted and opportunity.endDate < now
+( src/components/organization/ApplicantCard.jsx:37 ; src/pages/applicantsList.jsx:60-62 ).
+No decimal-precision or step constraint found anywhere -- plain finite-number validation only.
+
+file:///C:/Users/hp/AppData/Local/Temp/claude/c--Users-hp-Desktop-volunteer-organization/d89c1356-99cd-412a-9659-94a60bfb05e2/scratchp... 11/22
+8/9/26, 2:41 PM  Backend Requirements Document
+
+ Backend gap: this whole feature needs a new nullable hours_logged column on the pivot table plus the PATCH
+
+/participations/{id}/hours endpoint -- explicitly flagged as unbuilt in frontend comments
+( src/services/participations.js:216-222 ).
+
+10. Volunteer Requirements
+
+     Registration fields: §3.2 base + §5.2 table.
+     Profile-completion required fields (gates entire app, §5.7): educationLevel, dateOfBirth, gender, city, skillIds (1) .
+      interests / about optional.
+
+     Schema/UI mismatch to flag: the Zod schema allows 6 education levels, but the actual profile form only renders 4
+
+     (Master's/PhD are commented out) -- backend should accept all 6 regardless, this is a frontend gap, not a backend one
+     ( src/components/volunteerProfile/ProfileForm.jsx:16-23 vs VolunteerProfileValidation.js:18-25 ).
+
+     Gender mismatch: validation schema only allows Female / Male , but a GenderBadge component elsewhere renders a
+
+     third value "Prefer not to say" -- backend should clarify whether a third gender option is intended (§24).
+     Volunteers can: apply/withdraw, log a committed-hours pledge, view own participation list + effective/display status, view a
+     personal hours summary (aggregated from participations), view achievements, receive notifications (achievement unlocked,
+     hours confirmed, application accepted/rejected, upcoming-opportunity reminder 2 days before start).
+
+11. Organization Requirements & Verification Lifecycle
+
+11.1 Status values ( src/constants/organizationStatus.js:2-7 )
+
+pending (default)  verified | rejected | suspended (admin-only transitions, §12).
+
+11.2 Effects of each status
+
+      pending : awaiting admin review, banner shown, opportunity actions likely still available in current mock but production
+     intent should be confirmed (§24).
+      verified : full access -- can toggle opportunity status, accept/reject applicants, log hours.
+      rejected : account fully locked -- cannot post opportunities, review applicants, or use org services until a new verification
+     document is resubmitted, which resets status back to pending server-side
+     ( src/components/OrgProfile/RejectedVerificationPanel.jsx:50-53 ; src/services/organization.js:196-200 ).
+      suspended : admin-only action, only available on already- verified orgs
+     ( src/components/admin/OrganizationReviewCard.jsx:99-112 ); same lockout expectation as rejected.
+
+11.3 Endpoints
+
+      GET /organizations/{id} / PUT /organizations/{id} {name, description, city, website, contact_person} --
+     profile (no email field -- not a column on organizations ).
+
+     New requirement: POST /organizations/{id}/verification-document (multipart, field verification_document ) --
+
+     resubmission after rejection; must reset statuspending and clear rejection_reason server-side.
+
+     Confirmed gap: OrganizationController::update today only does $organization->update($request->validated())
+
+     -- it does not handle any file/logo upload, so there is currently no way to update an org's logo after registration
+     ( src/services/organization.js:1-24 ).
+
+file:///C:/Users/hp/AppData/Local/Temp/claude/c--Users-hp-Desktop-volunteer-organization/d89c1356-99cd-412a-9659-94a60bfb05e2/scratchp... 12/22
+8/9/26, 2:41 PM                                        Backend Requirements Document
+
+12. Admin Requirements
+
+    Catalog CRUD: Categories ( backend confirmed implemented -- CategoryController store/update/destroy match
+    CategoryRequest , src/services/categories.js:56-61 ), Skills ( SkillController entirely unimplemented, table lacks
+    working categoryId , src/services/skills.js:96-104 ), Governorates ( planned CRUD endpoints exist client-side as
+
+     calls, but confirmed no live GET endpoint is wired into any form yet -- see §23).
+
+     Organization review: GET /admin/organizations?status=pending|verified|rejected|suspended , PATCH
+     /admin/organizations/{id}/verify {status, reason?} -- reason required for rejected / suspended , not required for
+
+    verified .  No admin namespace/routes exist yet at all -- role:admin Spatie middleware is planned but not built
+
+     ( src/services/admin.js:1-13 ).
+
+    Own profile/password: PUT /admin/profile , PUT /admin/password ( paths unconfirmed).
+
+     Platform stats: GET /stats/summary  {volunteersCount, organizationsCount, opportunitiesCount} . A 4th field
+      citiesCoveredCount is referenced in the UI but explicitly flagged unconfirmed -- ask backend whether it exists or drop it
+     from the dashboard ( src/services/stats.js:5-7 ).
+
+     Admin dashboard is currently composed client-side from 3 separate queries (stats + categories + full org list) -- no
+     dedicated endpoint exists. A queryKeys.admin.dashboard cache key is already defined in the frontend but no hook uses it
+     -- this is either a signal of a planned-but-unbuilt GET /admin/dashboard aggregate endpoint, or dead code to clean up (flag
+     with frontend team, §24).
+
+13. Achievements System
+
+Three definitions, all evaluated against a volunteer's participation history ( src/services/achievements.js:36-52,92-94 ):
+
+ID               Name                                  Unlock rule
+                                                        completedOpportunitiesCount  1
+a1               First Volunteering Opportunity         totalConfirmedHours  10
+                                                        completedOpportunitiesCount  3
+a2               10 Volunteer Hours
+
+a3               Completion of Three Group Activities
+
+Explicit, repeated instruction in the code: achievement unlocking must be entirely backend business logic, not admin-set and
+not frontend-decided -- "Laravel should evaluate these automatically (e.g., via an Eloquent model event/observer triggered when
+a participation completes) and flip unlocked=true + set earnedDate " ( achievements.js:1-20 ). The frontend only ever renders
+whatever GET /volunteers/{id|me}/achievements returns: [{id, name, description, unlocked, earnedDate, progress:
+{current,target}|null}] .
+
+Achievements are platform-wide, not per-organization ( achievements.js:56-57 ) -- worth reconfirming as a deliberate product
+decision (§24).
+
+ Ambiguity to flag: achievement a3 's name says "group activities," but the mock rule that computes it just counts any 3
+
+completed opportunities -- it does not filter by the opportunity's isGroup flag. Confirm with product/backend whether a3
+should specifically require isGroup = true opportunities.
+
+14. Notifications
+
+ No real endpoint exists yet ("approved by backend team but not built" per code comment,
+
+src/services/notifications.js:1-13 ). Intended shape once built: GET /notifications  [{id, type, title, description,
+href, seen}] .
+
+file:///C:/Users/hp/AppData/Local/Temp/claude/c--Users-hp-Desktop-volunteer-organization/d89c1356-99cd-412a-9659-94a60bfb05e2/scratchp... 13/22
+8/9/26, 2:41 PM                       Backend Requirements Document
+
+Types the frontend already renders (derived client-side today): achievement , hours , status-accepted , status-rejected ,
+opportunity-reminder , org-verified , org-rejected , applicant-withdrawn .
+
+ Gap: "seen/read" state is currently tracked entirely client-side via 5 separate localStorage maps, with no server representation
+
+at all. If/when this endpoint is built, a PATCH /notifications/{id}/read -style mechanism will be needed, replacing the
+localStorage trackers.
+
+useRecentUpdates polls this data source every 5 seconds for authenticated volunteers and for organizations that have an
+organizationId ( src/hooks/useRecentUpdates.js:23,31-34 ) -- whatever endpoint backs this must be cheap enough to poll
+per active user.
+
+15. Dashboards & Analytics (Organization)
+
+No dedicated backend endpoint exists yet -- currently composed client-side from fetchMyOpportunities() + per-opportunity
+fetchApplicantsForOpportunity() calls. Intended future single endpoint: GET /organizations/me/dashboard
+( src/services/dashboard.js:1-9 ).
+
+Expected response shape:
+
+{
+
+   totalOpportunities, openOpportunities, totalVolunteers, pendingRequests,
+
+   completionRate,     // round(completed / total * 100)
+
+   totalHoursPledged,  //  committedHours across all NON-REJECTED applicants
+
+   opportunitiesBreakdown: [{id, title, currentVolunteers, maxVolunteers}],
+
+   recentActivity: [{id, volunteerName, opportunityTitle, opportunityId, status, date}],  // top 5 by date desc
+
+   analyticsTrends: {
+
+      metrics: [{key, label}],
+
+      weekly: [ 7 daily buckets ],
+
+      monthly: [ 6 monthly buckets ]
+
+   }
+
+}
+
+Each trend bucket: {key, label, opportunitiesCreated, applicationsReceived, acceptedVolunteers,
+totalVolunteerHours} . Requires opportunities to expose a created_at -equivalent timestamp for correct bucketing
+( src/services/dashboard.js:80-85 ).
+
+ Two "hours" numbers are intentionally different -- both must be exposed distinctly: totalHoursPledged sums
+
+committedHours for all non-rejected applicants; analyticsTrends.totalVolunteerHours sums hoursLogged ??
+committedHours only for accepted applicants ( src/services/dashboard.js:134-137,265-271 ).
+
+16. File Uploads       Value
+                        image/jpeg, image/png, image/webp ( src/constants/media.js:4 )
+  Constraint           2 MB ( media.js:7 )
+  Allowed MIME types    FormData ; updates use POST + _method=PUT
+  Max size
+  Upload mechanism
+
+file:///C:/Users/hp/AppData/Local/Temp/claude/c--Users-hp-Desktop-volunteer-organization/d89c1356-99cd-412a-9659-94a60bfb05e2/scratchp... 14/22
+8/9/26, 2:41 PM                     Backend Requirements Document
+
+Use case                            Field name               Media collection
+Volunteer profile photo              photo
+Organization logo                    photo (generic helper)   profile_photo
+Organization verification document   verification_document
+(registration + resubmission)                                 profile_image
+Opportunity cover image              image
+                                                              verification_documents -- image only, no PDF support
+                                                             anywhere in the frontend
+
+                                                              not yet named in MEDIA_COLLECTIONS -- planned,
+
+                                                             commented out ( media.js:13-14 )
+
+Backend should mirror the same limits server-side: image|mimes:jpeg,png,webp|max:2048 .
+
+17. Filtering, Search, Sort, Pagination
+
+17.1 GET /opportunities
+
+Params sent defensively by the frontend: search, categoryId, categoryIds[], skillId, skillIds[], location . 
+
+Confirmed gap: OpportunityController currently has no implemented actions at all -- none of these filters exist server-side
+today.
+
+     The opportunities list page applies one additional hard client-side filter regardless of backend: only status =
+     registration_open opportunities are ever shown on the main list (other statuses are reachable only via direct links or an
+     org's "past opportunities" view).
+     No pagination UI exists on this page -- full result set is rendered.
+
+17.2 GET /volunteers/me/suggested-opportunities
+
+Personalization params: skillIds[], city . Response is loosely typed on purpose (accepts
+matchReason / match_reason / reason / explanation , or a numeric probability / score ) -- backend has flexibility in the exact
+field name for its match output.
+
+17.3 GET /organizations
+
+     Confirmed paginated server-side via Laravel paginate(15) , envelope nested at data.data .
+     Confirmed gap: index() has no search filter logic -- frontend sends ?search= defensively for future support only.
+
+     Frontend also sends status=verified but since the status column doesn't exist, this has no effect today (frontend already
+     defensively treats null status as "pass the filter" rather than excluding everything).
+
+17.4 Applicants list ( GET /opportunities/{id}/participants )
+
+Entirely client-side filtering/sort/pagination -- the endpoint returns the full applicant list in one call; no query params are sent.
+Client applies: search (name substring), statusFilter ( all|pending|accepted|rejected -- note: no withdrawn / expired
+filter option even though those statuses exist), sortOrder ( newest|oldest by participatedAt ), and a "show more" (load-
+more) pagination pattern applied after filtering.
+
+17.5 Success stories ( GET /opportunities?status=completed )
+
+ Real-mode call only filters by status=completed ; it does not also require current_volu  min_volu the way the mock does
+
+-- meaning an opportunity that ended with zero volunteers could incorrectly appear as a "success story" today. Recommend the
+endpoint (or a dedicated success-stories endpoint) apply the stricter filter server-side.
+
+file:///C:/Users/hp/AppData/Local/Temp/claude/c--Users-hp-Desktop-volunteer-organization/d89c1356-99cd-412a-9659-94a60bfb05e2/scratchp... 15/22
+8/9/26, 2:41 PM                             Backend Requirements Document
+
+18. React Query / Data Synchronization Requirements
+
+     Global cache defaults: staleTime: 60s , retry: 1 , refetchOnWindowFocus: false ( src/app/queryClient.js ).
+
+     Query key hierarchy is resource-rooted ( src/app/queryKeys.js ) -- e.g. opportunities.all is a prefix that, when
+     invalidated, implicitly invalidates list/suggested/detail/mine/completed . Every opportunity mutation
+     (create/update/delete/toggle-status/participate) is expected to affect all of these views consistently -- i.e. read-after-
+     write consistency on a single opportunities resource.
+
+     Mutations widely assume the response body includes the created/updated resource (used to patch the cache directly via
+      setQueryData ) -- e.g. category/skill/city create-mutations expect result.data to be the new object; the city update-
+     mutation matches the cache entry by result.data.id , implying the response's id must equal the requested resource's
+     id.
+
+     Skills responses must embed a full nested category object, not just a categoryId -- confirmed by frontend
+
+     comments explaining why skill mutations use full-list invalidation instead of optimistic patching (rebuilding the nested object
+     client-side was judged not worth it) ( useCreateSkillMutation.js / useUpdateSkillMutation.js comments).
+
+     Contract inconsistency to resolve: useReviewOrganizationMutation reads result.status / result.reason at the top
+
+     level of the mutation response, while every other mutation in the codebase reads result.data.{...} . Recommend
+     standardizing before backend implementation.
+     Polling: only one hook polls on an interval -- useRecentUpdates at 5 seconds (§14). All other data hooks rely on cache
+     invalidation/refetch-on-navigation, not polling. No websockets/SSE anywhere.
+
+19. Full Endpoint Catalog
+
+Method/path as called by the frontend; Status column uses the legend at the top of this document.
+
+Auth
+
+Method & Path           Request                                                    Response                Status
+ POST /register         multipart, see §5.2                                         {user, token}
+ POST /login             {email, password}                                          {user, token}          
+ POST /forgot-password   {email}                                                   generic success always  
+ POST /reset-password    {token, email, password, password_confirmation}           success/error           
+ PUT /admin/profile      {name, email, phone, bio}                                 updated admin           
+ PUT /admin/password     {currentPassword, newPassword}                            success/error           
+                                                                                                           
+
+Volunteer                                Request          Response                                 Status
+                                         multipart, §3.2  updated profile
+  Method & Path                          -                 Achievement[]                           
+   POST /volunteers/{id} + _method=PUT                                                              (rules must be server-
+   GET /volunteers/{id|me}/achievements                    Participation[] (§8.4
+                                                          shape)                                   computed, §13)
+GET /volunteers/me/participations        -                 Opportunity[] w/ match
+                                                          metadata                                 
+ GET /volunteers/me/suggested-            skillIds[],
+opportunities                            city                                                      
+
+file:///C:/Users/hp/AppData/Local/Temp/claude/c--Users-hp-Desktop-volunteer-organization/d89c1356-99cd-412a-9659-94a60bfb05e2/scratchp... 16/22
+8/9/26, 2:41 PM                         Backend Requirements Document
+
+Organization profile & directory     Request                          Response              Status
+                                      search, status                  paginated list
+  Method & Path                                                                              search not
+   GET /organizations                -                                organization
+                                      {name, description, city,       organization          implemented; status
+   GET /organizations/{id}           website, contact_person}                               column missing
+   PUT /organizations/{id}           multipart verification_document  organization
+                                                                      (statuspending)        (single fetch works)
+   POST                                                                                      no file/logo
+  /organizations/{id}/verification-  -                                Opportunity[]
+  document                                                                                  handling
+   GET
+  /organizations/{id}/opportunities                                                         
+
+                                                                                            
+
+Opportunities                        Request                          Response              Status
+                                      search, categoryId(s),          paginated/list
+  Method & Path                      skillId(s), location, status                            controller has no
+   GET /opportunities                                                  {opportunity,
+                                     -                                similar}              implemented actions
+   GET /opportunities/{id}                                             Opportunity[]
+                                                                                            
+ GET                                 -                                opportunity
+/organizations/me/opportunities                                       opportunity           
+ POST /opportunities                 multipart, §3.4
+                                     multipart                        -                     
+ POST /opportunities/{id} +                                           opportunity           
+ _method=PUT                         -                                participation
+ DELETE /opportunities/{id}           {status}                                              
+                                      {committed_hours}                                     
+ PATCH /opportunities/{id}/status                                                           
+ POST
+/opportunities/{id}/participate
+
+Participations                       Request                          Response              Status
+                                     -                                applicant list (§6.2
+  Method & Path                                                       fields)               
+   GET                                {status,                        participation
+  /opportunities/{id}/participants   rejection_reason?}                                     
+   PUT /participations/{id}           {status:'withdrawn'}            participation
+                                      {hours}                         participation         
+   PUT /participations/{id}                                                                  needs new column +
+   PATCH /participations/{id}/hours
+                                                                                            route
+
+file:///C:/Users/hp/AppData/Local/Temp/claude/c--Users-hp-Desktop-volunteer-organization/d89c1356-99cd-412a-9659-94a60bfb05e2/scratchp... 17/22
+8/9/26, 2:41 PM                                     Backend Requirements Document
+
+Catalog (admin)
+
+Method & Path                            Request              Response             Status
+ GET/POST/PUT/DELETE /categories(/{id})   {name,              category
+                                         description}                               confirmed built
+ GET/POST/PUT/DELETE /skills(/{id})       {name, categoryId}  skill (with nested
+                                                              category)             controller unimplemented
+ GET/POST/PUT/DELETE                      {nameAr, nameEn}    governorate
+/governorates(/{id})                                                                no GET wired anywhere
+
+                                                                                   yet
+
+Admin                                    Request              Response        Status
+                                          status              paginated list
+  Method & Path                           {status,            organization     no admin namespace exists
+   GET /admin/organizations              reason?}                             
+   PATCH                                 -
+  /admin/organizations/{id}/verify                            aggregate        (candidate; currently unused key in
+   GET /admin/dashboard                                       stats
+                                                                              frontend)
+
+Misc              Request Response                                                 Status
+
+  Method & Path   -  {volunteersCount, organizationsCount, opportunitiesCount,      last field
+   GET
+  /stats/summary     citiesCoveredCount?}                                          unconfirmed
+   GET
+  /notifications  -  [{id, type, title, description, href, seen}]                   not built
+
+file:///C:/Users/hp/AppData/Local/Temp/claude/c--Users-hp-Desktop-volunteer-organization/d89c1356-99cd-412a-9659-94a60bfb05e2/scratchp... 18/22
+8/9/26, 2:41 PM                 Backend Requirements Document
+
+20. Validation Rules Reference
+
+Rule                        Value                                 Source
+Email                       standard email format                  src/utils/auth/validation.js:41
+Register/reset password      8 chars                               validation.js:45,28
+Login password              non-empty only                         validation.js:19
+Password confirmation       must match password                    validation.js:31-34
+Volunteer age                18 (from dateOfBirth )                VolunteerProfileValidation.js:56-59
+Org name                    2-255 chars                            OrganizationProfileValidation.js:43-47
+Org description              10 chars                              OrganizationProfileValidation.js:49-52
+Org website                 valid URL or empty                     OrganizationProfileValidation.js:56-60
+Governorate/city            one of 14 fixed values                 VolunteerProfileValidation.js:27-42
+Education level             one of 6 fixed values                  VolunteerProfileValidation.js:18-25
+Gender                       Female / Male only (see §24 re: 3rd   VolunteerProfileValidation.js:16
+                            value)
+Skills                      array,  1                              VolunteerProfileValidation.js:68
+Opportunity title           3-255 chars                            opportunityValidation.js:12-15
+Opportunity description      20 chars                              opportunityValidation.js:17-20
+Opportunity dates            endDate  startDate ;                  opportunityValidation.js:56-75
+                             registerStartAt 
+Opportunity hours           registerEndAt  startDate               opportunityValidation.js:37-40,60-63
+                             minHours, maxHours,
+Opportunity volunteer caps  totalHours  1 ; maxHours               opportunityValidation.js:42-51,64-67
+                            minHours
+Committed hours (apply)      minVolunteers, maxVolunteers          src/services/opportunities.js:553-559
+                             1 integers; max  min
+Hours logged (org confirm)  within [opportunity.minHours,          src/components/organization/ManageHoursModal.jsx:30-
+                            opportunity.maxHours]                 34
+Category/Skill/Governorate    0 , no upper bound                   categories.js , skills.js , syrianGovernorates.js
+name
+Org review reason           required, unique (case-insensitive)
+
+Image upload                required for rejected / suspended ,   src/services/admin.js:117-123
+                            not for verified                      src/constants/media.js:4-7
+
+                            JPG/PNG/WEBP,  2MB
+
+No password complexity rules (uppercase/digit/symbol) exist anywhere -- length-only.
+
+file:///C:/Users/hp/AppData/Local/Temp/claude/c--Users-hp-Desktop-volunteer-organization/d89c1356-99cd-412a-9659-94a60bfb05e2/scratchp... 19/22
+8/9/26, 2:41 PM  Backend Requirements Document
+
+21. Business Rules the Backend Must Enforce
+
+  1. Opportunity status is always derived from dates/counts, never manually set except the registrationClosedManually toggle
+     (§7.2).
+
+  2. current_volu is a live count of accepted participations -- never a stored increment/decrement counter (§3.4).
+  3. A volunteer cannot have two simultaneously active ( pending / accepted ) participations for the same opportunity; re-
+
+     applying after rejected / withdrawn is explicitly allowed.
+  4. Withdrawal is only valid while the opportunity's registration is still open -- not gated by the opportunity's start date directly.
+  5. Rejecting or suspending an organization requires a non-empty reason ; approving does not.
+  6. Resubmitting a verification document must reset an organization's status to pending and clear its rejection reason server-
+
+     side.
+  7. Achievement unlocking must be computed and persisted entirely server-side (event/observer-driven on participation
+
+     completion) -- never admin-set, never frontend-computed in production.
+  8. Anti-enumeration: forgot-password must always return a generic success response regardless of whether the email exists.
+  9. Password reset tokens should be single-use and time-limited (mock mirrors Laravel's ~1 hour default).
+10. File-upload update endpoints must accept POST + _method=PUT override (PHP cannot parse multipart on true PUT ).
+11. Withdrawn participations must never be hard-deleted -- kept as status = withdrawn , distinct from rejected , to preserve
+
+     a transparent history for both volunteer and organization.
+
+      22. Backend Team Checklist
+
+        Blocking / must-build before real-mode cutover:
+                   Implement OpportunityController -- all actions (index with filters, show, store, update, destroy, status toggle,
+
+             participate) are currently empty.
+                   Implement SkillController -- all actions currently empty; ensure skills table has a working categoryId column
+
+             and responses embed a nested category object.
+                   Add hours_logged nullable column to opportunity_volunteer pivot + build PATCH /participations/{id}/hours .
+                   Add status column to organizations table ( pending|verified|rejected|suspended ) -- currently always null .
+                   Add rejection_reason + reviewed_at to organizations (or a related review-log table).
+                   Build POST /organizations/{id}/verification-document (resubmission endpoint, resets status  pending).
+                   Fix OrganizationResource to return phone (currently omitted despite the column existing on users ).
+                   Fix OrganizationController::update to support logo/file uploads (currently plain field update only).
+                   Implement ?search= filtering on GET /organizations ( index() currently ignores it).
+                   Build the admin namespace: role:admin middleware, GET/PATCH /admin/organizations... .
+                   Build GET /governorates (+ admin CRUD already scaffolded client-side) -- currently 100% static frontend data.
+                   Build GET /notifications (+ a mark-as-read mechanism) -- currently entirely client-side/localStorage.
+                   Confirm/implement POST /forgot-password , POST /reset-password , PUT /admin/profile , PUT /admin/password --
+
+             paths are currently frontend guesses (Fortify/Breeze convention).
+                   Ensure login/register responses include a roles[] array and a non-empty token string.
+                   Build achievement-granting logic server-side (event/observer on participation completion) per the 3 rules in §13.
+
+        Should confirm / decide (see §24 for full context):
+                   Confirm citiesCoveredCount for GET /stats/summary , or approve dropping it from the admin dashboard.
+                   Decide on a dedicated GET /admin/dashboard aggregate endpoint vs. keeping client-side composition.
+
+file:///C:/Users/hp/AppData/Local/Temp/claude/c--Users-hp-Desktop-volunteer-organization/d89c1356-99cd-412a-9659-94a60bfb05e2/scratchp... 20/22
+8/9/26, 2:41 PM                             Backend Requirements Document
+
+Decide token lifetime/expiry/refresh strategy (nothing currently modeled frontend-side).
+Decide whether re-applying after rejected / withdrawn creates a new participation row or resets the old one.
+Decide whether a 3rd gender option ( "Prefer not to say" ) should be supported.
+Decide whether achievement a3 ("group activities") should specifically require isGroup = true opportunities.
+Decide the exact endpoint/collection name for opportunity cover-image uploads (not yet finalized frontend-side either).
+Confirm success-stories filtering should also require current_volu  min_volu , not just status = completed .
+
+23. Frontend  Backend Contract Gaps
+
+A. Confirmed backend gaps (from direct code/controller inspection, cited in frontend comments)
+
+Gap                                 Impact                                             Source
+
+ OpportunityController -- no        Opportunities                                      src/services/opportunities.js:418-419
+implemented actions at all          list/detail/create/edit/delete/status/participate
+                                    all non-functional in real mode
+ SkillController --
+index/store/update/destroy          Admin skill management is mock-only                src/services/skills.js:96-104
+unimplemented; table lacks working
+category link                       Verification state can't persist; frontend fakes    src/utils/api/apiResponseSchemas.js:70-
+                                     'pending'                                         72
+ organizations table has no                                                             src/services/organizations.js:24-28
+ status column                      Org directory/detail pages can't show phone
+                                    even though data exists                             src/services/organization.js:1-24
+ OrganizationResource never
+returns phone                       Org logo can never be changed post-                 src/services/organizations.js:10-37
+                                    registration via this endpoint
+ OrganizationController::update                                                         src/services/admin.js:1-13
+has no file-upload handling         Search box on org directory is currently a no-
+                                    op server-side
+ GET /organizations ignores ?
+search=                             Entire admin org-review flow is mock-only
+
+No admin routes/ role:admin         Org can't record final confirmed hours in real     src/services/participations.js:216-222
+middleware exist                    mode                                               src/services/notifications.js:1-13
+
+No hours_logged column / hours      Notification bell is fully simulated client-side
+endpoint
+
+No notifications endpoint
+
+file:///C:/Users/hp/AppData/Local/Temp/claude/c--Users-hp-Desktop-volunteer-organization/d89c1356-99cd-412a-9659-94a60bfb05e2/scratchp... 21/22
+8/9/26, 2:41 PM                          Backend Requirements Document
+
+B. Frontend-internal inconsistencies (not backend's fault, but relevant context)
+
+Inconsistency                            Detail
+Education-level options
+Gender options                           Schema allows 6 values; profile form UI only offers 4
+Governorate lists duplicated 4×
+                                         Schema allows 2 ( Female / Male ); a UI component ( GenderBadge ) supports a 3rd
+ CityFormModal UI                        ( "Prefer not to say" ) that can never actually be selected
+
+ useReviewOrganizationMutation            syrianGovernorates.js , volunteerProfile/ProfileForm.jsx ,
+response shape                            OrgProfile/ProfileForm.jsx , and both *ProfileValidation.js files each hardcode
+ admin.dashboard query key               their own copy, with naming drift ("Rural Damascus" vs "Rif Dimashq")
+Success-stories filter
+                                         Only exposes a nameEn input, even though the data model (and planned API payload) requires
+Volunteer update URL vs. header comment   nameAr too -- currently no way for an admin to supply it
+
+                                         Reads result.status / result.reason at the top level, while every other mutation in the
+                                         app expects result.data.{...}
+
+                                         Defined in queryKeys.js but no hook anywhere reads or writes it -- either dead code or a
+                                         signal of a planned-but-unbuilt endpoint
+
+                                         Real-mode call filters only by status=completed ; mock additionally requires current_volu
+                                          min_volu -- real mode can surface "failed" opportunities as success stories
+
+                                         File header comment suggests POST /api/volunteers/me ; the actual implementation calls
+                                          POST /volunteers/{volunteerId} (by id, not "me")
+
+C. Undetermined -- needs an explicit backend/product decision
+
+  1. Token expiry & refresh strategy (nothing modeled client-side).
+  2. Whether logout should call a server-side token-revocation endpoint (currently pure client-side clear).
+  3. Whether re-applying after rejected / withdrawn creates a new pivot row or resets the existing one to pending .
+  4. citiesCoveredCount on the platform-stats endpoint -- exists in UI, unconfirmed if backend will ever supply it.
+  5. Whether achievements should remain platform-wide (current explicit decision) or ever become per-organization.
+  6. Whether achievement a3 should require isGroup = true opportunities specifically.
+  7. Final field name / media collection for opportunity cover-image uploads.
+  8. Whether pending organizations should be allowed to post opportunities at all before verification (current mock behavior
+
+     doesn't explicitly block this beyond the "verified" gate on accept/reject/hours actions).
+  9. Whether GET /organizations pagination ( paginate(15) ) needs frontend-side "load more"/page controls to be added --
+
+     no such UI was found, meaning only the first page may currently ever be visible regardless of backend readiness.
+
+End of document. All findings above trace to specific frontend source files; none were inferred beyond what the code and its inline
+comments state explicitly.
+
+file:///C:/Users/hp/AppData/Local/Temp/claude/c--Users-hp-Desktop-volunteer-organization/d89c1356-99cd-412a-9659-94a60bfb05e2/scratchp... 22/22
+

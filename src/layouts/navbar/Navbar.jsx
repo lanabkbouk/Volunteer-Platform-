@@ -12,7 +12,6 @@ import {
   ChevronDown,
   Globe,
   Compass,
-  Building2,
 } from "lucide-react";
 
 import { ROUTES } from "../../constants/paths";
@@ -39,12 +38,19 @@ export default function Navbar({ role = "guest" }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isBellOpen, setIsBellOpen] = useState(false);
-
-  // أيقونة "الشخص" لا تعبّر عن حساب منظمة — نفس الأيقونة الموحّدة
-  // المستخدمة أصلًا كبديل شعار المنظمة (OrganizationCard.jsx،
-  // OrganizationDetailsPage.jsx)، بدل أيقونة شخصية عامة لا تناسبها
-  const AvatarFallbackIcon =
-    accountType === ACCOUNT_TYPES.ORGANIZATION ? Building2 : UserIcon;
+  // ⚠️ avatarUrl ممكن يكون موجود (قيمة نصية) بس يفشل التحميل الفعلي
+  // (رابط منتهي/معطوب) — بدون هالحالة، وسم <img> المكسور كان يعرض نص
+  // الـ alt (اسم المستخدم) مقصوص جوا دائرة صغيرة بدل أيقونة واضحة
+  // ⚠️ نخزّن الرابط الفاشل نفسه (مش true/false) — لما avatarUrl يتغيّر
+  // (صورة جديدة بعد وحدة معطوبة)، المقارنة تحت بتصير false تلقائيًا
+  // بدون أي useEffect لإعادة الضبط يدويًا
+  const [failedAvatarUrl, setFailedAvatarUrl] = useState(null);
+  // ⚠️ أي رابط blob: باقٍ بالجلسة من قبل إصلاح services/volunteer.js
+  // (راجع fileToDataUrl.js) مضمون 100% إنه معطوب بعد أي reload — رابط
+  // blob: مربوط بذاكرة التبويب السابق فقط. ما في داعي حتى نحاول
+  // تحميله ونستنى onError؛ نتعامل معه كـ"فاشل" فورًا من أول render
+  const isStaleBlobUrl = user?.avatarUrl?.startsWith("blob:");
+  const avatarLoadFailed = isStaleBlobUrl || failedAvatarUrl === user?.avatarUrl;
 
   const handleLogout = () => {
     logout();
@@ -181,15 +187,16 @@ export default function Navbar({ role = "guest" }) {
                                     bg-white/10 border border-white/15
                                     text-white hover:bg-white/15 hover:border-white/25 
                                     transition">
-                      {user?.avatarUrl ? (
+                      {user?.avatarUrl && !avatarLoadFailed ? (
                         <img
                           src={user.avatarUrl}
                           alt={user.displayName}
                           className="h-7 w-7 rounded-full object-cover border-2 border-primary/70"
+                          onError={() => setFailedAvatarUrl(user.avatarUrl)}
                         />
                       ) : (
                         <div className="h-7 w-7 rounded-full bg-primary/20 border border-primary/40 flex items-center justify-center">
-                          <AvatarFallbackIcon className="h-4 w-4 text-primary" />
+                          <UserIcon className="h-4 w-4 text-primary" />
                         </div>
                       )}
                       <span className="text-sm sm:text-base">

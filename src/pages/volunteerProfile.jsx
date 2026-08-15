@@ -76,15 +76,25 @@ export default function VolunteerProfile() {
 
   // نحجز التنقّل بس لما فيه تعديلات فعلية غير محفوظة، وما نحجزه أثناء
   // عملية الحفظ نفسها (submitting) حتى ما يعلق المستخدم بمنتصف الحفظ
+  //
+  // ⚠️ imageUpload مش جزء من react-hook-form (methods.formState.isDirty)
+  // إطلاقًا — هو state منفصل بالكامل (useImageUpload). بدون تضمينه هون
+  // صراحة، اختيار صورة جديدة أو إزالتها وعدم الضغط على "Save" كان
+  // بيسمح للمستخدم يبارح الصفحة بصمت تام بدون أي تحذير، فتضيع الصورة
+  const hasUnsavedImageChange = Boolean(imageUpload.file) || imageUpload.removed;
   const unsavedChangesBlocker = useUnsavedChangesGuard(
-    methods.formState.isDirty && !updateProfileMutation.isPending
+    (methods.formState.isDirty || hasUnsavedImageChange) && !updateProfileMutation.isPending
   );
 
   const fullName = user?.displayName;
 
   const onSubmit = async (data) => {
     try {
-      const result = await updateProfileMutation.mutateAsync({ values: data, photoFile: imageUpload.file });
+      const result = await updateProfileMutation.mutateAsync({
+        values: data,
+        photoFile: imageUpload.file,
+        removePhoto: imageUpload.removed,
+      });
 
       if (!result.success) {
         showError(result.error || "Failed to save profile");
@@ -97,6 +107,12 @@ export default function VolunteerProfile() {
       // (useUnsavedChangesGuard) رح يضل يحذّر المستخدم حتى بعد ما حفظ فعليًا
       methods.reset(data);
 
+      // نفس الشي لحالة الصورة (file/removed) — بدون هالسطر، لو حفظتِ
+      // صورة جديدة بنجاح، imageUpload.file كان رح يضل "معلّق" للأبد،
+      // وحارس التنقّل فوق رح يستمر يحذّر بالغلط حتى إنه الحفظ نجح فعليًا
+      const savedImageUrl = result.data?.imageUrl ?? (imageUpload.removed ? "" : imageUpload.previewUrl);
+      imageUpload.reset(savedImageUrl);
+
       // نحدّث الجلسة بالحقول المحفوظة فعليًا. RequireCompleteProfile
       // رح يفحص هالحقول نفسها مباشرة (مو علم منفصل) عبر
       // isVolunteerProfileComplete، فبمجرد ما تتحدث هون بيتحدث قرار
@@ -104,7 +120,7 @@ export default function VolunteerProfile() {
       updateUser({
         ...data,
         skillIds: data.skills,
-        imageUrl: result.data?.imageUrl || imageUpload.previewUrl,
+        imageUrl: savedImageUrl,
       });
     } catch (err) {
       showError(err.message || "Failed to save profile");
@@ -120,6 +136,7 @@ export default function VolunteerProfile() {
             gender={methods.watch("gender")}
             imagePreview={imageUpload.previewUrl}
             onImageChange={imageUpload.handleFileChange}
+            onImageRemove={imageUpload.handleRemove}
           />
 
           {imageUpload.error && (

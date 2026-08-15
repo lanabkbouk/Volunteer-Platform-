@@ -7,6 +7,7 @@ import { useAuth } from "../context/AuthContext";
 import { useOrganizationProfileQuery } from "../hooks/queries/useOrganizationProfileQuery";
 import { useUpdateOrganizationProfileMutation } from "../hooks/queries/useUpdateOrganizationProfileMutation";
 import { useImageUpload } from "../hooks/useImageUpload";
+import useUnsavedChangesGuard from "../hooks/useUnsavedChangesGuard";
 import { queryKeys } from "../app/queryKeys";
 import { organizationProfileSchema } from "../utils/auth/OrganizationProfileValidation";
 import { ORGANIZATION_STATUS } from "../constants/organizationStatus";
@@ -18,12 +19,12 @@ import OrgProfileForm from "../components/OrgProfile/ProfileForm";
 import OrgProfilePreview from "../components/OrgProfile/ProfilePreview";
 import VerificationStatusBanner from "../components/OrgProfile/VerificationStatusBanner";
 import RejectedVerificationPanel from "../components/OrgProfile/RejectedVerificationPanel";
-import ProfileCompletionReminderBanner from "../components/OrgProfile/ProfileCompletionReminderBanner";
 import Skeleton from "../components/ui/Skeleton";
+import Modal from "../components/ui/Modal";
+import Button from "../components/ui/Button";
 import Toast from "../components/common/Toast";
 import { useToast } from "../hooks/useToast";
 import { getOrganizationId } from "../utils/auth/getOrganizationId";
-import { isOrganizationProfileComplete } from "../utils/auth/profileCompletion";
 
 export default function OrgProfile() {
   const { user, updateUser } = useAuth();
@@ -38,12 +39,6 @@ export default function OrgProfile() {
   // الخدمة بترجع { success, data } دايمًا (ما بترمي استثناء)، فمنطق
   // التحقق يضل هون بدل الاعتماد على query.isError
   const organization = organizationQuery.data?.success ? organizationQuery.data.data : null;
-  // isFetched (مو !isLoading): الاستعلام لازم يكون نفّذ فعليًا مرة عالأقل
-  // قبل ما نعتبرها "فشلت" — نفس نمط dashboard.jsx بالضبط، حتى لا يظهر
-  // الفورم فاضي بصمت عند فشل الجلب
-  const loadError = organizationQuery.isFetched && !organizationQuery.data?.success
-    ? organizationQuery.data?.error || "Unable to load your organization profile"
-    : "";
 
   const updateProfileMutation = useUpdateOrganizationProfileMutation(organizationId);
 
@@ -51,7 +46,7 @@ export default function OrgProfile() {
   // نفس الـ hook المستخدم بصفحة Register وorgForm، بدل FileReader يدوي
   // مكرر هون لحاله
   const imageUpload = useImageUpload();
-  const imagePreview = imageUpload.previewUrl || organization?.imageUrl || "";
+  const imagePreview = imageUpload.previewUrl;
 
   const { toast, showSuccess, showError, closeToast } = useToast();
 
@@ -91,25 +86,49 @@ export default function OrgProfile() {
     markOrganizationStatusSeen(organization.id, organization.status);
   }, [organization?.id, organization?.status]);
 
+  // نحجز التنقّل بس لما فيه تعديلات فعلية غير محفوظة، وما نحجزه أثناء
+  // عملية الحفظ نفسها — نفس نمط volunteerProfile.jsx بالضبط
+  //
+  // ⚠️ imageUpload مش جزء من react-hook-form (methods.formState.isDirty)
+  // إطلاقًا — بدون تضمينه هون صراحة، اختيار شعار جديد أو إزالته وعدم
+  // الضغط على "Save" كان بيسمح للمنظمة تبارح الصفحة بصمت تام بدون أي
+  // تحذير، فيضيع الشعار المختار
+  const hasUnsavedImageChange = Boolean(imageUpload.file) || imageUpload.removed;
+  const unsavedChangesBlocker = useUnsavedChangesGuard(
+    (methods.formState.isDirty || hasUnsavedImageChange) && !updateProfileMutation.isPending
+  );
+
   const onSubmit = async (data) => {
     try {
       // بناء FormData صار مسؤولية طبقة الخدمة (services/organization.js)
-      // بدل الصفحة — نفس نمط buildOpportunityFormData
-      const result = await updateProfileMutation.mutateAsync(data);
+      // بدل الصفحة — نفس نمط buildOpportunityFormData. نمرّر الشعار هون
+      // كمان (values/photoFile/removePhoto) — نفس شكل استدعاء
+      // updateVolunteerProfile بالضبط، للتوحيد بين الصفحتين
+      const result = await updateProfileMutation.mutateAsync({
+        values: data,
+        photoFile: imageUpload.file,
+        removePhoto: imageUpload.removed,
+      });
 
       if (!result.success) {
         showError(result.error || "Failed to save changes");
         return;
       }
 
-      updateUser({ ...user, ...data });
+      // نصفّر حالة الصورة (file/removed) بعد نجاح الحفظ — وإلا حارس
+      // التنقّل فوق رح يضل يحذّر حتى بعد ما الحفظ نجح فعليًا (نفس
+      // السبب بالضبط بـ volunteerProfile.jsx)
+      const savedImageUrl = result.data?.imageUrl ?? (imageUpload.removed ? "" : imageUpload.previewUrl);
+      imageUpload.reset(savedImageUrl);
+
+      updateUser({ ...user, ...data, imageUrl: savedImageUrl });
 
       // ندمج قيم الفورم المحفوظة مباشرة بكاش React Query — وإلا رأس
       // الصفحة (الاسم، الشارة) يضل عارض البيانات القديمة للأبد بنفس
       // الجلسة، رغم إنه الحفظ نجح فعليًا بالتخزين
       queryClient.setQueryData(queryKeys.organization.profile(organizationId), (current) => ({
         success: true,
-        data: { ...(current?.data ?? {}), ...data },
+        data: { ...(current?.data ?? {}), ...data, imageUrl: savedImageUrl },
       }));
 
       methods.reset(data);
@@ -124,33 +143,35 @@ export default function OrgProfile() {
 
   if (isLoading) {
     return (
-      <div className="mx-auto w-full flex-1 max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-        {/* هيكل تقريبي لرأس البروفايل: صورة دائرية + اسم + شارة حالة */}
-        <div className={`flex flex-col md:flex-row md:items-center gap-8 ${PANEL_SURFACE} px-8 py-10`}>
-          <div className="flex items-center gap-6">
-            <Skeleton className="h-24 w-24 rounded-xl" />
-            <div className="flex flex-col gap-3">
-              <Skeleton className="h-6 w-48" />
-              <Skeleton className="h-5 w-24 rounded-full" />
+      <div className="mx-auto w-full flex-1 max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <div className="container mx-auto px-4 md:px-16 py-10 md:py-14">
+          {/* هيكل تقريبي لرأس البروفايل: صورة دائرية + اسم + شارة حالة */}
+          <div className={`flex flex-col md:flex-row md:items-center gap-8 ${PANEL_SURFACE} px-8 py-10`}>
+            <div className="flex items-center gap-6">
+              <Skeleton className="h-24 w-24 rounded-xl" />
+              <div className="flex flex-col gap-3">
+                <Skeleton className="h-6 w-48" />
+                <Skeleton className="h-5 w-24 rounded-full" />
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* هيكل تقريبي للنموذج + بطاقة المعاينة */}
-        <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className={`lg:col-span-2 ${PANEL_SURFACE} p-6 md:p-8 flex flex-col gap-5`}>
-            <Skeleton className="h-4 w-32" />
-            <Skeleton className="h-12 w-full rounded-xl" />
-            <Skeleton className="h-4 w-32" />
-            <Skeleton className="h-28 w-full rounded-xl" />
-            <Skeleton className="h-4 w-32" />
-            <Skeleton className="h-12 w-full rounded-xl" />
-          </div>
-          <div className={`${PANEL_SURFACE} p-6 md:p-8 flex flex-col items-center gap-4`}>
-            <Skeleton className="h-20 w-20 rounded-full" />
-            <Skeleton className="h-5 w-32" />
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-2/3" />
+          {/* هيكل تقريبي للنموذج + بطاقة المعاينة */}
+          <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className={`lg:col-span-2 ${PANEL_SURFACE} p-6 md:p-8 flex flex-col gap-5`}>
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-12 w-full rounded-xl" />
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-28 w-full rounded-xl" />
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-12 w-full rounded-xl" />
+            </div>
+            <div className={`${PANEL_SURFACE} p-6 md:p-8 flex flex-col items-center gap-4`}>
+              <Skeleton className="h-20 w-20 rounded-full" />
+              <Skeleton className="h-5 w-32" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-2/3" />
+            </div>
           </div>
         </div>
       </div>
@@ -159,65 +180,77 @@ export default function OrgProfile() {
 
   return (
     <FormProvider {...methods}>
-      <div className="mx-auto w-full flex-1 max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-        {loadError && (
-          <p className="mb-4 rounded-lg border border-danger bg-danger/5 px-3 py-2 text-sm text-danger">
-            {loadError}
-          </p>
-        )}
+      <div className="mx-auto w-full flex-1 max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <div className="container mx-auto px-4 md:px-16 py-10 md:py-14">
 
-        {isRejected ? (
-          <RejectedVerificationPanel
-            organizationId={organizationId}
-            rejectionReason={organization?.rejectionReason}
-            onUploadSuccess={showSuccess}
-            onUploadError={showError}
-          />
-        ) : (
-          <VerificationStatusBanner
+          {isRejected ? (
+            <RejectedVerificationPanel
+              organizationId={organizationId}
+              rejectionReason={organization?.rejectionReason}
+              onUploadSuccess={showSuccess}
+              onUploadError={showError}
+            />
+          ) : (
+            <VerificationStatusBanner
+              status={organization?.status}
+              rejectionReason={organization?.rejectionReason}
+            />
+          )}
+
+          <OrgProfileHeader
+            name={organization?.name}
+            imagePreview={imagePreview}
+            onImageChange={imageUpload.handleFileChange}
+            onImageRemove={imageUpload.handleRemove}
             status={organization?.status}
-            rejectionReason={organization?.rejectionReason}
           />
-        )}
 
-        {/* تذكير غير مانع لإكمال البروفايل — مستقل تمامًا عن حالة التوثيق
-            (pending/rejected)، فبيظهر جنب أي بانر تاني فوق لو الوصف أو
-            المدينة ناقصين */}
-        {organization && !isOrganizationProfileComplete(organization) && (
-          <ProfileCompletionReminderBanner />
-        )}
+          {imageUpload.error && (
+            <p className="mt-2 text-sm text-danger">{imageUpload.error}</p>
+          )}
 
-        <OrgProfileHeader
-          name={organization?.name}
-          imagePreview={imagePreview}
-          onImageChange={imageUpload.handleFileChange}
-          status={organization?.status}
-        />
+          {/* FORM + PREVIEW */}
+          <form
+              onSubmit={methods.handleSubmit(onSubmit)}
+              className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6"
+            >
+            {/* LEFT: FORM */}
+            <div className={`lg:col-span-2 ${PANEL_SURFACE} p-6 md:p-8`}>
+              <OrgProfileForm submitting={updateProfileMutation.isPending} />
+            </div>
 
-        {imageUpload.error && (
-          <p className="mt-2 text-sm text-danger">{imageUpload.error}</p>
-        )}
+            {/* RIGHT: PREVIEW */}
+            <OrgProfilePreview email={organization?.email} phone={user?.phone} />
+          </form>
 
-        {/* FORM + PREVIEW */}
-        <form
-            onSubmit={methods.handleSubmit(onSubmit)}
-            className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6"
-          >
-          {/* LEFT: FORM */}
-          <div className={`lg:col-span-2 ${PANEL_SURFACE} p-6 md:p-8`}>
-            <OrgProfileForm submitting={updateProfileMutation.isPending} />
-          </div>
-
-          {/* RIGHT: PREVIEW */}
-          <OrgProfilePreview email={organization?.email} phone={user?.phone} />
-        </form>
-
-        {!canUseServices && (
-          <p className="mt-4 text-xs text-body text-center">
-            Opportunity posting will be available once your organization is verified.
-          </p>
-        )}
+          {!canUseServices && (
+            <p className="mt-4 text-xs text-body text-center">
+              Opportunity posting will be available once your organization is verified.
+            </p>
+          )}
+        </div>
       </div>
+
+      {/* نافذة تأكيد المغادرة — تظهر بس لما فيه تعديلات غير محفوظة
+          (نص أو شعار) والمنظمة حاولت تنتقل لصفحة تانية (رابط أو زر
+          رجوع المتصفح) — نفس نمط volunteerProfile.jsx بالضبط */}
+      <Modal
+        open={unsavedChangesBlocker.state === "blocked"}
+        onClose={() => unsavedChangesBlocker.reset?.()}
+        title="Unsaved changes"
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => unsavedChangesBlocker.reset?.()}>
+              Stay on this page
+            </Button>
+            <Button variant="danger" onClick={() => unsavedChangesBlocker.proceed?.()}>
+              Leave without saving
+            </Button>
+          </>
+        }
+      >
+        You have unsaved changes to your organization profile. If you leave now, these changes will be lost.
+      </Modal>
 
       <Toast
         message={toast.message}

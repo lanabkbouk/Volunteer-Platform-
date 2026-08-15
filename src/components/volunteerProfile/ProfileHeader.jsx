@@ -8,6 +8,7 @@ export default function ProfileHeader({
   gender,
   imagePreview,
   onImageChange,
+  onImageRemove,
 }) {
   return (
     <div className={`flex flex-col md:flex-row md:items-center gap-8 ${PANEL_SURFACE} px-8 py-10`}>
@@ -18,11 +19,11 @@ export default function ProfileHeader({
         <ImageUploader
           previewUrl={imagePreview}
           onFileChange={onImageChange}
+          onRemove={onImageRemove}
           shape="square"
           size="md"
           fallbackIcon={null}
           fallbackText={fullName?.[0]?.toUpperCase() || "V"}
-          alt={fullName ? `${fullName}'s profile photo` : "Profile photo"}
         />
 
         <div className="flex flex-col">

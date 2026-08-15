@@ -36,7 +36,16 @@ function loadPersistedSession() {
 }
 
 function persistSession({ user, token, accountType }) {
-  localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ user, token, accountType }))
+  try {
+    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({ user, token, accountType }))
+  } catch (error) {
+    // ⚠️ لو فشلت (مثلًا QuotaExceededError — صورة base64 كبيرة + بيانات
+    // Mock متراكمة من جلسات اختبار كتيرة)، ما منوقف تحديث الجلسة
+    // بالذاكرة (state لسا بيتحدث طبيعي بالتابع اللي استدعى هاي الدالة)؛
+    // بس التغيير ما رح يبقى بعد reload/جلسة جديدة. نسجّل تحذير واضح
+    // بالـ console بدل فشل صامت 100% بدون أي أثر
+    console.warn('Failed to persist session to localStorage — changes will not survive a reload.', error)
+  }
 }
 
 export function AuthProvider({ children }) {

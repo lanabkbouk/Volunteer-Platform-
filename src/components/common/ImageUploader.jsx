@@ -1,7 +1,6 @@
 // components/common/ImageUploader.jsx
 
-import { useState } from "react"
-import { Camera, Building2, User } from "lucide-react"
+import { Camera, Building2, User, X } from "lucide-react"
 
 const SHAPE_CLASSES = {
   circle: "rounded-full",
@@ -17,40 +16,27 @@ const SIZE_CLASSES = {
 export default function ImageUploader({
   previewUrl,
   onFileChange,
+  // اختياري — لو مُمرَّر، بيظهر زر إزالة صغير (X) بس لما فيه previewUrl
+  // فعليًا. بدونه (مثلاً بشاشات ما بتدعم إزالة الصورة)، السلوك القديم
+  // يضل زي ما هو تمامًا
+  onRemove,
   shape = "circle",
   size = "md",
   fallbackIcon = "user",
   fallbackText,
   disabled = false,
-  alt = "Profile",
 }) {
   const FallbackIcon = fallbackIcon === "organization" ? Building2 : User
-
-  // رابط صحيح شكليًا بس معطوب/محذوف (404) كان يطلع أيقونة المتصفح
-  // المكسورة الافتراضية بدل الـ fallback الجاهز أصلًا تحت — نتتبّع فشل
-  // التحميل ونرجّع لنفس حالة "بلا صورة". نصفّرها كل ما يتغيّر previewUrl
-  // (رفع صورة جديدة لازم ياخد فرصة تحميل من جديد). تصفير الحالة بيصير
-  // مباشرة أثناء الـ render (نمط React الموصى فيه لضبط state حسب تغيّر
-  // prop) بدل useEffect، تفاديًا لعملية render إضافية غير ضرورية
-  const [imageFailed, setImageFailed] = useState(false)
-  const [lastPreviewUrl, setLastPreviewUrl] = useState(previewUrl)
-  if (previewUrl !== lastPreviewUrl) {
-    setLastPreviewUrl(previewUrl)
-    setImageFailed(false)
-  }
-
-  const showImage = previewUrl && !imageFailed
 
   return (
     <div className="relative inline-block">
       <div
         className={`${SIZE_CLASSES[size]} ${SHAPE_CLASSES[shape]} overflow-hidden border border-heading/10 flex items-center justify-center`}
       >
-        {showImage ? (
+        {previewUrl ? (
           <img
             src={previewUrl}
-            alt={alt}
-            onError={() => setImageFailed(true)}
+            alt="Profile"
             className="w-full h-full object-cover transition-transform duration-200 hover:scale-[1.03]"
           />
         ) : fallbackText ? (
@@ -62,7 +48,7 @@ export default function ImageUploader({
 
       {!disabled && (
         <label
-          className="absolute -bottom-2 -right-2 w-11 h-11 rounded-full bg-field border border-heading/10 flex items-center justify-center cursor-pointer hover:bg-primary/10 transition-colors shadow-sm focus-within:ring-2 focus-within:ring-primary/40"
+          className="absolute -bottom-2 -right-2 w-10 h-10 rounded-full bg-field border border-heading/10 flex items-center justify-center cursor-pointer hover:bg-primary/10 transition-colors shadow-sm focus-within:ring-2 focus-within:ring-primary/40"
         >
           <span className="sr-only">Change the image</span>
           <Camera size={16} className="text-primary" />
@@ -73,6 +59,20 @@ export default function ImageUploader({
             onChange={onFileChange}
           />
         </label>
+      )}
+
+      {/* زر الإزالة — بأعلى اليسار، حتى ما يتداخل بصريًا مع زر الكاميرا
+          بأسفل اليمين. يظهر فقط لما فيه صورة فعلية معروضة، مو أيقونة/حرف
+          افتراضي (إزالة "لا شيء" ما إلها معنى) */}
+      {!disabled && onRemove && previewUrl && (
+        <button
+          type="button"
+          onClick={onRemove}
+          className="absolute -top-1.5 -right-1.5 w-7 h-7 rounded-full bg-danger text-white flex items-center justify-center shadow-sm hover:bg-danger/90 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-danger/40"
+        >
+          <span className="sr-only">Remove photo</span>
+          <X size={14} />
+        </button>
       )}
     </div>
   )

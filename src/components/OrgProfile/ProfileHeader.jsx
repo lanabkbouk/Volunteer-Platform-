@@ -14,6 +14,7 @@ export default function OrgProfileHeader({
   name,
   imagePreview,
   onImageChange,
+  onImageRemove,
   status,
 }) {
   const statusLabel = status ? ORGANIZATION_STATUS_META[status]?.label : "Status";
@@ -24,6 +25,7 @@ export default function OrgProfileHeader({
         <ImageUploader
           previewUrl={imagePreview}
           onFileChange={onImageChange}
+          onRemove={onImageRemove}
           shape="square"
           size="md"
           fallbackIcon={null}

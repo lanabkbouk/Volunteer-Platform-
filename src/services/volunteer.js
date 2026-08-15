@@ -35,6 +35,12 @@ function buildVolunteerFormData({ values, photoFile }) {
   formData.append('gendre', (values.gender || '').toLowerCase())
   formData.append('city', values.city || '')
   formData.append('about', values.about || '')
+  formData.append('interests', values.interests || '')
+  // كانت ناقصة هون بالكامل — skills حقل إجباري (≥1) بالفورم، بس الطلب
+  // الحقيقي ما كان يرسلها إطلاقًا، فأي تعديل مهارات كان يضيع صامتًا بوضع
+  // real. نفس أسلوب تسلسل المصفوفات المستخدم أصلًا بـ buildOpportunityFormData
+  // (JSON.stringify)، حتى يبقى التعامل مع array بداخل FormData موحّد بالمشروع
+  formData.append('skill_ids', JSON.stringify(values.skills || []))
 
   if (photoFile) formData.append('photo', photoFile)
 
