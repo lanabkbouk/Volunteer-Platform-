@@ -20,20 +20,20 @@ export const ORGANIZATION_STATUS_META = {
   [ORGANIZATION_STATUS.PENDING]: {
     label: "Pending Review",
     message: "Your organization is awaiting verification by our team. This may take a few days.",
-    badgeClassName: "bg-yellow-100 text-yellow-800",
-    bannerClassName: "bg-yellow-50 border-yellow-200 text-yellow-800",
+    badgeClassName: "bg-amber-100 text-amber-800",
+    bannerClassName: "bg-amber-50 border-amber-200 text-amber-800",
   },
   [ORGANIZATION_STATUS.VERIFIED]: {
     label: "Verified",
     message: "Your organization has been verified and can post volunteer opportunities.",
-    badgeClassName: "bg-green-100 text-green-800",
-    bannerClassName: "bg-green-50 border-green-200 text-green-800",
+    badgeClassName: "bg-success/10 text-success",
+    bannerClassName: "bg-success/5 border-success/20 text-success",
   },
   [ORGANIZATION_STATUS.REJECTED]: {
     label: "Rejected",
     message: "Your verification request was rejected. Please review the reason below and update your information.",
-    badgeClassName: "bg-red-100 text-red-800",
-    bannerClassName: "bg-red-50 border-red-200 text-red-800",
+    badgeClassName: "bg-danger/10 text-danger",
+    bannerClassName: "bg-danger/5 border-danger/20 text-danger",
   },
   [ORGANIZATION_STATUS.SUSPENDED]: {
     label: "Suspended",

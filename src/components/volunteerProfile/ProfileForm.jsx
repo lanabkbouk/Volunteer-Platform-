@@ -18,8 +18,6 @@ const EDUCATION_LEVEL_ITEMS = [
   { name: "High School", value: "High School" },
   { name: "Diploma", value: "Diploma" },
   { name: "Bachelor's Degree", value: "Bachelor's Degree" },
-  // { name: "Master's Degree", value: "Master's Degree" },
-  // { name: "PhD", value: "PhD" },
 ];
 
 const GOVERNORATE_ITEMS = [

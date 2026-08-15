@@ -15,13 +15,15 @@ import { calculateAge } from '../validators'
 
 const GENDER_OPTIONS = ['Female', 'Male']
 
+// قرار منتج مقصود: ما فينا نستبعد "ماجستير"/"دكتوراه" — مش منطقي حمَلة
+// هالشهادتين يسجّلوا كمتطوّعين بمنصة تطوع أصلًا (سياق المنصة مختلف عن
+// سياق توظيف أكاديمي). الفورم (ProfileForm.jsx) أصلًا بيخفيهم، وهون
+// بنمنعهم على مستوى الـ schema كمان حتى ما يوصلوا كقيمة صالحة بأي طريق
 const EDUCATION_LEVEL_OPTIONS = [
   'No Formal Education',
   'High School',
   'Diploma',
   "Bachelor's Degree",
-  "Master's Degree",
-  'PhD',
 ]
 
 const SYRIA_GOVERNORATES = [

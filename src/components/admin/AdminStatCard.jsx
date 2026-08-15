@@ -3,7 +3,7 @@ import { CARD_BASE } from '../../utils/surfaceStyles'
 
 const ACCENT_STYLES = {
   primary: 'bg-primary/10 text-primary',
-  success: 'bg-emerald-500/10 text-emerald-700',
+  success: 'bg-success/10 text-success',
   warning: 'bg-amber-500/10 text-amber-700',
   danger: 'bg-danger/10 text-danger',
   secondary: 'bg-secondary/10 text-secondary',

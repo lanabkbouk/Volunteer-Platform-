@@ -1,3 +1,4 @@
+import { Info } from "lucide-react";
 import { useFormContext } from "react-hook-form";
 import { PANEL_SURFACE } from "../../utils/surfaceStyles";
 import InfoRow from "../ui/InfoRow";
@@ -34,8 +35,11 @@ export default function ProfilePreview({ fullName, email, phone, availableSkills
   const interestsChips = splitCsvToChips(values.interests);
 
   return (
-    <div className={`${PANEL_SURFACE} p-6 md:p-8`}>
-      <Typography variant="h4" gutterBottom>Preview</Typography>
+    <div className={`${PANEL_SURFACE} border-l-4 border-l-info p-6 md:p-8`}>
+      <div className="flex items-center gap-2 mb-4">
+        <Info size={18} className="text-info" />
+        <Typography variant="h4">Preview</Typography>
+      </div>
 
       <div className="space-y-4">
         <InfoRow label="Full Name" value={fullName} />

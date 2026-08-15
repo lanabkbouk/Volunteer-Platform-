@@ -84,12 +84,17 @@ export default function OrganizationDetailsPage() {
 
   if (loading) {
     return (
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      // 7xl (مو 5xl) — توحيد عرض الحاوية مع باقي صفحات المشروع
+      // (OpportunitiesListPage/OrganizationsListPage)، ولازم يطابق حالتي
+      // الخطأ والمحتوى الفعلي تحت بالضبط حتى ما يصير Layout Shift عند التحميل
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <Skeleton className="h-9 w-1/2 mb-4" />
         <Skeleton className="w-full aspect-[3/1] rounded-3xl mb-6" />
         <Skeleton className="h-4 w-full mb-2" />
         <Skeleton className="h-4 w-5/6 mb-8" />
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        {/* 3 أعمدة على lg (مو 2) — نفس شبكة كاردات الفرص المستخدمة
+            بباقي الصفحات (md:2 / lg:3)، تطابق شبكة القسم الفعلي تحت */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <CardSkeleton />
           <CardSkeleton />
         </div>
@@ -99,7 +104,8 @@ export default function OrganizationDetailsPage() {
 
   if (loadError || !organization) {
     return (
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      // نفس عرض حالتي التحميل والمحتوى الفعلي بالضبط — راجع التعليق أعلاه
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <p className="rounded-lg border border-danger bg-danger/5 px-3 py-2 text-sm text-danger">
           {loadError || "This organization could not be found."}
         </p>
@@ -115,7 +121,8 @@ export default function OrganizationDetailsPage() {
     : "";
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    // نفس عرض حالتي التحميل والخطأ بالضبط — راجع التعليق أعلى الملف
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       <nav className="text-sm text-heading/50 mb-4" aria-label="Breadcrumb">
         <Link
           to={ROUTES.ORGANIZATIONS}
@@ -223,7 +230,8 @@ export default function OrganizationDetailsPage() {
       />
 
       {opportunitiesLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        // 3 أعمدة على lg — نفس ملاحظة شبكة الـ Skeleton أعلى الملف
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <CardSkeleton />
           <CardSkeleton />
         </div>
@@ -243,7 +251,9 @@ export default function OrganizationDetailsPage() {
           />
         ) : (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            {/* 3 أعمدة على lg (مو 2) — توحيد شبكة كاردات الفرص مع باقي
+                الصفحات (md:2 / lg:3)، بدل عمودين بس حتى على شاشات واسعة */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {openShowMore.visibleItems.map((opportunity) => (
                 <OpportunityCard key={opportunity.id} opportunity={opportunity} />
               ))}
@@ -267,7 +277,8 @@ export default function OrganizationDetailsPage() {
           <div className="mb-4 flex justify-end">
             <StatusLegendPopover />
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          {/* 3 أعمدة على lg — نفس ملاحظة شبكة تبويب Open أعلاه */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {pastShowMore.visibleItems.map((opportunity) => (
               <OpportunityCard key={opportunity.id} opportunity={opportunity} />
             ))}

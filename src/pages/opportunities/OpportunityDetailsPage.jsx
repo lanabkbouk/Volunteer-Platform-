@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { MapPin, Calendar, Clock, Phone, Building2 } from "lucide-react";
+import { MapPin, Calendar, Clock, Phone, Building2, Users } from "lucide-react";
 import Typography from "../../components/ui/Typography";
 import Chip from "../../components/ui/Chip";
 import Button from "../../components/ui/Button";
@@ -281,6 +281,16 @@ export default function OpportunityDetailsPage() {
               <Clock size={16} className="text-primary" aria-hidden="true" />
               {opportunity.minHours}-{opportunity.maxHours} hrs / session
             </span>
+            {/* isGroup صراحة true بس — فردية هي الافتراضي وما إلها داعي
+                لإشارة. الحقل نفسه يغذّي منطق إنجاز "3 أنشطة جماعية"
+                بالباك اند (AchievementService::checkThreeGroupActivities)،
+                فمش مجرد معلومة عرض بلا استخدام فعلي بمكان تاني */}
+            {opportunity.isGroup === true && (
+              <span className="flex items-center gap-1">
+                <Users size={16} className="text-primary" aria-hidden="true" />
+                Group opportunity
+              </span>
+            )}
           </div>
 
           <div className="mb-6">

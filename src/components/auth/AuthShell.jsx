@@ -6,7 +6,7 @@ import LogoIcon from "../ui/LogoIcon";
 // وشارة شعار دائرية بلون primary تعزّز إحساس الثقة من أول ثانية.
 export default function AuthShell({ title, subtitle, children, footer }) {
   return (
-    <section className="relative min-h-screen overflow-hidden bg-bg px-4 py-10">
+    <section className="relative min-h-screen overflow-hidden bg-canvas px-4 py-10">
       {/* توهّج برتقالي خفيف بالخلفية — لمسة لون واحدة بس، بدون مبالغة */}
       <div
         aria-hidden="true"

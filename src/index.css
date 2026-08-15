@@ -2,30 +2,49 @@
 /* @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800&family=Inter:wght@400;500;600&display=swap'); */
    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@500;700;800&family=Inter:wght@400;500;600&display=swap');
 /*
-  نظام الألوان والخطوط — راجعي ملاحظة design-tokens.md لشرح كل قرار.
-  - primary: البرتقالي الأساسي الموجود أصلًا بهوية الموقع (بدون تغيير)
+  نظام الألوان والخطوط — Modern Energetic Light Theme.
+  - primary: البرتقالي الأساسي الموجود أصلًا بهوية الموقع (بدون تغيير).
+    الخلفية الفاتحة المرتبطة فيه (Light Orange) ما إلها توكن منفصل —
+    bg-primary/10 أصلًا بيحسب لنفس الدرجة الفاتحة تقريبًا (~#FFF2E7)
+    بدون الحاجة لقيمة ثابتة إضافية مكررة
   - secondary: تركواز مستوحى من القاشاني/الفسيفساء الدمشقية — يُستخدم بحدود
     (شارة "موثّق"، لمسات تصميمية)، مو بديل عن primary
-  - bg: أبيض نقي موحّد لخلفيات الصفحات
+  - canvas: خلفية الصفحة العامة (رمادي مزرق فاتح جدًا) — بتفرّق بصريًا عن
+    bg/field الأبيض الصافي المخصص للـ Cards، حتى تبان الكروت مرتفعة عن
+    الصفحة فعليًا بدل ما تغرق فيها (أبيض على أبيض)
+  - heading/body: نص أساسي وثانوي بدرجة رمادي مزرق (مو بني دافئ متل قبل)
+    متناسقة مع canvas الجديدة
+  - success/info/achievement: ألوان دلالية موحّدة للحالات (Accepted/Active،
+    Active/In-progress، إنجازات) — بدل درجات Tailwind خام متكررة بأكثر
+    من ملف بدون مصدر واحد للحقيقة
 */
 @theme{
   --color-primary: #FD7E14;
   --color-secondary: #146B72;
+  --color-canvas: #F5F7FA;
   --color-bg: #FFFFFF;
-  --color-heading: #1A1410;
-  --color-body: rgba(26, 20, 16, 0.65);
-  --color-danger: #ef4444;
+  --color-heading: #111827;
+  --color-body: #667085;
+  --color-danger: #F04438;
   --color-dangerHover:#f87171;
   --color-field: #ffffff;
 
   /* توكن "نجاح" موحّد — كان في 3 درجات أخضر خام مختلفة مبعثرة بـ
      Button/Input/AuthAlert لنفس الحالة، بدون أي مصدر واحد للحقيقة */
-  --color-success: #16a34a;
-  --color-successHover: #22c55e;
+  --color-success: #12B76A;
+  --color-successHover: #17c785;
 
-  /* 👇 جديد — خلفية محايدة خفيفة جدًا، خاصة بلوحة الأدمن فقط،
-     لخلق فرق بصري بينها وبين البطاقات البيضاء فوقها */
-  --color-adminBg: #F7F6F4;
+  /* Info/Active — حالات مثل "In Progress"، وأي عنصر تفاعلي/نشط بحاجة
+     لون مختلف عن primary وsuccess */
+  --color-info: #3B82F6;
+
+  /* Achievement/Highlight — إنجازات المتطوع ولمسات "مميّزة" بحاجة تبرز
+     عن باقي الألوان الدلالية (نجاح/تحذير/خطأ) */
+  --color-achievement: #7F56D9;
+
+  /* خلفية لوحة الأدمن — نفس درجة canvas تمامًا الآن، حتى تبقى كل
+     الصفحات (عامة أو أدمن) على نفس لغة الخلفية الموحّدة */
+  --color-adminBg: #F5F7FA;
 
   --font-display: 'Cairo', system-ui, sans-serif;
   --font-body: 'Inter', system-ui, sans-serif;

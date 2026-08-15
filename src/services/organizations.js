@@ -205,34 +205,64 @@ function mapOrganizationFromApi(raw) {
   }
 }
 
+// نفس حجم صفحة الباك اند الحقيقي (paginate(15)) — راجع الملاحظة أعلى
+// الملف. نستخدمه بوضع mock كمان حتى سلوك الـ Pagination يكون مطابقًا
+// بالوضعين (نفس عدد العناصر بكل صفحة، نفس نقطة توقف "hasNextPage")
+const MOCK_PAGE_SIZE = 15
+
 /**
- * يجلب قائمة المنظمات **الموثّقة فقط** (فلترة الاسم/المدينة تصير هون
- * بوضع الـ mock، وبتنتقل لـ query param ?search= بوضع real). فلترة
- * "الموثّقة فقط" مفعّلة بالوضعين — راجع isVerifiedOrStatusUnavailable
+ * يجلب صفحة واحدة من قائمة المنظمات **الموثّقة فقط** (فلترة الاسم/المدينة
+ * تصير هون بوضع الـ mock، وبتنتقل لـ query param ?search= بوضع real).
+ * فلترة "الموثّقة فقط" مفعّلة بالوضعين — راجع isVerifiedOrStatusUnavailable
  * أعلى الملف لتفاصيل السلوك الدفاعي بوضع real لما status ما يكون متاحًا.
- * @param {{search?: string}} filters
- * @returns {Promise<Array<object>>}
+ *
+ * الشكل المُرجَع غني عمدًا ({data, meta, links}) بدل array مباشرة، حتى
+ * useOrganizationsQuery (useInfiniteQuery) يقدر يقرر هل في صفحة تانية
+ * (meta.current_page مقابل meta.last_page) بدون أي معرفة إضافية بشكل
+ * استجابة الباك اند من جوا الـ hook نفسه.
+ *
+ * @param {{search?: string, page?: number}} filters
+ * @returns {Promise<{data: Array<object>, meta?: {current_page:number, last_page:number, total:number, per_page:number}, links?: {next: string|null, prev: string|null}}>}
  */
-export async function fetchOrganizations({ search = '' } = {}) {
+export async function fetchOrganizations({ search = '', page = 1 } = {}) {
   if (MOCK_MODE) {
     await wait()
 
     // بوضع mock الحقل status موجود ومضمون دايمًا (بيانات محلية ثابتة أو
     // مُدارة عبر admin.js reviewOrganization)، فالفلترة هون مباشرة وأكيدة
     // 100% — بعكس وضع real تحت يلي بيحتاج فحص دفاعي لأن الباك اند لسا ما
-    // بيرجّع status حقيقي (راجع الملاحظة أعلى الملف)
+    // بيرجّع status حقيقي (راجع الملاحظة أعلى الملف). نفلتر *قبل* التقسيم
+    // لصفحات (بعكس real تحت)، لأن meta.total هون لازم يعكس عدد الموثّقة
+    // فعليًا حتى "Show N more" يطلع رقم دقيق 100% بوضع الاختبار المحلي
     const verifiedOrganizations = getAllMockOrganizations().filter(
       (organization) => organization.status === ORGANIZATION_STATUS.VERIFIED,
     )
 
     const normalizedSearch = search.trim().toLowerCase()
-    if (!normalizedSearch) return verifiedOrganizations
+    const filtered = normalizedSearch
+      ? verifiedOrganizations.filter(
+          (organization) =>
+            organization.name.toLowerCase().includes(normalizedSearch) ||
+            organization.city.toLowerCase().includes(normalizedSearch),
+        )
+      : verifiedOrganizations
 
-    return verifiedOrganizations.filter(
-      (organization) =>
-        organization.name.toLowerCase().includes(normalizedSearch) ||
-        organization.city.toLowerCase().includes(normalizedSearch),
-    )
+    const total = filtered.length
+    const lastPage = Math.max(Math.ceil(total / MOCK_PAGE_SIZE), 1)
+    // نضبط page المطلوبة ضمن مدى صالح (1..lastPage) — تحسّبًا لصفحة
+    // كانت صالحة قبل تضييق نتيجة بحث جديد وصارت تتجاوز عدد الصفحات
+    // المتاحة فعليًا الآن
+    const currentPage = Math.min(Math.max(page, 1), lastPage)
+    const start = (currentPage - 1) * MOCK_PAGE_SIZE
+
+    return {
+      data: filtered.slice(start, start + MOCK_PAGE_SIZE),
+      meta: { current_page: currentPage, last_page: lastPage, total, per_page: MOCK_PAGE_SIZE },
+      links: {
+        next: currentPage < lastPage ? String(currentPage + 1) : null,
+        prev: currentPage > 1 ? String(currentPage - 1) : null,
+      },
+    }
   }
 
   try {
@@ -241,19 +271,35 @@ export async function fetchOrganizations({ search = '' } = {}) {
     // الملاحظة أعلى الملف) — فور ما يُضاف الدعم فعليًا بالخادم، الفلترة
     // بتشتغل من هناك مباشرة بدون أي تعديل هون
     const response = await apiClient.get('/organizations', {
-      params: { search, status: ORGANIZATION_STATUS.VERIFIED },
+      params: { search, status: ORGANIZATION_STATUS.VERIFIED, page },
     })
-    // الباك اند بيرجّع النتيجة مُصفّحة (paginate) — بعد فك تغليف Laravel
-    // بـ client.js، response.data بيصير { data: [...], links, meta }
-    // مش array مباشرة، فلازم ندخل مستوى إضافي هون تحديدًا
-    const list = Array.isArray(response.data) ? response.data : response.data?.data || []
+
+    // ⚠️ الباك اند بيغلّف النتيجة المُصفّحة *مرتين*: التغليف الخارجي
+    // (Laravel API Resource {data, meta?, links?}) فكّه client.js أصلاً،
+    // لكن المحتوى الداخلي الناتج هو بنية الـ Paginator الكاملة نفسها
+    // {data, links, meta} — مش array مباشرة. يعني meta/links هون لازم
+    // نقراهم من response.data.meta/.links، مش من response.meta/.links
+    // (يلي client.js بيرفعهم لمستواه هو بس لتغليف Resource العادي غير
+    // المُصفّح — راجع unwrapLaravelEnvelope بـ api/client.js)
+    const isPaginatedShape = Boolean(response.data) && !Array.isArray(response.data) && typeof response.data === 'object'
+    const rawList = Array.isArray(response.data) ? response.data : response.data?.data || []
 
     // طبقة أمان إضافية محليًا (Defensive) على الخام قبل التطبيع — لو
     // الباك اند تجاهل ?status= فوق (أو لسا ما بيدعمها إطلاقًا)، نصفّي
     // هون بدل ما نعرض منظمات غير موثّقة بالغلط. لو حقل status نفسه غير
     // متوفر إطلاقًا بالاستجابة، ما بنطبّق أي فلترة ونعرض القائمة كاملة
     // (سلوك الوضع الحالي بالضبط) بدل ما نكسر الصفحة أو نعرضها فاضية
-    return list.filter(isVerifiedOrStatusUnavailable).map(mapOrganizationFromApi)
+    //
+    // ⚠️ ملاحظة دقة: meta.total تحت بيعكس عدد نتائج استعلام الباك اند
+    // الخام (قبل فلترتنا المحلية)، فبما إنه ?status= لسا بلا تأثير هناك
+    // (نفس الملاحظة أعلى)، meta.total ممكن يكون أكبر من عدد العناصر
+    // الموثّقة الفعلي المعروض — "Show N more" بوضع real تقريبي وليس دقيقًا
+    // 100% لحد ما الباك اند يفلتر فعليًا على status=verified من عنده
+    return {
+      data: rawList.filter(isVerifiedOrStatusUnavailable).map(mapOrganizationFromApi),
+      meta: isPaginatedShape ? response.data.meta : undefined,
+      links: isPaginatedShape ? response.data.links : undefined,
+    }
   } catch (error) {
     throw new Error(getApiErrorMessage(error, 'Failed to load organizations'), { cause: error })
   }

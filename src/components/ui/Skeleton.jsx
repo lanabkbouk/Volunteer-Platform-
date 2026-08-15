@@ -13,7 +13,7 @@ export default function Skeleton({ className = "" }) {
     <div
       role="presentation"
       aria-hidden="true"
-      className={`animate-pulse rounded-lg bg-heading/10 ${className}`}
+      className={`animate-pulse rounded-xl bg-heading/10 ${className}`}
     />
   );
 }

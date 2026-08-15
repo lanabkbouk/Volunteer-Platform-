@@ -72,10 +72,25 @@ export default function OpportunityCard({
         </p>
       ) : null}
 
-      {opportunity.category && showCategoryChip ? (
-        <Chip customStyle={categoryStyle} className="mb-4 inline-block w-fit">
-          {getCategoryLabel(opportunity.category.name)}
-        </Chip>
+      {(opportunity.category && showCategoryChip) || opportunity.isGroup === true ? (
+        <div className="flex flex-wrap items-center gap-2 mb-4">
+          {opportunity.category && showCategoryChip ? (
+            <Chip customStyle={categoryStyle} className="inline-block w-fit">
+              {getCategoryLabel(opportunity.category.name)}
+            </Chip>
+          ) : null}
+
+          {/* isGroup صراحة true بس (مش أي قيمة فولسي) — فردية هي الافتراضي
+              وما إلها داعي لشارة. الحقل نفسه يغذّي منطق إنجاز "3 أنشطة
+              جماعية" بالباك اند (AchievementService::checkThreeGroupActivities)،
+              فمش مجرد UI بدون استخدام فعلي بمكان تاني */}
+          {opportunity.isGroup === true ? (
+            <Chip color="blue" className="inline-flex items-center gap-1 w-fit">
+              <Users size={12} aria-hidden="true" />
+              Group opportunity
+            </Chip>
+          ) : null}
+        </div>
       ) : null}
 
       <Button

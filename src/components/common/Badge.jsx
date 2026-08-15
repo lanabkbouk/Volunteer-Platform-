@@ -5,9 +5,9 @@
 const TONE_CLASSES = {
   neutral: "bg-heading/5 text-body border-heading/10",
   primary: "bg-primary/10 text-primary border-primary/30",
-  success: "bg-emerald-500/10 text-emerald-700 border-emerald-500/30",
+  success: "bg-success/10 text-success border-success/30",
   secondary: "bg-secondary/10 text-secondary border-secondary/30",
-  warning: "bg-yellow-500/10 text-yellow-700 border-yellow-500/40",
+  warning: "bg-amber-500/10 text-amber-700 border-amber-500/40",
   danger: "bg-danger/10 text-danger border-danger/40",
   header: "bg-field text-heading border-heading/10"
 }

@@ -13,7 +13,7 @@ export default function MainLayout() {
   const isAdminRoute = location.pathname.startsWith('/admin')
 
   return (
-    <div className='flex min-h-screen flex-col bg-field text-heading'>
+    <div className='flex min-h-screen flex-col bg-canvas text-heading'>
       {!isAdminRoute && <Navbar role={accountType || 'guest'} />}
 
       <main className='w-full flex-1'>

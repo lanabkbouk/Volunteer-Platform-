@@ -95,7 +95,7 @@ export default function Dropdown({
           className={`flex items-center justify-between w-full gap-2
             px-4 py-3 rounded-xl bg-field
             transition-colors duration-200
-            border ${error ? "border-danger" : "border-heading/10"}
+            border ${error ? "border-danger" : "border-heading/10 hover:border-primary/30"}
             focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary`}
         >
           <span className="flex items-center gap-2 truncate">

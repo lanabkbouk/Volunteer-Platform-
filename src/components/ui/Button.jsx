@@ -84,7 +84,7 @@ export default function Button({
     sizeStyles[size],
     isDisabled
       ? "opacity-60 cursor-not-allowed pointer-events-none"
-      : "cursor-pointer hover:shadow-sm",
+      : "cursor-pointer hover:shadow-sm active:scale-[0.98]",
     fullWidth ? "w-full" : "",
     className,
   ]

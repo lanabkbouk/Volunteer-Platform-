@@ -17,9 +17,14 @@
 // الشكل الأساسي المشترك: الحواف + الخلفية + الحدود
 export const CARD_SURFACE = "rounded-2xl bg-field border border-heading/10";
 
-// حالة الارتفاع الموحّدة عند المرور بالماوس (Hover Elevation)
+// حالة الارتفاع الموحّدة عند المرور بالماوس (Hover Elevation) — ظل
+// بطبقتين بالراحة (contact shadow قريب + ambient shadow أوسع وأخف) بدل
+// shadow-sm المسطّح، حتى تبان البطاقة مرتفعة فعليًا عن خلفية الصفحة
+// (canvas) حتى قبل أي hover. لون الظل مبني على --color-heading الجديد
+// (17,24,39) بدل البني الدافئ القديم. حدّ برتقالي خفيف جدًا عند الـ hover
+// (بدل تغيير الحدّة كليًا) يعطي تلميح "تفاعلي" بصري إضافي بدون مبالغة
 export const CARD_ELEVATION =
-  "shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1";
+  "shadow-[0_1px_2px_rgba(17,24,39,0.04),0_4px_10px_-2px_rgba(17,24,39,0.06)] transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-primary/20";
 
 // Padding مريح موحّد لمحتوى البطاقة (يمكن تجاوزه لبطاقات ذات حجم مختلف)
 export const CARD_PADDING = "p-5";

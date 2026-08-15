@@ -27,7 +27,7 @@ export default function Home() {
   const statsError = statsQuery.isError;
 
   return (
-    <div className="bg-bg text-heading">
+    <div className="bg-canvas text-heading">
       <HomeHero volunteersCount={stats?.volunteersCount} loading={loading} />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-24">

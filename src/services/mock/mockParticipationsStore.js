@@ -82,7 +82,7 @@ export const MOCK_VOLUNTEER_PROFILES = {
   v2: {
     volunteerId: 'v2', name: 'Omar Khalil', photo: null, city: 'Aleppo',
     skills: ['Teaching'], phone: '+963922222222', email: 'omar.khalil@example.com',
-    educationLevel: "Master's Degree", dateOfBirth: '1997-09-02', gender: 'male',
+    educationLevel: 'Diploma', dateOfBirth: '1997-09-02', gender: 'male',
   },
   v3: {
     volunteerId: 'v3', name: 'Maya Saleh', photo: null, city: 'Damascus',

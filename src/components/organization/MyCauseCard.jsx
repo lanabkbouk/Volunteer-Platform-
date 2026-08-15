@@ -109,10 +109,25 @@ export default function MyCauseCard({
         </span>
       </div>
 
-      {opportunity.category ? (
-        <Chip customStyle={categoryStyle} className="mb-4 inline-block w-fit">
-          {getCategoryLabel(opportunity.category.name)}
-        </Chip>
+      {opportunity.category || opportunity.isGroup === true ? (
+        <div className="flex flex-wrap items-center gap-2 mb-4">
+          {opportunity.category ? (
+            <Chip customStyle={categoryStyle} className="inline-block w-fit">
+              {getCategoryLabel(opportunity.category.name)}
+            </Chip>
+          ) : null}
+
+          {/* isGroup صراحة true بس — تأكيد بصري سريع للمنظمة إنه تعليم
+              "جماعية" اتسجّل صح وقت الإنشاء. الحقل نفسه يغذّي منطق إنجاز
+              "3 أنشطة جماعية" بالباك اند
+              (AchievementService::checkThreeGroupActivities)، مش UI زائدة */}
+          {opportunity.isGroup === true ? (
+            <Chip color="blue" className="inline-flex items-center gap-1 w-fit">
+              <Users size={12} aria-hidden="true" />
+              Group opportunity
+            </Chip>
+          ) : null}
+        </div>
       ) : null}
 
       {/* تقدّم عدد المتطوعين — معلومة مخصصة لمنظور المنظمة، غير موجودة بكارد المتطوع */}
