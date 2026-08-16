@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import Input from '../../components/ui/Input'
 import Button from '../../components/ui/Button'
+import Typography from '../../components/ui/Typography'
 import AccountSwitch from '../../components/forms/AccountSwitcher'
 import OrganizationForm from '../../components/forms/orgForm'
 import VolunteerForm from '../../components/forms/volunteerForm'
@@ -54,8 +55,8 @@ export default function Register() {
   const isVolunteer = accountType === ACCOUNT_TYPES.VOLUNTEER
 
   const subtitle = useMemo(() => {
-    if (isVolunteer) return 'Join our community and make a difference!'
-    return 'Register your Volunteer Platform or NGO to connect with volunteers.'
+    if (isVolunteer) return 'Find volunteering opportunities that match your skills and schedule.'
+    return 'Register your organization and connect with volunteers.'
   }, [isVolunteer])
 
   const {
@@ -151,6 +152,10 @@ export default function Register() {
             noValidate
       
           >
+            <Typography variant='overline' color='muted' className='mt-2'>
+              {isVolunteer ? 'Your Information' : 'Organization Details'}
+            </Typography>
+
             {isVolunteer ? (
               <VolunteerForm register={register} errors={errors} onFieldChange={handleFormChange} />
             ) : (
@@ -163,6 +168,10 @@ export default function Register() {
                 onVerificationImageChange={handleVerificationImageChange}
               />
             )}
+
+            <Typography variant='overline' color='muted' className='mt-4'>
+              Account Details
+            </Typography>
 
             <Input
               label='Email'

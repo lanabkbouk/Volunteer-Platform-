@@ -6,9 +6,8 @@
 // والتنسيق يدويًا هون من جديد.
 
 import { motion } from "framer-motion";
-import { Users } from "lucide-react";
 import Typography from "../ui/Typography";
-import StatCard from "../common/StatCard";
+import VolunteersIllustration from "../icons/VolunteersIllustration";
 
 export default function MissionSection({ volunteers }) {
   return (
@@ -30,9 +29,9 @@ export default function MissionSection({ volunteers }) {
         </Typography>
       </div>
 
-      {/* استخدام لإمكانية icon الموجودة أصلًا بـ StatCard — نفس رمز
-          "Active Volunteers" المستخدم بباقي الصفحة تحت */}
-      <StatCard icon={Users} number={volunteers} label="Active Volunteers" />
+      <div className="flex flex-col items-center gap-6">
+        <VolunteersIllustration className="w-full max-w-xs" />
+      </div>
     </motion.div>
   );
 }

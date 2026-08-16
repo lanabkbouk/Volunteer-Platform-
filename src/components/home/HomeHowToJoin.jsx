@@ -21,6 +21,35 @@ export default function HomeHowToJoin() {
         </Typography>
       </div>
 
+      {/* illustration بسيطة (SVG محلي، بلا مكتبة خارجية) تفصل بصريًا بين
+          العنوان والعمودين — دوائر primary/10 كخلفية + شكل "شخص" مبسّط
+          (دائرة رأس + قوس جسم، بروح أيقونة User من Lucide) لكل طرف،
+          وخط متقطّع بينهم يرمز للتواصل بين المتطوع والمنظمة */}
+      <div className="flex justify-center mb-10" aria-hidden="true">
+        <svg width="280" height="72" viewBox="0 0 280 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="90" cy="36" r="32" className="fill-primary/10" />
+          <circle cx="190" cy="36" r="32" className="fill-primary/10" />
+
+          <circle cx="90" cy="24" r="9" className="fill-primary" />
+          <path d="M70 58c0-12 9-20 20-20s20 8 20 20" className="fill-primary" />
+
+          <circle cx="190" cy="24" r="9" className="fill-primary" />
+          <path d="M170 58c0-12 9-20 20-20s20 8 20 20" className="fill-primary" />
+
+          <line
+            x1="120"
+            y1="40"
+            x2="160"
+            y2="40"
+            className="stroke-primary"
+            strokeWidth="2"
+            strokeDasharray="4 4"
+            strokeLinecap="round"
+          />
+          <circle cx="140" cy="40" r="4" className="fill-primary" />
+        </svg>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <HowToJoinColumn
           title="For Volunteers"

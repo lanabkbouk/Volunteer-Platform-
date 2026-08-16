@@ -44,6 +44,12 @@ export default function OrganizationForm({
           Organization Verification Image
           <span className='ml-1 text-primary'>*</span>
         </label>
+        <p className='text-xs text-body mb-1'>
+          Upload an official document proving your organization's legitimacy —
+          e.g. a business registration certificate, official license, or
+          government-issued NGO registration. This helps our team verify your
+          organization faster.
+        </p>
 
         <UploadRow
           fieldId='verificationImage'
