@@ -12,7 +12,8 @@ import Button from "../ui/Button";
 import { ROUTES } from "../../constants/paths";
 
 const HERO_IMAGE_URL =
-  "https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&w=2000&q=80";
+    "https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?auto=format&fit=crop&w=2000&q=80";
+
 
 // Ease احترافي (خروج ناعم بدون ارتداد) — نفس المنحنى لكل عناصر الدخول
 // حتى يحس المستخدم بإيقاع واحد متسق للـ Hero كامل
