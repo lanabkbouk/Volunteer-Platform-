@@ -4,7 +4,7 @@ import Card from "../ui/Card";
 import Chip from "../ui/Chip";
 import Button from "../ui/Button";
 import OpportunityStatusBadge from "./OpportunityStatusBadge";
-import { CATEGORY_COLORS, CATEGORY_ICONS, getCategoryLabel } from "../../utils/categoryStyles";
+import { CATEGORY_COLORS, CATEGORY_ICONS, CATEGORY_ILLUSTRATIONS, getCategoryLabel } from "../../utils/categoryStyles";
 import { ROUTES } from "../../constants/paths";
 
 export default function OpportunityCard({
@@ -26,7 +26,13 @@ export default function OpportunityCard({
   // Falls back to a category-colored icon whenever there's no real photo yet —
   // whether the organization hasn't uploaded one, or the backend rejected it.
   // This never depends on the backend "working"; it's always safe to render.
-  const imageFallback = (
+  const CategoryIllustration = CATEGORY_ILLUSTRATIONS[categoryName];
+
+  const imageFallback = CategoryIllustration ? (
+    <div className="flex w-full aspect-video items-center justify-center bg-canvas overflow-hidden">
+      <CategoryIllustration className="w-full h-full object-contain p-2" />
+    </div>
+  ) : (
     <div className={`flex w-full aspect-video items-center justify-center ${categoryStyle}`}>
       <CategoryIcon className="h-10 w-10" aria-hidden="true" />
     </div>

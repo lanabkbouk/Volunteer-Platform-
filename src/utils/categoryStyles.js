@@ -26,6 +26,12 @@ import {
 } from "lucide-react";
 import EducationIcon from "../components/icons/EducationIcon";
 import SocialIcon from "../components/icons/SocialIcon";
+import HealthIllustration from "../components/icons/categories/HealthIllustration";
+import EducationIllustration from "../components/icons/categories/EducationIllustration";
+import SocialIllustration from "../components/icons/categories/SocialIllustration";
+import SportIllustration from "../components/icons/categories/SportIllustration";
+import EnvironmentIllustration from "../components/icons/categories/EnvironmentIllustration";
+import TechnicalIllustration from "../components/icons/categories/TechnicalIllustration";
 
 // -----------------------------
 // Category Icons (الأيقونة تبقى مبسّطة: أيقونة مخصّصة لأول 6 فئات
@@ -39,6 +45,21 @@ export const CATEGORY_ICONS = {
   Sport: Dumbbell,
   Environment: Leaf,
   Technical: Cpu,
+};
+
+// -----------------------------
+// illustrations مخصّصة لخلفية "صورة الفرصة" البديلة — بس للفئات
+// التاريخية الستة. أي فئة تانية (غير موجودة بهالخريطة) تضل على
+// النظام العام الحالي (CATEGORY_ICONS + لون Hash) بلا أي illustration،
+// لأن رسم illustration لكل فئة مستقبلية غير معروفة مستحيل تقنيًا.
+// -----------------------------
+export const CATEGORY_ILLUSTRATIONS = {
+  Health: HealthIllustration,
+  Education: EducationIllustration,
+  Social: SocialIllustration,
+  Sport: SportIllustration,
+  Environment: EnvironmentIllustration,
+  Technical: TechnicalIllustration,
 };
 
 // -----------------------------

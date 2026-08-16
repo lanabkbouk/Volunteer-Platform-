@@ -7,7 +7,7 @@ import Button from "../ui/Button";
 import ConfirmModal from "../common/ConfirmModal";
 import OpportunityStatusBadge from "../opportunity/OpportunityStatusBadge";
 import { OPPORTUNITY_STATUS } from "../../constants/opportunityStatus";
-import { CATEGORY_COLORS, CATEGORY_ICONS, getCategoryLabel } from "../../utils/categoryStyles";
+import { CATEGORY_COLORS, CATEGORY_ICONS, CATEGORY_ILLUSTRATIONS, getCategoryLabel } from "../../utils/categoryStyles";
 import { ROUTES } from "../../constants/paths";
 
 // نفس منطق حساب المقاعد المتبقية المستخدم في OpportunityCard (بدون تكراره حرفيًا لأن
@@ -79,7 +79,13 @@ export default function MyCauseCard({
     setIsToggleConfirmOpen(false);
   };
 
-  const imageFallback = (
+  const CategoryIllustration = CATEGORY_ILLUSTRATIONS[categoryName];
+
+  const imageFallback = CategoryIllustration ? (
+    <div className="flex w-full aspect-video items-center justify-center bg-canvas overflow-hidden">
+      <CategoryIllustration className="w-full h-full object-contain p-2" />
+    </div>
+  ) : (
     <div className={`flex w-full aspect-video items-center justify-center ${categoryStyle}`}>
       <CategoryIcon className="h-10 w-10" aria-hidden="true" />
     </div>

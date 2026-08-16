@@ -7,7 +7,7 @@
 import { CheckCircle2, Users, Calendar } from "lucide-react";
 import Card from "../ui/Card";
 import Chip from "../ui/Chip";
-import { CATEGORY_COLORS, CATEGORY_ICONS } from "../../utils/categoryStyles";
+import { CATEGORY_COLORS, CATEGORY_ICONS, CATEGORY_ILLUSTRATIONS } from "../../utils/categoryStyles";
 
 function formatDate(dateString) {
   if (!dateString) return "";
@@ -22,7 +22,13 @@ export default function SuccessStoryCard({ opportunity }) {
   const categoryStyle = CATEGORY_COLORS[categoryName] || CATEGORY_COLORS.Social;
   const CategoryIcon = CATEGORY_ICONS[categoryName] || Users;
 
-  const imageFallback = (
+  const CategoryIllustration = CATEGORY_ILLUSTRATIONS[categoryName];
+
+  const imageFallback = CategoryIllustration ? (
+    <div className="flex w-full aspect-video items-center justify-center bg-canvas overflow-hidden">
+      <CategoryIllustration className="w-full h-full object-contain p-2" />
+    </div>
+  ) : (
     <div className={`flex w-full aspect-video items-center justify-center ${categoryStyle}`}>
       <CategoryIcon className="h-10 w-10" aria-hidden="true" />
     </div>

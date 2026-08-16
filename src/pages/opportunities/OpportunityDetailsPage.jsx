@@ -18,7 +18,7 @@ import { useParticipateMutation } from "../../hooks/queries/useParticipateMutati
 import { useAuth } from "../../context/AuthContext";
 import { ACCOUNT_TYPES } from "../../constants/auth/accountTypes";
 import { ROUTES } from "../../constants/paths";
-import { CATEGORY_COLORS, CATEGORY_ICONS } from "../../utils/categoryStyles";
+import { CATEGORY_COLORS, CATEGORY_ICONS, CATEGORY_ILLUSTRATIONS } from "../../utils/categoryStyles";
 import { OPPORTUNITY_STATUS } from "../../constants/opportunityStatus";
 
 function formatDate(dateString) {
@@ -116,6 +116,7 @@ export default function OpportunityDetailsPage() {
   const categoryName = opportunity.category?.name;
   const categoryStyle = CATEGORY_COLORS[categoryName] || CATEGORY_COLORS.Social;
   const CategoryIcon = CATEGORY_ICONS[categoryName] || MapPin;
+  const CategoryIllustration = CATEGORY_ILLUSTRATIONS[categoryName];
 
   // التسجيل مفتوح فعليًا (محسوب تلقائيًا حسب التاريخ وعدد المتطوعين —
   // راجع utils/opportunityStatus.js) — أي حالة تانية تمنع الانضمام
@@ -252,6 +253,10 @@ export default function OpportunityDetailsPage() {
                 onError={() => setCoverImageFailed(true)}
                 className="w-full h-full object-cover"
               />
+            ) : CategoryIllustration ? (
+              <div className="flex w-full h-full items-center justify-center bg-canvas overflow-hidden">
+                <CategoryIllustration className="w-full h-full object-contain p-6" />
+              </div>
             ) : (
               <div className={`flex w-full h-full items-center justify-center ${categoryStyle}`}>
                 <CategoryIcon size={48} aria-hidden="true" />
