@@ -4,6 +4,7 @@ import useClickOutside from "../../hooks/useClickOutside";
 
 export default function NavbarDropdown({
   trigger,
+  triggerAriaLabel,
   items = [],
   header = null,
   isOpen,
@@ -54,6 +55,7 @@ export default function NavbarDropdown({
         tabIndex={0}
         aria-haspopup="true"
         aria-expanded={isOpen}
+        aria-label={triggerAriaLabel}
         onClick={() => setIsOpen(!isOpen)}
         onKeyDown={handleTriggerKeyDown}
         className="cursor-pointer select-none rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"

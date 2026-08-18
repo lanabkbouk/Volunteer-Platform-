@@ -5,14 +5,12 @@ import {
   Menu,
   UserPlus,
   X,
-  UserIcon,
   LogOut,
   Settings2,
   UserRound,
   ChevronDown,
   Globe,
   Compass,
-  Building2
 } from "lucide-react";
 
 import { ROUTES } from "../../constants/paths";
@@ -23,6 +21,7 @@ import LogoIcon from "../../components/ui/LogoIcon";
 import Button from "../../components/ui/Button";
 import NavbarDropdown from "../../components/ui/NavbarDropdown";
 import NotificationBell from "../../components/ui/NotificationBell";
+import Avatar from "../../components/common/Avatar";
 import { useAuth } from "../../context/AuthContext";
 import useRecentUpdates from "../../hooks/useRecentUpdates";
 import { getOrganizationId } from "../../utils/auth/getOrganizationId";
@@ -39,22 +38,7 @@ export default function Navbar({ role = "guest" }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isBellOpen, setIsBellOpen] = useState(false);
-  // ⚠️ avatarUrl ممكن يكون موجود (قيمة نصية) بس يفشل التحميل الفعلي
-  // (رابط منتهي/معطوب) — بدون هالحالة، وسم <img> المكسور كان يعرض نص
-  // الـ alt (اسم المستخدم) مقصوص جوا دائرة صغيرة بدل أيقونة واضحة
-  // ⚠️ نخزّن الرابط الفاشل نفسه (مش true/false) — لما avatarUrl يتغيّر
-  // (صورة جديدة بعد وحدة معطوبة)، المقارنة تحت بتصير false تلقائيًا
-  // بدون أي useEffect لإعادة الضبط يدويًا
-  const [failedAvatarUrl, setFailedAvatarUrl] = useState(null);
-  // ⚠️ أي رابط blob: باقٍ بالجلسة من قبل إصلاح services/volunteer.js
-  // (راجع fileToDataUrl.js) مضمون 100% إنه معطوب بعد أي reload — رابط
-  // blob: مربوط بذاكرة التبويب السابق فقط. ما في داعي حتى نحاول
-  // تحميله ونستنى onError؛ نتعامل معه كـ"فاشل" فورًا من أول render
-  const isStaleBlobUrl = user?.avatarUrl?.startsWith("blob:");
-  const avatarLoadFailed = isStaleBlobUrl || failedAvatarUrl === user?.avatarUrl;
-  const isOrganization = accountType === ACCOUNT_TYPES.ORGANIZATION;
-  const FallbackIcon = isOrganization ? Building2 : UserIcon;  
-  
+
   const handleLogout = () => {
     logout();
     navigate(ROUTES.HOME);
@@ -175,23 +159,13 @@ export default function Navbar({ role = "guest" }) {
                 <NavbarDropdown
                   isOpen={isProfileOpen}
                   setIsOpen={setIsProfileOpen}
+                  triggerAriaLabel={`Account menu — ${user?.displayName || "Account"}`}
                   trigger={
-                    <div className="flex items-center gap-2 rounded-2xl px-3 py-2 
+                    <div className="flex items-center gap-2 rounded-2xl px-3 py-2
                                     bg-white/10 border border-white/15
-                                    text-white hover:bg-white/15 hover:border-white/25 
+                                    text-white hover:bg-white/15 hover:border-white/25
                                     transition">
-                      {user?.avatarUrl && !avatarLoadFailed ? (
-                        <img
-                          src={user.avatarUrl}
-                          alt={user.displayName}
-                          className="h-7 w-7 rounded-full object-cover border-2 border-primary/70"
-                          onError={() => setFailedAvatarUrl(user.avatarUrl)}
-                        />
-                      ) : (
-                        <div className="h-7 w-7 rounded-full bg-primary/20 border border-primary/40 flex items-center justify-center">
-                          <FallbackIcon className="h-4 w-4 text-primary" />
-                        </div>
-                      )}
+                      <Avatar src={user?.avatarUrl} name={user?.displayName} size="sm" />
                       <span className="text-sm sm:text-base">
                         {user?.displayName}
                       </span>
@@ -200,6 +174,19 @@ export default function Navbar({ role = "guest" }) {
                           isProfileOpen ? "rotate-180" : ""
                         }`}
                       />
+                    </div>
+                  }
+                  header={
+                    <div className="flex items-center gap-3">
+                      <Avatar src={user?.avatarUrl} name={user?.displayName} size="md" />
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-heading">
+                          {user?.displayName}
+                        </p>
+                        <p className="truncate text-xs text-heading/60">
+                          {user?.email}
+                        </p>
+                      </div>
                     </div>
                   }
                   items={dropdownItems}
