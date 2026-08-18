@@ -10,6 +10,7 @@ import { isMockMode } from './api/mockMode'
 import { wait } from './api/delay'
 import { AUTH_STORAGE_KEY } from '../constants/auth/storage'
 import { updateMockUser } from './mock/mockUserStore'
+import { readFileAsDataUrl } from './api/fileToDataUrl'
 
 const MOCK_MODE = isMockMode()
 
@@ -56,8 +57,7 @@ function buildVolunteerFormData({ values, photoFile }) {
 export async function updateVolunteerProfile(volunteerId, { values, photoFile } = {}) {
   if (MOCK_MODE) {
     await wait()
-
-    const imageUrl = photoFile ? URL.createObjectURL(photoFile) : undefined
+    const imageUrl = photoFile ? await readFileAsDataUrl(photoFile) : undefined
     const email = getCurrentSessionEmail()
 
     // ⚠️ كانت هون بترجع success بدون ما تحفظ أي شي فعليًا بمخزن
