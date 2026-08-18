@@ -7,10 +7,10 @@ import CategoryRow from '../../components/admin/CategoryRow'
 import CategoryFormModal from '../../components/admin/CategoryFormModal'
 import SkillRow from '../../components/admin/SkillRow'
 import SkillFormModal from '../../components/admin/SkillFormModal'
+import ConfirmModal from '../../components/common/ConfirmModal'
 import Toast from '../../components/common/Toast'
 import Badge from '../../components/common/Badge'
 import Input from '../../components/ui/Input'
-import Modal from '../../components/ui/Modal'
 import Button from '../../components/ui/Button'
 import Typography from '../../components/ui/Typography'
 import { PANEL_SURFACE } from '../../utils/surfaceStyles'
@@ -344,31 +344,17 @@ export default function AdminCatalogManagement() {
         error={categoryFormError || (categoryMutation.data?.success === false ? categoryMutation.data.error : null)}
       />
 
-      <Modal
+      <ConfirmModal
         open={Boolean(categoryToDelete)}
         onClose={() => setCategoryToDelete(null)}
+        onConfirm={handleDeleteCategory}
         title={`Delete ${categoryToDelete?.name ? getCategoryLabel(categoryToDelete.name) : 'category'}?`}
-        footer={
-          <>
-            <Button variant="ghost" onClick={() => setCategoryToDelete(null)} disabled={deleteCategoryMutation.isPending}>
-              Cancel
-            </Button>
-            <Button
-              variant="danger"
-              onClick={handleDeleteCategory}
-              isLoading={deleteCategoryMutation.isPending}
-              loadingText="Deleting..."
-            >
-              Delete category
-            </Button>
-          </>
-        }
-      >
-        <Typography variant="body" className="text-body">
-          This category will be removed from the platform. Opportunities and skills linked to it will need a
-          replacement category.
-        </Typography>
-      </Modal>
+        description="This category will be removed from the platform. Opportunities and skills linked to it will need a replacement category."
+        confirmLabel="Delete category"
+        confirmVariant="danger"
+        isLoading={deleteCategoryMutation.isPending}
+        loadingText="Deleting..."
+      />
 
       <SkillFormModal
         key={skillModal ? skillModal.id ?? 'new' : 'closed'}
@@ -384,31 +370,17 @@ export default function AdminCatalogManagement() {
         error={skillFormError || (skillMutation.data?.success === false ? skillMutation.data.error : null)}
       />
 
-      <Modal
+      <ConfirmModal
         open={Boolean(skillToDelete)}
         onClose={() => setSkillToDelete(null)}
+        onConfirm={handleDeleteSkill}
         title={`Delete ${skillToDelete?.name || 'skill'}?`}
-        footer={
-          <>
-            <Button variant="ghost" onClick={() => setSkillToDelete(null)} disabled={deleteSkillMutation.isPending}>
-              Cancel
-            </Button>
-            <Button
-              variant="danger"
-              onClick={handleDeleteSkill}
-              isLoading={deleteSkillMutation.isPending}
-              loadingText="Deleting..."
-            >
-              Delete skill
-            </Button>
-          </>
-        }
-      >
-        <Typography variant="body" className="text-body">
-          This skill will be removed from the platform. Volunteer profiles and opportunities referencing it will
-          need to be updated.
-        </Typography>
-      </Modal>
+        description="This skill will be removed from the platform. Volunteer profiles and opportunities referencing it will need to be updated."
+        confirmLabel="Delete skill"
+        confirmVariant="danger"
+        isLoading={deleteSkillMutation.isPending}
+        loadingText="Deleting..."
+      />
 
       <Toast message={toast.message} variant={toast.variant} duration={7000} onClose={closeToast} />
     </AdminLayout>

@@ -1,6 +1,8 @@
+import { useEffect, useRef, useState } from "react";
 import { AlertCircle, Trophy, Target } from "lucide-react";
 import useAchievements from "../../hooks/useAchievements";
 import AchievementCard from "./AchievementCard";
+import AchievementUnlockedModal from "./AchievementUnlockedModal";
 import Skeleton from "../ui/Skeleton";
 import EmptyState from "../common/EmptyState";
 import Typography from "../ui/Typography";
@@ -9,9 +11,33 @@ import { CARD_SURFACE, CARD_PADDING } from "../../utils/surfaceStyles";
 export default function AchievementsList() {
   const { achievements, justUnlockedIds, loading, error, retry } = useAchievements();
 
+  // إدارة مركزية لمودال الاحتفال — نفس الـstate تُستخدم لكل من الفتح
+  // التلقائي (أول إنجاز justUnlocked لسا ما انعرض له مودال بهالزيارة)
+  // وإعادة الفتح اليدوية (نقر أي بطاقة مكتسبة بأي وقت)
+  const [selectedAchievement, setSelectedAchievement] = useState(null);
+  const hasShownUnlockModalRef = useRef(false);
+
+  useEffect(() => {
+    if (hasShownUnlockModalRef.current || justUnlockedIds.size === 0) return;
+
+    const firstJustUnlocked = achievements.find((item) => justUnlockedIds.has(item.id));
+    if (!firstJustUnlocked) return;
+
+    hasShownUnlockModalRef.current = true;
+    // استدعاء setState مباشرة بجسم الـ Effect بيسبب cascading render
+    // (راجع react-hooks/set-state-in-effect) — نجدولها عبر setTimeout(…, 0)
+    // بدل هيك: نفس النتيجة (المودال يفتح فورًا عمليًا)، بس كـ استدعاء غير
+    // متزامن مقبول، مش استدعاء متزامن بجسم الـ Effect نفسه
+    const openModalTimeoutId = setTimeout(() => {
+      setSelectedAchievement(firstJustUnlocked);
+    }, 0);
+
+    return () => clearTimeout(openModalTimeoutId);
+  }, [achievements, justUnlockedIds]);
+
   if (loading) {
     return (
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         {Array.from({ length: 3 }).map((_, index) => (
           <div key={index} className={`${CARD_SURFACE} ${CARD_PADDING} flex flex-col gap-4`}>
             <div className="flex items-start justify-between gap-3">
@@ -62,6 +88,12 @@ export default function AchievementsList() {
 
   return (
     <div className="flex flex-col gap-8">
+      <AchievementUnlockedModal
+        achievement={selectedAchievement}
+        isOpen={Boolean(selectedAchievement)}
+        onClose={() => setSelectedAchievement(null)}
+      />
+
       {/* ملخّص عام أبرز من مجرد سطر نص — نفس الرقمين المحسوبين أصلًا
           (unlockedCount/achievements.length)، بس بعرض أوضح مع شريط تقدّم إجمالي */}
       <div className="flex flex-col gap-2">
@@ -92,12 +124,13 @@ export default function AchievementsList() {
           <Typography variant="bodySm" weight="semibold" className="text-heading/70">
             Earned
           </Typography>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
             {earnedAchievements.map((item) => (
               <AchievementCard
                 key={item.id}
                 achievement={item}
                 justUnlocked={justUnlockedIds.has(item.id)}
+                onClick={() => setSelectedAchievement(item)}
               />
             ))}
           </div>
@@ -114,7 +147,7 @@ export default function AchievementsList() {
             <Target size={14} className="text-heading/40" aria-hidden="true" />
             Still to unlock
           </Typography>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
             {lockedAchievements.map((item) => (
               <AchievementCard key={item.id} achievement={item} />
             ))}

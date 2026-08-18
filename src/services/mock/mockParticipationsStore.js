@@ -42,6 +42,7 @@ export const MOCK_PARTICIPATIONS = [
   // بمراجعة p1 بالأعلى) — حتى يبان الفرق بين "لدى هالمنظمة" (0) و"إجمالاً" (2)
   { id: 'p20', volunteerId: 'v1', opportunityId: 'o6', status: PARTICIPATION_STATUS.ACCEPTED, committedHours: 6, hoursLogged: 6, joinedDate: daysFromNow(-400) },
   { id: 'p21', volunteerId: 'v1', opportunityId: 'o5', status: PARTICIPATION_STATUS.ACCEPTED, committedHours: 4, hoursLogged: 4, joinedDate: daysFromNow(-238) },
+  { id: 'temp2', volunteerId: 'v-lana@example.com', opportunityId: 'o5', status: PARTICIPATION_STATUS.ACCEPTED, committedHours: 6, hoursLogged: 6, joinedDate: daysFromNow(-200) },
 
   // Omar (v2): فرصة مكتملة إضافية بنفس منظمة o2 (org2) + فرصتين
   // بمنظمات تانية — حتى يبان "لدى هالمنظمة" (1) مقابل "إجمالاً" (3)

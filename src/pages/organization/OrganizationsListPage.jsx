@@ -6,6 +6,7 @@ import OrganizationSearchBar from "../../components/organization/OrganizationSea
 import CardSkeleton from "../../components/ui/CardSkeleton";
 import EmptyState from "../../components/common/EmptyState";
 import ShowMoreButton from "../../components/common/ShowMoreButton";
+import AuthAlert from "../../components/auth/AuthAlert";
 import { useOrganizationsQuery } from "../../hooks/queries/useOrganizationsQuery";
 import { useDebouncedValue } from "../../hooks/useDebouncedValue";
 
@@ -84,7 +85,7 @@ export default function OrganizationsListPage() {
           ))}
         </div>
       ) : error ? (
-        <p className="text-sm text-danger">{error}</p>
+        <AuthAlert variant="error">{error}</AuthAlert>
       ) : organizations.length === 0 ? (
         <EmptyState
           icon={search ? SearchX : Building2}

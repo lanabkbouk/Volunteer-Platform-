@@ -145,9 +145,7 @@ export default function Navbar({ role = "guest" }) {
                   onClick={() => navigate(ROUTES.REGISTER)}
                   variant="primary"
                   size="medium"
-                  className="flex items-center gap-2 rounded-2xl px-5 py-2.5 
-                             text-[15px] font-medium shadow-sm hover:shadow-md 
-                             border border-primary/40"
+                  className="flex items-center gap-2"
                 >
                   <UserPlus className="h-4 w-4" />
                   <span>Create Account</span>
@@ -156,17 +154,9 @@ export default function Navbar({ role = "guest" }) {
                 {/* Sign In */}
                 <Button
                   onClick={() => navigate(ROUTES.LOGIN)}
-                  variant="ghost"
+                  variant="outlineLight"
                   size="medium"
-                  className="
-                    flex items-center gap-2
-                    rounded-2xl
-                    bg-black
-                    text-white
-                    border border-primary
-                    px-5 py-2.5 text-[15px] font-medium
-                    transition hover:opacity-90
-                  "
+                  className="flex items-center gap-2"
                 >
                   <LogIn className="h-4 w-4" />
                   <span>Sign In</span>
@@ -220,12 +210,11 @@ export default function Navbar({ role = "guest" }) {
             {/* Mobile Menu Button */}
             <Button
               onClick={() => setIsOpen(!isOpen)}
-              variant="ghost"
+              variant="outlineLight"
               size="small"
               aria-label={isOpen ? "Close menu" : "Open menu"}
               aria-expanded={isOpen}
-              className="p-2 rounded-xl bg-heading/10 text-white 
-                         hover:bg-heading/20 md:hidden"
+              className="p-2 md:hidden"
             >
               {isOpen ? <X className="h-7 w-7" /> : <Menu className="h-7 w-7" />}
             </Button>
@@ -298,9 +287,9 @@ export default function Navbar({ role = "guest" }) {
                   setIsOpen(false);
                   navigate(ROUTES.LOGIN);
                 }}
-                variant="ghost"
+                variant="outlineLight"
                 fullWidth
-                className="flex items-center justify-center gap-2 bg-black! text-white! border-primary!"
+                className="flex items-center justify-center gap-2"
               >
                 <LogIn className="h-4 w-4" />
                 <span>Sign In</span>

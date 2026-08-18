@@ -97,13 +97,10 @@ export default function MyCauseCard({
       imageSrc={opportunity.image}
       imageAlt={opportunity.title}
       imageFallback={imageFallback}
+      title={opportunity.title}
+      titleAdornment={<OpportunityStatusBadge status={opportunity.status} />}
       className={isHighlighted ? "ring-2 ring-primary" : ""}
     >
-      <div className="flex items-start justify-between gap-3 mb-2">
-        <h3 className="font-bold text-2xl text-heading">{opportunity.title}</h3>
-        <OpportunityStatusBadge status={opportunity.status} />
-      </div>
-
       <div className="flex flex-wrap items-center gap-3 mb-4 text-sm text-body">
         <span className="flex items-center gap-1">
           <MapPin size={16} className="text-primary" aria-hidden="true" />

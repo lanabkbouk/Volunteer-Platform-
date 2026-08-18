@@ -19,7 +19,7 @@ export default function ValuesGrid() {
         {ABOUT_VALUES.map((value) => (
           <div
             key={value.title}
-            className={`${PANEL_SURFACE} p-6 hover:border-primary transition-colors`}
+            className={`${PANEL_SURFACE} p-6`}
           >
             <Typography variant="h5" color="primary" gutterBottom>
               {value.title}

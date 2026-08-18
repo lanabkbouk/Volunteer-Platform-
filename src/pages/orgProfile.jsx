@@ -203,11 +203,8 @@ export default function OrgProfile() {
             onImageChange={imageUpload.handleFileChange}
             onImageRemove={imageUpload.handleRemove}
             status={organization?.status}
+            imageError={imageUpload.error}
           />
-
-          {imageUpload.error && (
-            <p className="mt-2 text-sm text-danger">{imageUpload.error}</p>
-          )}
 
           {/* FORM + PREVIEW */}
           <form

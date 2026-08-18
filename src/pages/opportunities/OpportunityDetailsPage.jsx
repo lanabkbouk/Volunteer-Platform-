@@ -12,6 +12,8 @@ import StatusLegendPopover from "../../components/ui/StatusLegendPopover";
 import ParticipateHoursModal from "../../components/opportunity/ParticipateHoursModal";
 import Skeleton from "../../components/ui/Skeleton";
 import Avatar from "../../components/common/Avatar";
+import AuthAlert from "../../components/auth/AuthAlert";
+import SimilarOpportunities from "../../components/opportunity/SimilarOpportunities";
 import { PANEL_SURFACE } from "../../utils/surfaceStyles";
 import { useOpportunityDetailsQuery } from "../../hooks/queries/useOpportunityDetailsQuery";
 import { useParticipateMutation } from "../../hooks/queries/useParticipateMutation";
@@ -52,6 +54,11 @@ export default function OpportunityDetailsPage() {
   const participateMutation = useParticipateMutation(id);
 
   const opportunity = detailsQuery.data?.opportunity ?? null;
+  // fetchOpportunityById بيرجّع { opportunity, similar } سوا بنفس النداء
+  // (نفس التصنيف، باستثناء الفرصة الحالية) — بيانات جاهزة أصلًا، فقط
+  // ناقصها عرضها بالعمود الأيمن (كان SimilarOpportunities موجود بدون ما
+  // يُستخدم بأي مكان)
+  const similarOpportunities = detailsQuery.data?.similar ?? [];
 
   const loading = detailsQuery.isPending;
   const loadError = detailsQuery.isError
@@ -80,7 +87,7 @@ export default function OpportunityDetailsPage() {
         <div className="max-w-3xl">
           <Skeleton className="h-9 w-2/3 mb-4" />
           <Skeleton className="h-11 w-40 rounded-xl mb-8" />
-          <Skeleton className="w-full aspect-video max-h-105 rounded-4xl mb-6" />
+          <Skeleton className="w-full aspect-video max-h-96 rounded-3xl mb-6" />
           <Skeleton className="h-4 w-1/3 mb-4" />
           <div className="flex flex-wrap gap-4 mb-6">
             <Skeleton className="h-4 w-24" />
@@ -100,9 +107,9 @@ export default function OpportunityDetailsPage() {
   if (loadError || !opportunity) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        <p className="rounded-lg border border-danger bg-danger/5 px-3 py-2 text-sm text-danger">
+        <AuthAlert variant="error">
           {loadError || "This opportunity could not be found."}
-        </p>
+        </AuthAlert>
       </div>
     );
   }
@@ -161,7 +168,7 @@ export default function OpportunityDetailsPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 pb-28 lg:pb-10">
       <nav className="text-sm text-heading/50 mb-4" aria-label="Breadcrumb">
-        <Link to={ROUTES.OPPORTUNITIES} className="hover:text-primary rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">
+        <Link to={ROUTES.OPPORTUNITIES} className="hover:text-primary rounded transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">
           Opportunities
         </Link>
         <span className="mx-2">/</span>
@@ -228,9 +235,9 @@ export default function OpportunityDetailsPage() {
         ) : null}
 
         {joinError ? (
-          <p className="mt-2 rounded-lg border border-danger bg-danger/5 px-3 py-2 text-sm text-danger">
-            {joinError}
-          </p>
+          <div className="mt-2">
+            <AuthAlert variant="error">{joinError}</AuthAlert>
+          </div>
         ) : null}
       </div>
 
@@ -267,7 +274,7 @@ export default function OpportunityDetailsPage() {
           {opportunity.organization?.name && (
             <Link
               to={`${ROUTES.ORGANIZATIONS}/${opportunity.organization.id}`}
-              className="mb-4 flex w-fit items-center gap-1.5 rounded text-sm text-body hover:text-primary hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+              className="mb-4 flex w-fit items-center gap-1.5 rounded text-sm text-body transition-colors hover:text-primary hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
             >
               <Building2 size={14} className="text-primary shrink-0" aria-hidden="true" />
               {opportunity.organization.name}
@@ -339,7 +346,7 @@ export default function OpportunityDetailsPage() {
                 {opportunity.organization?.id ? (
                   <Link
                     to={`${ROUTES.ORGANIZATIONS}/${opportunity.organization.id}`}
-                    className="text-lg font-semibold text-heading hover:text-primary rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                    className="text-lg font-semibold text-heading transition-colors hover:text-primary rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                   >
                     {opportunity.organization.name}
                   </Link>
@@ -350,7 +357,7 @@ export default function OpportunityDetailsPage() {
                 {opportunity.organization?.phone ? (
                   <a
                     href={`tel:${opportunity.organization.phone}`}
-                    className="mt-1 flex items-center gap-2 text-sm text-body hover:text-primary w-fit rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                    className="mt-1 flex items-center gap-2 text-sm text-body transition-colors hover:text-primary w-fit rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                   >
                     <Phone size={14} className="text-primary shrink-0" aria-hidden="true" />
                     {opportunity.organization.phone}
@@ -368,11 +375,13 @@ export default function OpportunityDetailsPage() {
           </Typography>
         </div>
 
-        {/* العمود الأيمن: بس How this works + Withdrawal Policy، بدون
-            sticky (يبقى بموقعه الطبيعي بتدفق الصفحة)، وبدون أي بوكس
-            تصنيفات (CategorySidebar انحذف بمهمة سابقة، ما إله أي أثر هون) */}
+        {/* العمود الأيمن: How this works + Withdrawal Policy، وتحتها فرص
+            مشابهة (نفس التصنيف) لو متوفرة — بدون sticky (يبقى بموقعه
+            الطبيعي بتدفق الصفحة)، وبدون أي بوكس تصنيفات (CategorySidebar
+            انحذف بمهمة سابقة، ما إله أي أثر هون) */}
         <div>
           <OpportunityLifecycleCard />
+          <SimilarOpportunities opportunities={similarOpportunities} />
         </div>
       </div>
 

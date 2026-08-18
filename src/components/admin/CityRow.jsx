@@ -11,7 +11,6 @@ export default function CityRow({ city, onEdit, onDelete, isDeleting }) {
     <div className={`${CARD_BASE} flex flex-col gap-4 md:flex-row md:items-center md:justify-between`}>
       <div className="flex flex-wrap items-center gap-2 min-w-0">
         <h3 className="font-semibold text-heading truncate">{city.nameEn}</h3>
-        <Badge label={city.nameAr} tone="neutral" />
       </div>
 
       <div className="flex items-center gap-2 shrink-0">

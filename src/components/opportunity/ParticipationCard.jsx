@@ -4,6 +4,7 @@ import { Building2, CalendarClock, Clock, MapPin, LogOut, PlayCircle, Info } fro
 import Button from "../ui/Button";
 import Modal from "../ui/Modal";
 import ConfirmModal from "../common/ConfirmModal";
+import AuthAlert from "../auth/AuthAlert";
 import ParticipationStatusBadge from "./ParticipationStatusBadge";
 import { useWithdrawParticipationMutation } from "../../hooks/queries/useWithdrawParticipationMutation";
 import { PARTICIPATION_STATUS } from "../../constants/participationStatus";
@@ -87,14 +88,14 @@ export default function ParticipationCard({ participation }) {
       {/* "شو الخطوة الجاية" أهم من التفاصيل الثانوية تحت (موقع/ساعات/تاريخ
           انضمام) — لهيك طالعينها فوق قبل صف الميتاداتا، مش تحت كل شي */}
       {daysUntilStart !== null && (
-        <div className="mb-3 flex items-center gap-1.5 rounded-lg bg-sky-500/10 px-3 py-2 text-sm font-medium text-sky-600 w-fit">
+        <div className="mb-3 flex items-center gap-1.5 rounded-lg bg-info/10 px-3 py-2 text-sm font-medium text-info w-fit">
           <CalendarClock size={14} aria-hidden="true" />
           Starts in {daysUntilStart} day{daysUntilStart === 1 ? "" : "s"}
         </div>
       )}
 
       {hasStarted && (
-        <div className="mb-3 flex items-center gap-1.5 rounded-lg bg-emerald-500/10 px-3 py-2 text-sm font-medium text-emerald-600 w-fit">
+        <div className="mb-3 flex items-center gap-1.5 rounded-lg bg-success/10 px-3 py-2 text-sm font-medium text-success w-fit">
           <PlayCircle size={14} aria-hidden="true" />
           Opportunity in progress
         </div>
@@ -155,7 +156,11 @@ export default function ParticipationCard({ participation }) {
         </p>
       )}
 
-      {error && <p className="mt-2 text-sm text-danger">{error}</p>}
+      {error && (
+        <div className="mt-2">
+          <AuthAlert variant="error">{error}</AuthAlert>
+        </div>
+      )}
 
       <Modal
         open={isReasonOpen}

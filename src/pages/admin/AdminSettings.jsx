@@ -10,7 +10,7 @@ import Toast from '../../components/common/Toast'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../hooks/useToast'
 import { ROUTES } from '../../constants/paths'
-import { CARD_BASE, PANEL_SURFACE } from '../../utils/surfaceStyles'
+import { CARD_SURFACE, CARD_ELEVATION, PANEL_SURFACE } from '../../utils/surfaceStyles'
 import { formatDateTime } from '../../utils/formatDateTime'
 import { useEffect, useState } from 'react'
 
@@ -81,7 +81,7 @@ export default function AdminSettings() {
           </div>
 
           <div className="mt-6 space-y-4">
-            <label className={`${CARD_BASE} flex items-center justify-between gap-4 p-4`}>
+            <label className={`${CARD_SURFACE} ${CARD_ELEVATION} flex items-center justify-between gap-4 p-4`}>
               <div>
                 <Typography variant="h6">Verification emails</Typography>
                 <Typography variant="bodySm" className="mt-1 text-body">
@@ -96,7 +96,7 @@ export default function AdminSettings() {
               />
             </label>
 
-            <label className={`${CARD_BASE} flex items-center justify-between gap-4 p-4`}>
+            <label className={`${CARD_SURFACE} ${CARD_ELEVATION} flex items-center justify-between gap-4 p-4`}>
               <div>
                 <Typography variant="h6">Weekly digest</Typography>
                 <Typography variant="bodySm" className="mt-1 text-body">
@@ -111,7 +111,7 @@ export default function AdminSettings() {
               />
             </label>
 
-            <label className={`${CARD_BASE} flex items-center justify-between gap-4 p-4`}>
+            <label className={`${CARD_SURFACE} ${CARD_ELEVATION} flex items-center justify-between gap-4 p-4`}>
               <div>
                 <Typography variant="h6">Security alerts</Typography>
                 <Typography variant="bodySm" className="mt-1 text-body">
@@ -148,7 +148,7 @@ export default function AdminSettings() {
           </div>
 
           <div className="mt-6 space-y-3">
-            <div className={`${CARD_BASE} p-4`}>
+            <div className={`${CARD_SURFACE} ${CARD_ELEVATION} p-4`}>
               <Typography variant="overline" className="text-body/70">
                 Last login
               </Typography>
@@ -157,7 +157,7 @@ export default function AdminSettings() {
               </Typography>
             </div>
 
-            <div className={`${CARD_BASE} p-4`}>
+            <div className={`${CARD_SURFACE} ${CARD_ELEVATION} p-4`}>
               <Typography variant="overline" className="text-body/70">
                 Account status
               </Typography>
@@ -167,7 +167,7 @@ export default function AdminSettings() {
               </div>
             </div>
 
-            <div className={`${CARD_BASE} p-4`}>
+            <div className={`${CARD_SURFACE} ${CARD_ELEVATION} p-4`}>
               <Typography variant="overline" className="text-body/70">
                 Password
               </Typography>
@@ -183,7 +183,7 @@ export default function AdminSettings() {
               </div>
             </div>
 
-            <div className={`${CARD_BASE} p-4`}>
+            <div className={`${CARD_SURFACE} ${CARD_ELEVATION} p-4`}>
               <Typography variant="overline" className="text-body/70">
                 Quick actions
               </Typography>

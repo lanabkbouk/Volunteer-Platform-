@@ -12,6 +12,7 @@
 import { Link } from "react-router-dom";
 import { Users, ChevronRight, Inbox } from "lucide-react";
 import Typography from "../ui/Typography";
+import EmptyState from "../common/EmptyState";
 import ParticipationStatusBadge from "../opportunity/ParticipationStatusBadge";
 import { PANEL_SURFACE } from "../../utils/surfaceStyles";
 import { ROUTES } from "../../constants/paths";
@@ -39,14 +40,7 @@ export default function RecentActivityFeed({ activity = [] }) {
       </Typography>
 
       {activity.length === 0 ? (
-        <div className="flex flex-col items-center text-center gap-3 py-10 px-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-heading/5">
-            <Inbox size={22} className="text-heading/40" aria-hidden="true" />
-          </div>
-          <Typography variant="bodySm" className="text-body">
-            No recent activity yet.
-          </Typography>
-        </div>
+        <EmptyState icon={Inbox} title="No recent activity yet" />
       ) : (
         <ul className="flex flex-col divide-y divide-heading/10">
           {activity.map((item) => {

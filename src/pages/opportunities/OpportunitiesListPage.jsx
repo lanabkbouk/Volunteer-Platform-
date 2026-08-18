@@ -1,20 +1,23 @@
 import { useCallback, useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
-import { Sparkles, SearchX, Loader2 } from "lucide-react";
+import { useSearchParams, useNavigate } from "react-router-dom";
+import { Sparkles, SearchX, Loader2, SlidersHorizontal, ChevronDown } from "lucide-react";
 import Typography from "../../components/ui/Typography";
 import OpportunityCard from "../../components/opportunity/OpportunityCard";
 import CategorySidebar from "../../components/opportunity/CategorySidebar";
 import OpportunityTabs, { OPPORTUNITY_TABS } from "../../components/opportunity/OpportunityTabs";
 import CardSkeleton from "../../components/ui/CardSkeleton";
 import EmptyState from "../../components/common/EmptyState";
+import AuthAlert from "../../components/auth/AuthAlert";
 import { useCategoriesQuery } from "../../hooks/queries/useCategoriesQuery";
 import { useOpportunitiesQuery } from "../../hooks/queries/useOpportunitiesQuery";
 import { useDebouncedValue } from "../../hooks/useDebouncedValue";
 import { useAuth } from "../../context/AuthContext";
 import { ACCOUNT_TYPES } from "../../constants/auth/accountTypes";
 import { OPPORTUNITY_STATUS } from "../../constants/opportunityStatus";
+import { ROUTES } from "../../constants/paths";
 
 export default function OpportunitiesListPage() {
+  const navigate = useNavigate();
   const { isAuthenticated, accountType, user } = useAuth();
   const isVolunteer = isAuthenticated && accountType === ACCOUNT_TYPES.VOLUNTEER;
 
@@ -126,13 +129,46 @@ export default function OpportunitiesListPage() {
 
       <div className="flex flex-col lg:flex-row gap-8">
         {!isSuggestedTab ? (
-          <CategorySidebar
-            categories={categories}
-            selectedCategoryId={selectedCategoryId}
-            onSelectCategory={selectCategory}
-            searchValue={search}
-            onSearchChange={setSearch}
-          />
+          <>
+            {/* موبايل: قائمة الفلاتر/التصنيفات مطوية افتراضيًا (details/summary)
+                — بدل ما الزائر يتمرّر عبر القائمة كاملة قبل ما يشوف أول
+                كارد فرصة فعلي. من lg فما فوق نفس القائمة تظهر دايمًا
+                موسّعة بالعمود الجانبي كالمعتاد (نسخة ثانية تحت مخصّصة
+                لهيك، مخفية بالكامل هون تحت lg) — ترتيب الأقسام بالصفحة
+                (فلاتر قبل النتائج) ما تغيّر، بس شكل عرضها على الموبايل بس */}
+            <details className="group w-full shrink-0 lg:hidden">
+              <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 rounded-xl border border-heading/10 bg-field px-4 py-3 text-sm font-semibold text-heading transition-colors hover:bg-heading/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 [&::-webkit-details-marker]:hidden">
+                <span className="flex items-center gap-2">
+                  <SlidersHorizontal size={16} aria-hidden="true" />
+                  Filters &amp; Categories
+                </span>
+                <ChevronDown
+                  size={16}
+                  className="shrink-0 transition-transform duration-200 group-open:rotate-180"
+                  aria-hidden="true"
+                />
+              </summary>
+              <div className="mt-4">
+                <CategorySidebar
+                  categories={categories}
+                  selectedCategoryId={selectedCategoryId}
+                  onSelectCategory={selectCategory}
+                  searchValue={search}
+                  onSearchChange={setSearch}
+                />
+              </div>
+            </details>
+
+            <div className="hidden lg:block">
+              <CategorySidebar
+                categories={categories}
+                selectedCategoryId={selectedCategoryId}
+                onSelectCategory={selectCategory}
+                searchValue={search}
+                onSearchChange={setSearch}
+              />
+            </div>
+          </>
         ) : null}
 
         <div className={`flex-1 ${isSuggestedTab ? "max-w-5xl mx-auto w-full" : ""}`}>
@@ -167,7 +203,7 @@ export default function OpportunitiesListPage() {
               ))}
             </div>
           ) : error ? (
-            <p className="text-sm text-danger">{error}</p>
+            <AuthAlert variant="error">{error}</AuthAlert>
           ) : visibleOpportunities.length === 0 ? (
             <EmptyState
               icon={isSuggestedTab ? Sparkles : SearchX}
@@ -177,6 +213,8 @@ export default function OpportunitiesListPage() {
                   ? "Update your profile details to get better matches."
                   : "Try a different search term or category."
               }
+              actionLabel={isSuggestedTab ? "Update Profile" : undefined}
+              onAction={isSuggestedTab ? () => navigate(ROUTES.VOLUNTEER_PROFILE) : undefined}
             />
           ) : isSuggestedTab ? (
             <div className="flex flex-col gap-10">

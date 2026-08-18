@@ -7,6 +7,7 @@ import { Plus } from 'lucide-react'
 import Typography from '../ui/Typography'
 import Skeleton from '../ui/Skeleton'
 import Button from '../ui/Button'
+import AuthAlert from '../auth/AuthAlert'
 import EmptyState from '../common/EmptyState'
 import { CARD_SURFACE } from '../../utils/surfaceStyles'
 
@@ -57,8 +58,8 @@ export default function CatalogSection({
         </div>
       ) : isError ? (
         // فشل الجلب لازم يظهر كخطأ صريح مع إعادة محاولة، مش كقائمة فاضية
-        <div className="flex flex-col items-start gap-3 rounded-lg border border-danger bg-danger/5 px-4 py-3 text-sm text-danger">
-          <p>{errorMessage}</p>
+        <div className="flex flex-col items-start gap-3">
+          <AuthAlert variant="error">{errorMessage}</AuthAlert>
           {onRetry && (
             <Button variant="danger" size="small" onClick={onRetry}>
               Retry

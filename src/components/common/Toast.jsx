@@ -16,7 +16,10 @@ const VARIANT_STYLES = {
   info: { icon: Info, className: 'bg-field border-heading/15 text-heading' },
 }
 
-export default function Toast({ message, variant = 'info', duration = 6000, onClose }) {
+// actionLabel/onAction اختياريان (نفس نمط EmptyState's actionLabel/onAction)
+// — لما ينمرروا سوا، بيظهر زر نصي إضافي جوا التوست (مثلًا "Undo") قبل
+// زر الإغلاق X. بدونهم، التوست بيشتغل بالضبط متل ما كان (رسالة + إغلاق فقط)
+export default function Toast({ message, variant = 'info', duration = 6000, onClose, actionLabel, onAction }) {
   // إغلاق تلقائي بعد مدة معيّنة، طالما في رسالة معروضة فعليًا
   useEffect(() => {
     if (!message) return undefined
@@ -27,6 +30,12 @@ export default function Toast({ message, variant = 'info', duration = 6000, onCl
   if (!message) return null
 
   const { icon: Icon, className } = VARIANT_STYLES[variant] ?? VARIANT_STYLES.info
+  const hasAction = Boolean(actionLabel && onAction)
+
+  const handleAction = () => {
+    onAction()
+    onClose()
+  }
 
   return createPortal(
     <div
@@ -37,6 +46,15 @@ export default function Toast({ message, variant = 'info', duration = 6000, onCl
       <div className={`flex items-start gap-3 rounded-2xl border p-4 shadow-lg ${className}`}>
         <Icon size={20} className="mt-0.5 shrink-0" />
         <p className="flex-1 text-sm font-medium">{message}</p>
+        {hasAction && (
+          <button
+            type="button"
+            onClick={handleAction}
+            className="shrink-0 text-sm font-semibold underline decoration-2 underline-offset-2 opacity-90 transition-opacity hover:opacity-100"
+          >
+            {actionLabel}
+          </button>
+        )}
         <button
           type="button"
           onClick={onClose}

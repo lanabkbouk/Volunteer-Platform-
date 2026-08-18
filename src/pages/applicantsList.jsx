@@ -11,6 +11,7 @@ import { useShowMore } from "../hooks/useShowMore";
 import { useParams, useLocation, Link } from "react-router-dom";
 import { ArrowLeft, Users } from "lucide-react";
 import Typography from "../components/ui/Typography";
+import Button from "../components/ui/Button";
 import ApplicantCard from "../components/organization/ApplicantCard";
 import ApplicantsSummaryStats from "../components/organization/ApplicantsSummaryStats";
 import ApplicantsToolbar from "../components/organization/ApplicantsToolbar";
@@ -43,6 +44,16 @@ export default function ApplicantsList() {
   const opportunity = opportunityQuery.data?.opportunity ?? null;
   const applicants = useMemo(() => applicantsQuery.data ?? [], [applicantsQuery.data]);
   const loading = opportunityQuery.isPending || applicantsQuery.isPending;
+  // فشل جلب الفرصة أو المتقدمين لازم يظهر كخطأ صريح مع إعادة محاولة، مش
+  // كحالة "ما في متقدمين" عادية — وإلا المنظمة بتفتكر إنه ما حدا تقدّم
+  // أصلًا بينما فعليًا في خطأ شبكة/سيرفر (نفس نمط myCauses.jsx وcreateEditCause.jsx)
+  const error = opportunityQuery.isError || applicantsQuery.isError
+    ? opportunityQuery.error?.message || applicantsQuery.error?.message || "Failed to load applicants"
+    : "";
+  const handleRetryLoad = () => {
+    opportunityQuery.refetch();
+    applicantsQuery.refetch();
+  };
   const { toast, showSuccess, showError, closeToast } = useToast();
 
   // تعليم كل انسحاب ظاهر هلق كـ"مشاهَد" — بعد هالسطر، تنبيه "A volunteer
@@ -225,6 +236,13 @@ export default function ApplicantsList() {
               <Skeleton className="h-9 w-24 rounded-xl" />
             </div>
           ))}
+        </div>
+      ) : error ? (
+        <div className="flex flex-col items-start gap-3 rounded-lg border border-danger bg-danger/10 px-3 py-2 text-sm text-danger">
+          <p>{error}</p>
+          <Button variant="danger" size="small" onClick={handleRetryLoad}>
+            Retry
+          </Button>
         </div>
       ) : !hasAnyApplicants ? (
         <EmptyState

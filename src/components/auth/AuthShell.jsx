@@ -1,4 +1,8 @@
+import { Link } from "react-router-dom";
 import LogoIcon from "../ui/LogoIcon";
+import Typography from "../ui/Typography";
+import { PANEL_SURFACE } from "../../utils/surfaceStyles";
+import { ROUTES } from "../../constants/paths";
 
 // قالب موحّد لصفحات المصادقة (Login/Register). كان مصمَّم سابقًا بالأسود
 // والأبيض بمعزل عن هوية المنصة (البرتقالي الدافئ المعرّف بـ index.css)،
@@ -14,13 +18,23 @@ export default function AuthShell({ title, subtitle, children, footer }) {
       />
 
       <div className="relative mx-auto flex min-h-[80vh] w-full max-w-xl items-center justify-center">
-        <div className="animate-shell-in w-full rounded-2xl border border-heading/10 bg-field p-6 shadow-xl sm:p-8">
+        <div className={`animate-shell-in w-full ${PANEL_SURFACE} p-6 sm:p-8`}>
           <header className="mb-6 flex flex-col items-center">
-            <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-white shadow-sm">
+            <Link
+              to={ROUTES.HOME}
+              className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-white shadow-sm transition hover:opacity-90"
+              aria-label="Back to home"
+            >
               <LogoIcon className="h-6 w-6" />
-            </span>
-            <h1 className="text-center text-2xl font-bold text-heading">{title}</h1>
-            {subtitle && <p className="mt-2 text-center text-sm text-body">{subtitle}</p>}
+            </Link>
+            <Typography as="h1" variant="h3" align="center">
+              {title}
+            </Typography>
+            {subtitle && (
+              <Typography variant="bodySm" align="center" className="mt-2">
+                {subtitle}
+              </Typography>
+            )}
           </header>
 
           {children}

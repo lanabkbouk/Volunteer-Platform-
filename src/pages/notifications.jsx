@@ -9,7 +9,7 @@
 // (كل 5 ثواني، راجع useRecentUpdates.js) — بدونها كان العنصر بيضل ظاهر
 // لحد 5 ثواني كاملة بعد الضغط على "مقروء"، إحساس بطيء وغير مباشر.
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Bell, CheckCheck, PartyPopper } from "lucide-react";
 import Typography from "../components/ui/Typography";
 import Button from "../components/ui/Button";
@@ -17,6 +17,8 @@ import TabsFilter from "../components/ui/TabsFilter";
 import EmptyState from "../components/common/EmptyState";
 import ShowMoreButton from "../components/common/ShowMoreButton";
 import NotificationListItem from "../components/notifications/NotificationListItem";
+import Toast from "../components/common/Toast";
+import { useToast } from "../hooks/useToast";
 import useRecentUpdates from "../hooks/useRecentUpdates";
 import { useShowMore } from "../hooks/useShowMore";
 import { CARD_SURFACE } from "../utils/surfaceStyles";
@@ -26,10 +28,21 @@ import {
   DEFAULT_NOTIFICATION_ICON,
 } from "../constants/notificationTypes";
 
+// مهلة "تراجع" التعليم الجماعي كمقروء — خلال هالوقت، نداء onDismiss()
+// الفعلي (يلي بيعلّم كل عنصر مقروء عند المصدر) بيضل مؤجّل، فالضغط على
+// "Undo" بالتوست قادر يلغيه فعليًا قبل ما يصير نهائي
+const MARK_ALL_UNDO_WINDOW_MS = 5000;
+
 export default function Notifications() {
   const { items } = useRecentUpdates();
   const [dismissedIds, setDismissedIds] = useState(() => new Set());
   const [activeTab, setActiveTab] = useState("all");
+  const { toast, showToast, closeToast } = useToast();
+  // نخزّن هون دفعة "التعليم الجماعي" المعلّقة حاليًا (لسا ما انفّذت
+  // فعليًا) — id المهلة + قائمة العناصر نفسها، حتى نقدر (أ) نلغي المهلة
+  // ونرجّع العناصر للعرض لو ضغط المستخدم Undo، أو (ب) ننفّذها فورًا لو
+  // ضغط "Mark all as read" مرة تانية قبل ما تخلص المهلة السابقة
+  const pendingMarkAllRef = useRef(null);
 
   const visibleAllItems = useMemo(
     () => items.filter((item) => !dismissedIds.has(item.id)),
@@ -73,13 +86,62 @@ export default function Notifications() {
     setDismissedIds((prev) => new Set(prev).add(item.id));
   };
 
+  // ملاحظة: onDismiss() الحقيقي لكل عنصر (يلي بيعلّمه مقروء عند المصدر)
+  // بيتنفّذ بس لما تخلص مهلة التراجع بدون ما يُلغى — بدونها، ضغطة "Undo"
+  // ما كانت رح تقدر تسترجع شي فعليًا لأنه التعليم الحقيقي يكون صار خلاص
+  const commitPendingMarkAll = () => {
+    const pending = pendingMarkAllRef.current;
+    if (!pending) return;
+    clearTimeout(pending.timeoutId);
+    pending.items.forEach((item) => item.onDismiss?.());
+    pendingMarkAllRef.current = null;
+  };
+
   const handleMarkAllRead = () => {
-    visibleAllItems.forEach((item) => item.onDismiss?.());
+    // لو فيه دفعة سابقة لسا معلّقة (المستخدم ضغط الزر مرتين بسرعة)،
+    // ننفّذها فورًا الأول بدل ما تضيع أو تتلخبط مع الدفعة الجديدة
+    commitPendingMarkAll();
+
+    const itemsToMark = visibleAllItems;
+
+    // إخفاء تفاؤلي فوري من العرض — نفس آلية dismissedIds المستخدمة أصلًا
+    // بالتعليم الفردي (handleDismiss تحت)، حتى الاستجابة البصرية تصير
+    // لحظية بغض النظر عن مهلة التراجع
     setDismissedIds((prev) => {
       const next = new Set(prev);
-      visibleAllItems.forEach((item) => next.add(item.id));
+      itemsToMark.forEach((item) => next.add(item.id));
       return next;
     });
+
+    const timeoutId = setTimeout(() => {
+      itemsToMark.forEach((item) => item.onDismiss?.());
+      pendingMarkAllRef.current = null;
+    }, MARK_ALL_UNDO_WINDOW_MS);
+
+    pendingMarkAllRef.current = { timeoutId, items: itemsToMark };
+
+    showToast(
+      `Marked ${itemsToMark.length} notification${itemsToMark.length === 1 ? "" : "s"} as read`,
+      "success",
+      {
+        actionLabel: "Undo",
+        onAction: () => {
+          const pending = pendingMarkAllRef.current;
+          if (!pending) return;
+          clearTimeout(pending.timeoutId);
+          pendingMarkAllRef.current = null;
+
+          // نرجّع بس نفس العناصر يلي كانت جزء من هالدفعة تحديدًا — لو
+          // المستخدم علّم عنصر إضافي مقروء يدويًا (X) بالفترة نفسها، بدنا
+          // يضل مخفي، مش يرجع بالغلط مع البقية
+          setDismissedIds((prev) => {
+            const next = new Set(prev);
+            pending.items.forEach((item) => next.delete(item.id));
+            return next;
+          });
+        },
+      },
+    );
   };
 
   return (
@@ -136,6 +198,18 @@ export default function Notifications() {
           </div>
         </div>
       )}
+
+      {/* duration مطابقة تمامًا لمهلة التراجع (MARK_ALL_UNDO_WINDOW_MS) —
+          حتى يختفي زر "Undo" بنفس لحظة ما يصير التعليم نهائيًا فعليًا،
+          بدل ما يضل ظاهرًا وما إله أي أثر بعدها */}
+      <Toast
+        message={toast.message}
+        variant={toast.variant}
+        duration={MARK_ALL_UNDO_WINDOW_MS}
+        onClose={closeToast}
+        actionLabel={toast.actionLabel}
+        onAction={toast.onAction}
+      />
     </div>
   );
 }

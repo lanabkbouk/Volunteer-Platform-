@@ -218,7 +218,7 @@ export default function CreateEditCause() {
   if (loadError) {
     return (
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        <div className="flex flex-col items-start gap-3 rounded-lg border border-danger bg-danger/5 px-4 py-3 text-sm text-danger">
+        <div className="flex flex-col items-start gap-3 rounded-lg border border-danger bg-danger/10 px-3 py-2 text-sm text-danger">
           <p>{loadError}</p>
           <Button variant="danger" size="small" onClick={handleRetryLoad}>
             Retry

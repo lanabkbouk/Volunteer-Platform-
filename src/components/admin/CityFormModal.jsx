@@ -1,6 +1,7 @@
 // نفس فلسفة CategoryFormModal/SkillFormModal بالضبط: مودال واحد للإنشاء
-// والتعديل، والـ slug بينحسب تلقائيًا بالخدمة (syrianGovernorates.js)
-// من nameEn، فما في داعي حقل إضافي يربك الأدمن.
+// والتعديل، والـ slug بينحسب تلقائيًا بالخدمة (syrianGovernorates.js) من
+// nameEn. الاسمين (عربي/إنجليزي) مطلوبين هون صراحة لأنهما يُخزّنان
+// ويُعرضان بشكل منفصل (راجع CityRow.jsx وnameAr/nameEn بالـ mutations).
 
 import { useState } from 'react'
 import Modal from '../ui/Modal'
@@ -44,6 +45,15 @@ export default function CityFormModal({ open, city, onClose, onSubmit, isSubmitt
     >
       <div className="flex flex-col gap-4">
         {error && <p className="text-sm text-danger">{error}</p>}
+
+        <Input
+          label="Name (Arabic)"
+          name="nameAr"
+          required
+          value={form.nameAr}
+          onChange={handleChange('nameAr')}
+          placeholder="Example: Damascus"
+        />
 
         <Input
           label="Name (English)"

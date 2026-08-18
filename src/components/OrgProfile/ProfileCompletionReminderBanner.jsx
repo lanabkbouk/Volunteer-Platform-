@@ -25,7 +25,7 @@ export default function ProfileCompletionReminderBanner() {
   return (
     <div
       role="status"
-      className="flex items-start gap-3 rounded-3xl border p-6 md:p-8 mb-8 bg-yellow-50 border-yellow-200 text-yellow-800"
+      className="flex items-start gap-3 rounded-3xl border p-6 md:p-8 mb-8 bg-amber-50 border-amber-200 text-amber-800"
     >
       <AlertTriangle size={20} className="mt-0.5 shrink-0" />
 
@@ -41,7 +41,7 @@ export default function ProfileCompletionReminderBanner() {
           to={ROUTES.ORGANIZATION_PROFILE}
           variant="ghost"
           size="small"
-          className="mt-4 !border-yellow-300 !text-yellow-800 hover:!bg-yellow-100"
+          className="mt-4"
         >
           Complete Profile
         </Button>

@@ -13,6 +13,7 @@ import ValuesGrid from "../components/about/ValuesGrid";
 import VisionGoals from "../components/about/VisionGoals";
 import GeometricDivider from "../components/common/GeometricDivider";
 import Button from "../components/ui/Button";
+import AuthAlert from "../components/auth/AuthAlert";
 
 export default function About() {
   const statsQuery = usePlatformStatsQuery();
@@ -45,9 +46,9 @@ export default function About() {
         <GeometricDivider />
 
         {statsError ? (
-          <div className="flex flex-col items-start gap-3 rounded-lg border border-danger bg-danger/5 px-4 py-3 text-sm text-danger">
-            <p>Failed to load platform statistics.</p>
-            <Button variant="danger" size="small" onClick={() => statsQuery.refetch()}>
+          <div className="flex flex-col items-start gap-3">
+            <AuthAlert variant="error">Failed to load platform statistics.</AuthAlert>
+            <Button variant="primary" size="small" onClick={() => statsQuery.refetch()}>
               Retry
             </Button>
           </div>

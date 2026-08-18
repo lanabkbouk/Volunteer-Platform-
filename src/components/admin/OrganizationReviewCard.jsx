@@ -32,6 +32,10 @@ export default function OrganizationReviewCard({
   const statusTone = getStatusTone(status)
   const isVerified = status === ORGANIZATION_STATUS.VERIFIED
   const isRejected = status === ORGANIZATION_STATUS.REJECTED
+  // منظمة معلَّقة (Suspended) كانت موثَّقة أصلًا — نفس الزر/المعالج
+  // (onApprove) بيرجّعها لحالة verified، بس النص لازم يعكس "إعادة تفعيل"
+  // مش "موافقة أولى" حتى ما يلتبس الأدمن وهو يراجع طابور فيه معلّقة وpending سوا
+  const isSuspended = status === ORGANIZATION_STATUS.SUSPENDED
 
   return (
     <article className={`${CARD_BASE} p-5 md:p-6`}>
@@ -83,10 +87,10 @@ export default function OrganizationReviewCard({
             size="small"
             disabled={isUpdating || isVerified}
             isLoading={isUpdating}
-            loadingText="Approving..."
+            loadingText={isSuspended ? 'Reinstating...' : 'Approving...'}
             onClick={() => onApprove(organization)}
           >
-            Approve verification
+            {isSuspended ? 'Reinstate organization' : 'Approve verification'}
           </Button>
           <Button
             variant="danger"

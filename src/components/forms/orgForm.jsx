@@ -1,5 +1,6 @@
 import Input from '../ui/Input'
 import UploadRow from '../common/UploadRow'
+import { FIELD_LABEL } from '../../utils/fieldStyles'
 
 // نموذج بيانات المنظمة فقط (UI بدون منطق) — منطق رفع/معاينة/التحقق من
 // صورة التوثيق موجود بـ Register.jsx (عبر useImageUpload)، هون بس عرض
@@ -40,7 +41,7 @@ export default function OrganizationForm({
           أوضح وأسهل بالاستخدام، خصوصًا إنه النص جنب الصورة أصلاً بيشرح
           إنه المنطقة كاملة قابلة للنقر. */}
       <div className='flex w-full flex-col gap-1'>
-        <label htmlFor='verificationImage' className='mb-1 text-sm font-medium text-heading'>
+        <label htmlFor='verificationImage' className={FIELD_LABEL}>
           Organization Verification Image
           <span className='ml-1 text-primary'>*</span>
         </label>

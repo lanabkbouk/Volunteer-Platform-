@@ -1,6 +1,7 @@
 // components/common/ImageUploader.jsx
 
 import { Camera, Building2, User, X } from "lucide-react"
+import ClickableAvatar from "./ClickableAvatar"
 
 const SHAPE_CLASSES = {
   circle: "rounded-full",
@@ -28,23 +29,39 @@ export default function ImageUploader({
 }) {
   const FallbackIcon = fallbackIcon === "organization" ? Building2 : User
 
+  const preview = (
+    <div
+      className={`${SIZE_CLASSES[size]} ${SHAPE_CLASSES[shape]} overflow-hidden border border-heading/10 flex items-center justify-center ${!previewUrl ? 'bg-primary/10' : ''}`}
+    >
+      {previewUrl ? (
+        <img
+          src={previewUrl}
+          alt="Profile"
+          className="w-full h-full object-cover transition-transform duration-200 hover:scale-[1.03]"
+        />
+      ) : fallbackText ? (
+        <span className="text-primary font-bold text-2xl">{fallbackText}</span>
+      ) : (
+        <FallbackIcon className="text-primary/50" size={30} />
+      )}
+    </div>
+  )
+
   return (
     <div className="relative inline-block">
-      <div
-        className={`${SIZE_CLASSES[size]} ${SHAPE_CLASSES[shape]} overflow-hidden border border-heading/10 flex items-center justify-center ${!previewUrl ? 'bg-primary/10' : ''}`}
-      >
-        {previewUrl ? (
-          <img
-            src={previewUrl}
-            alt="Profile"
-            className="w-full h-full object-cover transition-transform duration-200 hover:scale-[1.03]"
-          />
-        ) : fallbackText ? (
-          <span className="text-primary font-bold text-2xl">{fallbackText}</span>
-        ) : (
-          <FallbackIcon className="text-primary/50" size={30} />
-        )}
-      </div>
+      {/* disabled=true يعني هالمكوّن مستخدم كصورة مصغّرة جوا عنصر أكبر
+          هو الزر الفعلي لحاله (مثلًا UploadRow.jsx: الصف كامل تحت label
+          واحد بيفتح منتقي الملف). ClickableAvatar بترندر <button>، ولو
+          لفّينا فيها هون كمان بهالحالة كان بيصير button جوا label —
+          نقر الصورة المصغّرة كان رح يفتح Lightbox بدل منتقي الملف. فبنلف
+          بس لما disabled=false (استخدام مستقل بلا عنصر أكبر يحتويه) */}
+      {disabled ? (
+        preview
+      ) : (
+        <ClickableAvatar src={previewUrl} alt="Profile photo">
+          {preview}
+        </ClickableAvatar>
+      )}
 
       {!disabled && (
         <label

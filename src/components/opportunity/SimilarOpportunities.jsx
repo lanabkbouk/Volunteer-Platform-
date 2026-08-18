@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { ImageOff } from "lucide-react";
+import Typography from "../ui/Typography";
 import { ROUTES } from "../../constants/paths";
 import { PANEL_SURFACE } from "../../utils/surfaceStyles";
 
@@ -8,9 +9,9 @@ export default function SimilarOpportunities({ opportunities }) {
 
   return (
     <div className={`${PANEL_SURFACE} p-5`}>
-      <h3 className="text-sm font-semibold uppercase tracking-wide text-heading/60 mb-3">
+      <Typography as="h3" variant="overline" weight="semibold" color="muted" className="mb-3">
         Similar Opportunities
-      </h3>
+      </Typography>
 
       <ul className="flex flex-col gap-3">
         {opportunities.map((item) => (

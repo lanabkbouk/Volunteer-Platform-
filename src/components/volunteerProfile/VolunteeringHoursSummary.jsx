@@ -11,12 +11,22 @@
 // "لدى هالمنظمة" عند المنظمات، فأي رقم ظاهر هون متطابق مع أي مكان تاني.
 
 import { Link } from "react-router-dom";
-import { Clock3, Building2, CheckCircle2, Compass, Sparkles, PlayCircle, ArrowRight } from "lucide-react";
+import {
+  Clock3,
+  Building2,
+  CheckCircle2,
+  Compass,
+  Sparkles,
+  PlayCircle,
+  ArrowRight,
+  AlertCircle,
+} from "lucide-react";
 import StatCard from "../common/StatCard";
 import EmptyState from "../common/EmptyState";
 import Skeleton from "../ui/Skeleton";
 import Typography from "../ui/Typography";
 import Button from "../ui/Button";
+import Chip from "../ui/Chip";
 import { useVolunteerHoursSummaryQuery } from "../../hooks/queries/useVolunteerHoursSummaryQuery";
 import { ROUTES } from "../../constants/paths";
 import { CARD_SURFACE } from "../../utils/surfaceStyles";
@@ -42,9 +52,13 @@ export default function VolunteeringHoursSummary() {
 
   if (hasError) {
     return (
-      <p className="rounded-lg border border-danger bg-danger/5 px-3 py-2 text-sm text-danger">
-        {hoursSummaryQuery.error?.message || "Failed to load your volunteering hours"}
-      </p>
+      <EmptyState
+        icon={AlertCircle}
+        title="Couldn't load your volunteering hours"
+        description={hoursSummaryQuery.error?.message || "Failed to load your volunteering hours"}
+        actionLabel="Try again"
+        onAction={hoursSummaryQuery.refetch}
+      />
     );
   }
 
@@ -145,10 +159,10 @@ export default function VolunteeringHoursSummary() {
                 </span>
 
                 <span className="flex shrink-0 items-center gap-2">
-                  <span className="flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
+                  <Chip color="primary" className="px-2.5! py-1! text-xs font-semibold gap-1">
                     <Clock3 size={12} aria-hidden="true" />
                     {organization.confirmedHours} hrs
-                  </span>
+                  </Chip>
                   <span className="hidden items-center gap-1 text-xs text-heading/50 sm:flex">
                     <CheckCircle2 size={13} aria-hidden="true" />
                     {organization.completedOpportunitiesCount}

@@ -4,6 +4,7 @@
 import { useState } from "react";
 import { MapPin, Phone, Mail, Check, X, CheckCircle2, Clock3 } from "lucide-react";
 import Button from "../ui/Button";
+import Avatar from "../common/Avatar";
 import SkillChipsPreview from "../common/SkillChipsPreview";
 import ParticipationStatusBadge from "../opportunity/ParticipationStatusBadge";
 import VolunteerProfilePreviewModal from "./VolunteerProfilePreviewModal";
@@ -57,9 +58,7 @@ export default function ApplicantCard({
     >
       <div className="flex flex-col sm:flex-row sm:items-start gap-4">
         {/* الصورة الرمزية */}
-        <div className="h-12 w-12 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-lg shrink-0">
-          {volunteer.name?.charAt(0) || "?"}
-        </div>
+        <Avatar src={volunteer.photo} name={volunteer.name} size="md" />
 
         {/* المعلومات */}
         <div className="flex-1 min-w-0">

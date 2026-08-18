@@ -10,6 +10,7 @@ import SkillsSelector from "../common/SkillsSelector";
 import { SYRIAN_GOVERNORATES } from "../../services/syrianGovernorates";
 import { getCategoryLabel } from "../../utils/categoryStyles";
 import { ROUTES } from "../../constants/paths";
+import { FIELD_LABEL, FIELD_ERROR } from "../../utils/fieldStyles";
 
 const GOVERNORATE_ITEMS = SYRIAN_GOVERNORATES.map(({ nameEn }) => ({
   name: nameEn,
@@ -63,14 +64,34 @@ export default function CauseForm({
 
   return (
     <div className="flex flex-col gap-8">
-      {/* القسم الأول: المعلومات الأساسية — العنوان والوصف وصورة الغلاف،
+      {/* تحذير غير مانع: بروفايل المنظمة ناقص (وصف أو مدينة) — بلون تحذيري
+          (عنبري) مش أحمر، وبدون تعطيل زر الحفظ إطلاقًا. معروض أول شي بالفورم
+          حتى تقرر المنظمة قبل ما تعبي كل الحقول، مش كملاحظة أخيرة قبل الحفظ */}
+      {profileIncomplete && (
+        <div
+          role="alert"
+          className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-800"
+        >
+          <AlertTriangle size={18} className="mt-0.5 shrink-0" />
+          <p className="text-sm">
+            Your organization profile is incomplete. We recommend{" "}
+            <Link to={ROUTES.ORGANIZATION_PROFILE} className="font-medium underline underline-offset-2">
+              completing your profile
+            </Link>{" "}
+            first so this cause displays fully on its public page.
+          </p>
+        </div>
+      )}
+
+      {/* القسم الأول: المعلومات الأساسية — العنوان، الوصف، صورة الغلاف،
+          والموقع/التصنيف — كل ما يحدد هوية الفرصة الأساسية سوا بقسم واحد،
           أول شي بيشوفه المتطوع بالكارد، فمنطقيًا أول شي نطلبه هون */}
       <FormSection title="Basic Information">
         {/* صورة الفرصة — اختيارية، تُعرض بكارد الفرصة والقائمة إن وُجدت.
             دروب-زون أكبر وأوضح من مجرد أيقونة صغيرة، لأنها أهم عنصر
             بصري بالفرصة (أول شي يجذب نظر المتطوع بقائمة الفرص) */}
         <div className="flex flex-col gap-1">
-          <label className="mb-1 text-sm font-medium text-heading">Cover Image (optional)</label>
+          <label className={FIELD_LABEL}>Cover Image (optional)</label>
           <label
             htmlFor="cause-image"
             className="flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-heading/20 bg-heading/5 px-4 py-8 cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition text-center"
@@ -91,7 +112,7 @@ export default function CauseForm({
             </span>
           </label>
           <input id="cause-image" type="file" accept="image/*" className="hidden" onChange={onImageChange} />
-          {imageError && <p className="text-xs text-danger">{imageError}</p>}
+          {imageError && <p className={FIELD_ERROR}>{imageError}</p>}
         </div>
 
         <Input
@@ -112,11 +133,12 @@ export default function CauseForm({
           className="min-h-[140px]"
           required
         />
-      </FormSection>
 
-      {/* القسم الثاني: الموقع والتصنيف — يحددان وين ولمين بتظهر الفرصة
-          (فلاتر البحث بقائمة الفرص تعتمد عليهم مباشرة) */}
-      <FormSection title="Location & Category">
+        {/* الموقع والتصنيف — يحددان وين ولمين بتظهر الفرصة (فلاتر البحث
+            بقائمة الفرص تعتمد عليهم مباشرة). مدموجين هون جوا "Basic
+            Information" (مو قسم مستقل لحالهم) لأنهم معلومات أساسية تعرّف
+            الفرصة زي العنوان والوصف تمامًا، بدون داعي لعنوان قسم كامل
+            لحقلين بس */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <Controller
             name="categoryId"
@@ -156,7 +178,7 @@ export default function CauseForm({
         </div>
       </FormSection>
 
-      {/* القسم الثالث: المهارات المطلوبة — تُستخدم بخوارزمية اقتراح
+      {/* القسم الثاني: المهارات المطلوبة — تُستخدم بخوارزمية اقتراح
           الفرص للمتطوعين المناسبين (مع العمر والمدينة) */}
       <FormSection
         title="Required Skills"
@@ -172,7 +194,7 @@ export default function CauseForm({
         />
       </FormSection>
 
-      {/* القسم الرابع: الجدول الزمني ونافذة التسجيل */}
+      {/* القسم الثالث: الجدول الزمني ونافذة التسجيل */}
       <FormSection
         title="Schedule & Registration Window"
         description="The registration window must close on or before the opportunity's start date."
@@ -216,7 +238,7 @@ export default function CauseForm({
         </div>
       </FormSection>
 
-      {/* القسم الخامس: ساعات التطوع والسعة */}
+      {/* القسم الرابع: ساعات التطوع والسعة */}
       <FormSection title="Hours & Capacity">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
           <Input
@@ -288,24 +310,6 @@ export default function CauseForm({
           </div>
         </label>
       </FormSection>
-
-      {/* تحذير غير مانع: بروفايل المنظمة ناقص (وصف أو مدينة) — بلون تحذيري
-          (عنبري) مش أحمر، وبدون تعطيل زر الحفظ إطلاقًا */}
-      {profileIncomplete && (
-        <div
-          role="alert"
-          className="flex items-start gap-3 rounded-xl border border-yellow-200 bg-yellow-50 px-4 py-3 text-yellow-800"
-        >
-          <AlertTriangle size={18} className="mt-0.5 shrink-0" />
-          <p className="text-sm">
-            Your organization profile is incomplete. We recommend{" "}
-            <Link to={ROUTES.ORGANIZATION_PROFILE} className="font-medium underline underline-offset-2">
-              completing your profile
-            </Link>{" "}
-            first so this cause displays fully on its public page.
-          </p>
-        </div>
-      )}
 
       <Button
         type="submit"

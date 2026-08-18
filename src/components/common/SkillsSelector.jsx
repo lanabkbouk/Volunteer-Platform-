@@ -5,8 +5,8 @@
 // (تحديد المهارات المطلوبة من المتطوعين)، بدل تكرار نفس منطق التجميع
 // والعرض بملفين منفصلين.
 
-import { useState } from "react";
-import { Controller } from "react-hook-form";
+import { useEffect, useRef, useState } from "react";
+import { Controller, useWatch } from "react-hook-form";
 import { ChevronDown } from "lucide-react";
 import Skeleton from "../ui/Skeleton";
 import Typography from "../ui/Typography";
@@ -25,9 +25,45 @@ export default function SkillsSelector({
   error,
   helperText = "Select at least one skill from the list",
 }) {
-  // كل الفئات تبدأ مفتوحة (نفس السلوك القديم) — الطي اختياري بيد
-  // المتطوع فقط، ما منطويها تلقائيًا حتى لو كانت الفئات كتير
+  // مجمّعة هون مرة وحدة (بدل تكرارها داخل Controller render تحت) —
+  // نفس التجميع مستخدم لعرض المهارات ولحساب أي فئة تبدأ مطوية افتراضيًا
+  const grouped = availableSkills.reduce((acc, skill) => {
+    const category = skill.category?.name || "Other";
+    if (!acc[category]) acc[category] = [];
+    acc[category].push(skill);
+    return acc;
+  }, {});
+
+  // قيمة الحقل الحالية (IDs المهارات المختارة) — تُستخدم فقط لحساب حالة
+  // الطي الابتدائية تحت، مش لعرض الاختيار نفسه (هذا يبقى دور field.value
+  // داخل Controller زي ما كان تمامًا)
+  const currentValue = useWatch({ control, name, defaultValue: [] });
+
+  // الفئات اللي ما فيها ولا مهارة مختارة مسبقًا تبدأ مطوية، والفئات اللي
+  // فيها اختيار سابق (تعديل بروفايل موجود مثلًا) تضل مفتوحة — حتى يشوف
+  // المتطوع اختياراته الحالية فورًا بدل ما يفتش عنها وسط قائمة طويلة من
+  // الفئات الفاضية، خصوصًا إنه عدد الفئات مفتوح للزيادة من لوحة الإدارة
   const [collapsedCategories, setCollapsedCategories] = useState(() => new Set());
+
+  // availableSkills بتوصل بعد أول Render غالبًا (لسا عم تتحمّل)، فحساب
+  // الطي الابتدائي داخل useState مباشرة كان رح يشتغل دايمًا على قائمة
+  // فاضية. نطبّقه مرة وحدة بس أول ما توصل المهارات فعليًا (وليس بعدها،
+  // حتى لا نلغي طيّ/فتح المتطوع اليدوي اللاحق)
+  const hasAppliedInitialCollapse = useRef(false);
+  useEffect(() => {
+    if (hasAppliedInitialCollapse.current || loading || availableSkills.length === 0) return;
+
+    hasAppliedInitialCollapse.current = true;
+    setCollapsedCategories(() => {
+      const next = new Set();
+      Object.entries(grouped).forEach(([category, skills]) => {
+        const hasSelection = skills.some((skill) => (currentValue || []).includes(skill.id));
+        if (!hasSelection) next.add(category);
+      });
+      return next;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, availableSkills]);
 
   const toggleCategory = (category) => {
     setCollapsedCategories((current) => {
@@ -68,13 +104,6 @@ export default function SkillsSelector({
         control={control}
         defaultValue={[]}
         render={({ field: { value = [], onChange } }) => {
-          const grouped = availableSkills.reduce((acc, skill) => {
-            const category = skill.category?.name || "Other";
-            if (!acc[category]) acc[category] = [];
-            acc[category].push(skill);
-            return acc;
-          }, {});
-
           return (
             <div className="space-y-4">
               {Object.entries(grouped).map(([category, skills]) => {

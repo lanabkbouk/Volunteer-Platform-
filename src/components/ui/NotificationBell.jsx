@@ -44,9 +44,15 @@ export default function NotificationBell({ items, isOpen, onToggle, onClose, tri
           </p>
 
           {count === 0 ? (
-            <div className="flex flex-col items-center gap-2 px-4 py-8 text-center">
-              <PartyPopper size={22} className="text-heading/30" aria-hidden="true" />
-              <p className="text-sm text-heading/50">You're all caught up.</p>
+            // نفس تركيبة EmptyState (دائرة primary/10 + أيقونة + عنوان)
+            // بس بمقاس مصغّر يلائم عرض القائمة المنسدلة (w-80) — نسخة
+            // EmptyState الكاملة (py-20 وأيقونة 96px) مصمّمة لسكشن كامل
+            // بالصفحة، مش لقائمة منسدلة صغيرة بالنافبار
+            <div className="flex flex-col items-center gap-3 px-4 py-8 text-center">
+              <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10">
+                <PartyPopper size={20} className="text-primary" aria-hidden="true" />
+              </div>
+              <p className="text-sm font-semibold text-heading">You're all caught up.</p>
             </div>
           ) : (
             <div className="flex max-h-80 flex-col overflow-y-auto">

@@ -5,6 +5,8 @@
 // المطلوب أرقام إدارية ثابتة تُقرأ بسرعة بدون أي حركة، فإعادة استخدامه
 // كانت رح تفرض شكل وحركة لا تلائم لوحة إدارة احترافية.
 
+import { CARD_SURFACE } from "../../utils/surfaceStyles";
+
 const STAT_COLOR_CLASSES = {
   neutral: "text-heading",
   gold: "text-amber-600",
@@ -25,7 +27,7 @@ export default function ApplicantsSummaryStats({ total, pending, accepted, rejec
       {stats.map((stat) => (
         <div
           key={stat.label}
-          className="rounded-xl bg-field border border-heading/10 px-4 py-3 text-center sm:text-left"
+          className={`${CARD_SURFACE} px-4 py-3 text-center sm:text-left`}
         >
           <p className={`text-2xl font-bold leading-none ${STAT_COLOR_CLASSES[stat.color]}`}>
             {stat.value}

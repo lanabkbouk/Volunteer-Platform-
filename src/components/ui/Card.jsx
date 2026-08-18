@@ -92,7 +92,7 @@ export default function Card({
               fullWidth
               onClick={onAction}
               className={[
-                'py-4 rounded-xl text-[15px] font-bold uppercase tracking-wide',
+                'py-4 rounded-4xl text-[15px] font-bold uppercase tracking-wide',
                 buttonClassName,
               ].join(' ')}
             >

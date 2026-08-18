@@ -2,6 +2,7 @@
 import { Lock, CheckCircle2, CalendarCheck2, Target } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 import Typography from "../ui/Typography";
+import Badge from "../common/Badge";
 import { getAchievementStyle } from "../../utils/achievementStyles";
 import { CARD_SURFACE, CARD_PADDING } from "../../utils/surfaceStyles";
 import AchievementProgressBar from "./AchievementProgressBar";
@@ -20,8 +21,12 @@ function formatDate(dateString) {
 // justUnlocked: true بس أول مرة يشوف فيها المتطوع هالإنجاز مفتوح (تتحكم
 // فيها AchievementsList عبر localStorage) — بعدها بيصير إنجاز عادي بدون
 // إعادة تشغيل الحركة بكل زيارة، بنفس منطق أي منصة إنجازات عالمية.
-export default function AchievementCard({ achievement, justUnlocked = false }) {
+// onClick: اختياري — لما موجودة وisUnlocked=true، البطاقة تصير قابلة
+// للنقر لإعادة فتح مودال الاحتفال بأي وقت (مش بس أول مرة). البطاقات
+// المقفولة تبقى بلا أي تفاعل، ما في شي يُحتفل فيه لسا
+export default function AchievementCard({ achievement, justUnlocked = false, onClick }) {
   const isUnlocked = Boolean(achievement.unlocked);
+  const isClickable = isUnlocked && Boolean(onClick);
   // كل إنجاز ياخد لونه وأيقونته الخاصة حسب نوعه
   const { icon: Icon, colorClasses } = getAchievementStyle(achievement.name);
   const prefersReducedMotion = useReducedMotion();
@@ -30,11 +35,24 @@ export default function AchievementCard({ achievement, justUnlocked = false }) {
   // فرص...) — هدف بخطوة وحدة (أول فرصة) إما 0/1 أو مفتوح أصلًا، ما بيفيد شي
   const showsProgress = !isUnlocked && achievement.progress && achievement.progress.target > 1;
 
+  function handleKeyDown(event) {
+    if (!isClickable) return;
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      onClick();
+    }
+  }
+
   return (
     <motion.div
       initial={shouldCelebrate ? { scale: 0.85, opacity: 0 } : false}
       animate={shouldCelebrate ? { scale: 1, opacity: 1 } : false}
       transition={{ type: "spring", stiffness: 260, damping: 18 }}
+      onClick={isClickable ? onClick : undefined}
+      onKeyDown={isClickable ? handleKeyDown : undefined}
+      role={isClickable ? "button" : undefined}
+      tabIndex={isClickable ? 0 : undefined}
+      aria-label={isClickable ? `View ${achievement.name} celebration again` : undefined}
       className={[
         "relative flex flex-col gap-4 overflow-hidden",
         CARD_SURFACE,
@@ -44,6 +62,7 @@ export default function AchievementCard({ achievement, justUnlocked = false }) {
           // البطاقات المكتسبة عن الباقي حتى وهي بحالة السكون، مو بس عند hover
           ? "shadow-sm ring-1 ring-primary/15 transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
           : "border-dashed transition-colors duration-300 hover:border-heading/20",
+        isClickable ? "cursor-pointer hover:ring-2 hover:ring-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/50" : "",
         shouldCelebrate ? "animate-unlock-glow" : "",
       ].join(" ")}
     >
@@ -83,22 +102,11 @@ export default function AchievementCard({ achievement, justUnlocked = false }) {
         </div>
 
         {/* شارة حالة واضحة لتمييز المكتسب عن غير المكتسب بنظرة واحدة */}
-        <span
-          className={[
-            "inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium",
-            isUnlocked ? "bg-emerald-100 text-emerald-700" : "bg-heading/5 text-heading/40",
-          ].join(" ")}
-        >
-          {isUnlocked ? (
-            <>
-              <CheckCircle2 size={12} aria-hidden="true" /> Unlocked
-            </>
-          ) : (
-            <>
-              <Lock size={11} aria-hidden="true" /> Locked
-            </>
-          )}
-        </span>
+        {isUnlocked ? (
+          <Badge label="Unlocked" tone="success" icon={CheckCircle2} className="shrink-0" />
+        ) : (
+          <Badge label="Locked" tone="neutral" icon={Lock} className="shrink-0" />
+        )}
       </div>
 
       <div className="flex flex-col gap-1">

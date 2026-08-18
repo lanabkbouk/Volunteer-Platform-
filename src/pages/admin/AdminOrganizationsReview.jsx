@@ -6,15 +6,15 @@ import AdminLayout from '../../layouts/admin/AdminLayout'
 import OrganizationReviewCard from '../../components/admin/OrganizationReviewCard'
 import AdminOrganizationDetailsModal from '../../components/admin/AdminOrganizationDetailsModal'
 import VerificationDecisionModal from '../../components/admin/VerificationDecisionModal'
+import AuthAlert from '../../components/auth/AuthAlert'
+import ConfirmModal from '../../components/common/ConfirmModal'
 import EmptyState from '../../components/common/EmptyState'
 import ShowMoreButton from '../../components/common/ShowMoreButton'
 import Toast from '../../components/common/Toast'
-import Badge from '../../components/common/Badge'
 import Input from '../../components/ui/Input'
 import Skeleton from '../../components/ui/Skeleton'
 import Typography from '../../components/ui/Typography'
 import Button from '../../components/ui/Button'
-import Modal from '../../components/ui/Modal'
 import { useAdminOrganizationsQuery } from '../../hooks/queries/useAdminOrganizationsQuery'
 import { useReviewOrganizationMutation } from '../../hooks/queries/useReviewOrganizationMutation'
 import { useToast } from '../../hooks/useToast'
@@ -194,16 +194,25 @@ export default function AdminOrganizationsReview() {
             </Typography>
           </div>
 
-          <div className="grid gap-2 sm:grid-cols-5 justify-items-start sm:justify-items-stretch">
-            <Badge label={`All ${totals.all}`} tone="neutral" />
-            <Badge label={`Pending ${totals.pending}`} tone="warning" />
-            <Badge label={`Approved ${totals.approved}`} tone="success" />
-            <Badge label={`Rejected ${totals.rejected}`} tone="danger" />
-            {/* tone="neutral" مش "danger" — نفس تمييز الرمادي/الأحمر
-                المعتمد أصلًا بـ ORGANIZATION_STATUS_META (badgeClassName)
-                بين "معلّق مؤقتًا" (رمادي) و"مرفوض" (أحمر)، حتى يسهل تمييز
-                الحالتين بنظرة سريعة بصف الإجماليات */}
-            <Badge label={`Suspended ${totals.suspended}`} tone="neutral" />
+          {/* أرقام إجمالية بس للاستئناس البصري — عرضها كنص/عداد عادي (بدون
+              حدود/pill/hover) بدل Badge، حتى ما توهم الأدمن بإنها فلاتر
+              قابلة للنقر بينما هي مجرد أرقام إعلامية بجانب مربع البحث */}
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 text-sm text-body">
+            <span>
+              All <span className="font-semibold tabular-nums text-heading">{totals.all}</span>
+            </span>
+            <span>
+              Pending <span className="font-semibold tabular-nums text-heading">{totals.pending}</span>
+            </span>
+            <span>
+              Approved <span className="font-semibold tabular-nums text-heading">{totals.approved}</span>
+            </span>
+            <span>
+              Rejected <span className="font-semibold tabular-nums text-heading">{totals.rejected}</span>
+            </span>
+            <span>
+              Suspended <span className="font-semibold tabular-nums text-heading">{totals.suspended}</span>
+            </span>
           </div>
         </div>
 
@@ -225,8 +234,8 @@ export default function AdminOrganizationsReview() {
         // هاي أهم صفحة عمل بلوحة الأدمن (قائمة التحقق) — فشل الجلب لازم
         // يظهر كخطأ صريح مع إعادة محاولة، مش كقائمة فاضية تُفهم غلط
         // كـ"لا يوجد منظمات مسجّلة"
-        <div className="flex flex-col items-start gap-3 rounded-lg border border-danger bg-danger/5 px-4 py-3 text-sm text-danger">
-          <p>{error?.message || 'Failed to load organizations'}</p>
+        <div className="flex flex-col items-start gap-3">
+          <AuthAlert variant="error">{error?.message || 'Failed to load organizations'}</AuthAlert>
           <Button variant="danger" size="small" onClick={() => refetch()}>
             Retry
           </Button>
@@ -287,31 +296,25 @@ export default function AdminOrganizationsReview() {
         isSubmitting={reviewMutation.isPending}
       />
 
-      <Modal
+      <ConfirmModal
         open={Boolean(organizationToApprove)}
         onClose={() => setOrganizationToApprove(null)}
-        title={`Approve ${organizationToApprove?.name || 'organization'}?`}
-        footer={
-          <>
-            <Button variant="ghost" onClick={() => setOrganizationToApprove(null)} disabled={reviewMutation.isPending}>
-              Cancel
-            </Button>
-            <Button
-              variant="success"
-              onClick={handleConfirmApproval}
-              isLoading={reviewMutation.isPending}
-              loadingText="Approving..."
-            >
-              Confirm approval
-            </Button>
-          </>
+        onConfirm={handleConfirmApproval}
+        title={
+          organizationToApprove?.status === ORGANIZATION_STATUS.SUSPENDED
+            ? `Reinstate ${organizationToApprove?.name || 'organization'}?`
+            : `Approve ${organizationToApprove?.name || 'organization'}?`
         }
-      >
-        <Typography variant="bodySm" className="text-body">
-          This will mark the organization as approved immediately. The status will update in the review list and the
-          organization profile.
-        </Typography>
-      </Modal>
+        description={
+          organizationToApprove?.status === ORGANIZATION_STATUS.SUSPENDED
+            ? "This will lift the suspension immediately. The organization will be able to publish and manage opportunities again, and its status will update in the review list and the organization profile."
+            : 'This will mark the organization as approved immediately. The status will update in the review list and the organization profile.'
+        }
+        confirmLabel={organizationToApprove?.status === ORGANIZATION_STATUS.SUSPENDED ? 'Confirm reinstatement' : 'Confirm approval'}
+        confirmVariant="success"
+        isLoading={reviewMutation.isPending}
+        loadingText={organizationToApprove?.status === ORGANIZATION_STATUS.SUSPENDED ? 'Reinstating...' : 'Approving...'}
+      />
 
       <Toast message={toast.message} variant={toast.variant} duration={7000} onClose={closeToast} />
     </AdminLayout>

@@ -5,14 +5,20 @@
 
 import Modal from "../ui/Modal";
 import SkillChipsPreview from "../common/SkillChipsPreview";
+import Avatar from "../common/Avatar";
+import ClickableAvatar from "../common/ClickableAvatar";
+import Typography from "../ui/Typography";
 import { MapPin, Phone, Mail, GraduationCap, Cake, Clock3, Trophy, CheckCircle2 } from "lucide-react";
 import { calculateAge } from "../../utils/validators";
+import { CARD_SURFACE } from "../../utils/surfaceStyles";
 
 // بطاقة إحصائية صغيرة مُعاد استخدامها 3 مرات بالمودال (ساعات/إنجازات/
-// فرص مكتملة) — بدل تكرار نفس الـ JSX ثلاث مرات
+// فرص مكتملة) — بدل تكرار نفس الـ JSX ثلاث مرات. نفس سطح CARD_SURFACE
+// المركزي (بدون CARD_ELEVATION — تايل ثابت صغير، مش عنصر تفاعلي) بدل
+// إعادة كتابة نفس تركيبة bg-field/border يدويًا
 function StatBlock({ icon: Icon, value, label }) {
   return (
-    <div className="flex flex-col items-center text-center rounded-xl bg-field border border-heading/10 px-3 py-2.5">
+    <div className={`flex flex-col items-center text-center px-3 py-2.5 ${CARD_SURFACE}`}>
       <Icon size={16} className="text-primary mb-1" aria-hidden="true" />
       <p className="text-sm font-bold text-heading leading-none">{value}</p>
       <p className="text-[11px] text-heading/50 mt-1">{label}</p>
@@ -33,17 +39,9 @@ export default function VolunteerProfilePreviewModal({ open, onClose, volunteer 
     // بعينه، فاسمه هو أوضح عنوان مناسب للسياق
     <Modal open={open} onClose={onClose} title={volunteer.name || "Volunteer profile"} scrollBody>
       <div className="flex items-center gap-3 mb-5">
-        {volunteer.photo ? (
-          <img
-            src={volunteer.photo}
-            alt={volunteer.name}
-            className="h-14 w-14 rounded-full object-cover shrink-0"
-          />
-        ) : (
-          <div className="h-14 w-14 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-lg shrink-0">
-            {volunteer.name?.charAt(0) || "?"}
-          </div>
-        )}
+        <ClickableAvatar src={volunteer.photo} alt={volunteer.name}>
+          <Avatar src={volunteer.photo} name={volunteer.name} size="lg" />
+        </ClickableAvatar>
         {volunteer.city && (
           <span className="flex items-center gap-1 text-sm text-body">
             <MapPin size={13} className="text-primary shrink-0" aria-hidden="true" />
@@ -67,9 +65,9 @@ export default function VolunteerProfilePreviewModal({ open, onClose, volunteer 
 
       {unlockedAchievements.length > 0 && (
         <div className="mb-5">
-          <p className="text-xs font-semibold text-heading/50 uppercase tracking-wide mb-2">
+          <Typography as="p" variant="overline" weight="semibold" color="muted" className="mb-2">
             Achievements
-          </p>
+          </Typography>
           <div className="flex flex-col gap-1.5">
             {unlockedAchievements.map((achievement) => (
               <span key={achievement.id} className="flex items-center gap-1.5 text-sm text-heading">
@@ -128,9 +126,9 @@ export default function VolunteerProfilePreviewModal({ open, onClose, volunteer 
 
       {volunteer.skills?.length > 0 ? (
         <div>
-          <p className="text-xs font-semibold text-heading/50 uppercase tracking-wide mb-2">
+          <Typography as="p" variant="overline" weight="semibold" color="muted" className="mb-2">
             Skills
-          </p>
+          </Typography>
           <SkillChipsPreview skills={volunteer.skills} max={10} />
         </div>
       ) : null}

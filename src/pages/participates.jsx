@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Compass, Filter, Sparkles, ArrowRight } from "lucide-react";
 import Typography from "../components/ui/Typography";
+import AuthAlert from "../components/auth/AuthAlert";
 import ParticipationCard from "../components/opportunity/ParticipationCard";
 import TabsFilter from "../components/ui/TabsFilter";
 import Skeleton from "../components/ui/Skeleton";
@@ -139,9 +140,7 @@ export default function Participates() {
               ))}
             </div>
           ) : error ? (
-            <p className="rounded-lg border border-danger bg-danger/5 px-3 py-2 text-sm text-danger">
-              {error}
-            </p>
+            <AuthAlert variant="error">{error}</AuthAlert>
           ) : participations.length === 0 ? (
             <EmptyState
               icon={Compass}

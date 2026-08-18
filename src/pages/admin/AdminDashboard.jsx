@@ -11,6 +11,7 @@ import {
 
 import AdminLayout from '../../layouts/admin/AdminLayout'
 import AdminStatCard from '../../components/admin/AdminStatCard'
+import AuthAlert from '../../components/auth/AuthAlert'
 import Badge from '../../components/common/Badge'
 import Button from '../../components/ui/Button'
 import EmptyState from '../../components/common/EmptyState'
@@ -21,7 +22,7 @@ import { useCategoriesQuery } from '../../hooks/queries/useCategoriesQuery'
 import { useAdminOrganizationsQuery } from '../../hooks/queries/useAdminOrganizationsQuery'
 import { ORGANIZATION_STATUS } from '../../constants/organizationStatus'
 import { ROUTES } from '../../constants/paths'
-import { CARD_BASE, PANEL_SURFACE } from '../../utils/surfaceStyles'
+import { CARD_BASE, CARD_SURFACE, CARD_ELEVATION, PANEL_SURFACE } from '../../utils/surfaceStyles'
 import { formatDateTime } from '../../utils/formatDateTime'
 
 function getStatusTone(status) {
@@ -113,6 +114,18 @@ export default function AdminDashboard() {
     .sort((a, b) => new Date(b.requestedAt || 0) - new Date(a.requestedAt || 0))
     .slice(0, 5)
 
+  // مقاييس إضافية للوحة "Platform monitoring" غير مكررة عن بطاقات
+  // الإحصاءات بالأعلى — مشتقة من نفس بيانات organizations المحمّلة أصلًا
+  // بدون أي نداء API إضافي
+  const verificationRate =
+    totalOrganizations > 0 ? Math.round((verifiedOrganizations / totalOrganizations) * 100) : 0
+
+  const oldestPendingOrganization = organizations
+    .filter((organization) => organization.status === ORGANIZATION_STATUS.PENDING)
+    .sort((a, b) => new Date(a.requestedAt || 0) - new Date(b.requestedAt || 0))[0]
+
+  const newestOrganization = recentOrganizations[0]
+
   return (
     <AdminLayout
       eyebrow="Administrative workspace"
@@ -130,8 +143,8 @@ export default function AdminDashboard() {
       }
     >
       {errorMessage && (
-        <div className="flex flex-col items-start gap-3 rounded-2xl border border-danger bg-danger/5 px-4 py-3 text-sm text-danger">
-          <p>{errorMessage}</p>
+        <div className="flex flex-col items-start gap-3">
+          <AuthAlert variant="error">{errorMessage}</AuthAlert>
           <Button
             variant="danger"
             size="small"
@@ -219,7 +232,7 @@ export default function AdminDashboard() {
                   recentOrganizations.map((organization) => (
                     <div
                       key={organization.id}
-                      className="rounded-2xl border border-heading/10 bg-field px-4 py-4 transition hover:border-primary/20 hover:shadow-sm"
+                      className={`${CARD_SURFACE} ${CARD_ELEVATION} px-4 py-3`}
                     >
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <div className="min-w-0">
@@ -251,16 +264,19 @@ export default function AdminDashboard() {
               </Typography>
 
               <div className="mt-6 space-y-3">
-                <div className="rounded-2xl border border-heading/10 bg-field px-4 py-3 transition hover:border-primary/20 hover:shadow-sm">
+                {/* المقاييس هون مقصودة تكون مختلفة عن بطاقات الإحصاءات
+                    بالأعلى (raw totals)، مش تكرارًا لها — راجع تعليق
+                    verificationRate/oldestPendingOrganization/newestOrganization أعلاه */}
+                <div className={`${CARD_SURFACE} ${CARD_ELEVATION} px-4 py-3`}>
                   <Typography variant="overline" className="text-body/70">
-                    Pending verification
+                    Verification rate
                   </Typography>
                   <Typography variant="h5" className="mt-1">
-                    {pendingVerifications}
+                    {verificationRate}%
                   </Typography>
                 </div>
 
-                <div className="rounded-2xl border border-heading/10 bg-field px-4 py-3 transition hover:border-primary/20 hover:shadow-sm">
+                <div className={`${CARD_SURFACE} ${CARD_ELEVATION} px-4 py-3`}>
                   <Typography variant="overline" className="text-body/70">
                     Rejected organizations
                   </Typography>
@@ -269,21 +285,21 @@ export default function AdminDashboard() {
                   </Typography>
                 </div>
 
-                <div className="rounded-2xl border border-heading/10 bg-field px-4 py-3 transition hover:border-primary/20 hover:shadow-sm">
+                <div className={`${CARD_SURFACE} ${CARD_ELEVATION} px-4 py-3`}>
                   <Typography variant="overline" className="text-body/70">
-                    Verified organizations
+                    Newest organization
                   </Typography>
-                  <Typography variant="h5" className="mt-1">
-                    {verifiedOrganizations}
+                  <Typography variant="h5" className="mt-1 truncate">
+                    {newestOrganization?.name || 'No organizations yet'}
                   </Typography>
                 </div>
 
-                <div className="rounded-2xl border border-heading/10 bg-field px-4 py-3 transition hover:border-primary/20 hover:shadow-sm">
+                <div className={`${CARD_SURFACE} ${CARD_ELEVATION} px-4 py-3`}>
                   <Typography variant="overline" className="text-body/70">
-                    Categories
+                    Oldest pending request
                   </Typography>
                   <Typography variant="h5" className="mt-1">
-                    {totalCategories}
+                    {oldestPendingOrganization ? formatDateTime(oldestPendingOrganization.requestedAt) : 'None pending'}
                   </Typography>
                 </div>
               </div>

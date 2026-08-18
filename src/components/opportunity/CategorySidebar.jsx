@@ -8,6 +8,7 @@
 
 import { Search } from "lucide-react";
 import Input from "../ui/Input";
+import Typography from "../ui/Typography";
 import { PANEL_SURFACE } from "../../utils/surfaceStyles";
 import { getCategoryLabel } from "../../utils/categoryStyles";
 
@@ -50,7 +51,9 @@ export default function CategorySidebar({
       ) : null}
 
       <div className={`${PANEL_SURFACE} p-5`}>
-        <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-heading/60">Categories</h3>
+        <Typography as="h3" variant="overline" weight="semibold" color="muted" className="mb-3">
+          Categories
+        </Typography>
 
         <div className="flex flex-col gap-0.5">
           <FilterListItem

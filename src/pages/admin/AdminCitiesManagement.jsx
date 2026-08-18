@@ -5,10 +5,10 @@ import AdminLayout from '../../layouts/admin/AdminLayout'
 import CatalogSection from '../../components/admin/CatalogSection'
 import CityRow from '../../components/admin/CityRow'
 import CityFormModal from '../../components/admin/CityFormModal'
+import ConfirmModal from '../../components/common/ConfirmModal'
 import Toast from '../../components/common/Toast'
 import Badge from '../../components/common/Badge'
 import Input from '../../components/ui/Input'
-import Modal from '../../components/ui/Modal'
 import Button from '../../components/ui/Button'
 import Typography from '../../components/ui/Typography'
 import { PANEL_SURFACE } from '../../utils/surfaceStyles'
@@ -48,7 +48,7 @@ export default function AdminCitiesManagement() {
     if (!normalizedSearch) return cities
 
     return cities.filter((city) => {
-      const haystack = [city.nameEn, city.nameAr].filter(Boolean).join(' ').toLowerCase()
+      const haystack = [city.nameE].filter(Boolean).join(' ').toLowerCase()
       return haystack.includes(normalizedSearch)
     })
   }, [cities, searchTerm])
@@ -183,30 +183,17 @@ export default function AdminCitiesManagement() {
         error={formError || (cityMutation.data?.success === false ? cityMutation.data.error : null)}
       />
 
-      <Modal
+      <ConfirmModal
         open={Boolean(cityToDelete)}
         onClose={() => setCityToDelete(null)}
+        onConfirm={handleDeleteCity}
         title={`Delete ${cityToDelete?.nameEn || 'city'}?`}
-        footer={
-          <>
-            <Button variant="ghost" onClick={() => setCityToDelete(null)} disabled={deleteCityMutation.isPending}>
-              Cancel
-            </Button>
-            <Button
-              variant="danger"
-              onClick={handleDeleteCity}
-              isLoading={deleteCityMutation.isPending}
-              loadingText="Deleting..."
-            >
-              Delete city
-            </Button>
-          </>
-        }
-      >
-        <Typography variant="body" className="text-body">
-          This city will be removed from the platform. Forms referencing it will need to be updated.
-        </Typography>
-      </Modal>
+        description="This city will be removed from the platform. Forms referencing it will need to be updated."
+        confirmLabel="Delete city"
+        confirmVariant="danger"
+        isLoading={deleteCityMutation.isPending}
+        loadingText="Deleting..."
+      />
 
       <Toast message={toast.message} variant={toast.variant} duration={7000} onClose={closeToast} />
     </AdminLayout>

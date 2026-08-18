@@ -10,6 +10,7 @@ import { LayoutDashboard } from "lucide-react";
 import Typography from "../components/ui/Typography";
 import Skeleton from "../components/ui/Skeleton";
 import EmptyState from "../components/common/EmptyState";
+import AuthAlert from "../components/auth/AuthAlert";
 import VerificationStatusBanner from "../components/OrgProfile/VerificationStatusBanner";
 import ProfileCompletionReminderBanner from "../components/OrgProfile/ProfileCompletionReminderBanner";
 import DashboardStatsGrid from "../components/dashboard/DashboardStatsGrid";
@@ -114,9 +115,9 @@ export default function Dashboard() {
       </Typography>
 
       {error && (
-        <p className="mb-4 rounded-lg border border-danger bg-danger/5 px-3 py-2 text-sm text-danger">
-          {error}
-        </p>
+        <div className="mb-4">
+          <AuthAlert variant="error">{error}</AuthAlert>
+        </div>
       )}
 
       {loading ? (

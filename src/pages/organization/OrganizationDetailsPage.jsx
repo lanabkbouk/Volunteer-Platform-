@@ -10,6 +10,8 @@ import EmptyState from "../../components/common/EmptyState";
 import ShowMoreButton from "../../components/common/ShowMoreButton";
 import StatusLegendPopover from "../../components/ui/StatusLegendPopover";
 import Skeleton from "../../components/ui/Skeleton";
+import ClickableAvatar from "../../components/common/ClickableAvatar";
+import AuthAlert from "../../components/auth/AuthAlert";
 import { PANEL_SURFACE } from "../../utils/surfaceStyles";
 import { OPPORTUNITY_STATUS } from "../../constants/opportunityStatus";
 import { useOrganizationDetailsQuery } from "../../hooks/queries/useOrganizationDetailsQuery";
@@ -92,7 +94,7 @@ export default function OrganizationDetailsPage() {
         {/* نفس تخطيط المحتوى الفعلي تحت (صورة أصغر محاذية لليسار، اسم/
             مدينة تحتها) — بدون هيك كان رح يصير Layout Shift واضح لحظة
             انتهاء التحميل */}
-        <Skeleton className="w-full md:w-1/2 aspect-3/2 rounded-3xl mb-6" />
+        <Skeleton className="w-full md:w-1/2 aspect-video rounded-3xl mb-6" />
         <Skeleton className="h-8 w-2/3 mb-2" />
         <Skeleton className="h-4 w-1/3 mb-6" />
         <Skeleton className="h-4 w-full mb-2" />
@@ -111,9 +113,9 @@ export default function OrganizationDetailsPage() {
     return (
       // نفس عرض حالتي التحميل والمحتوى الفعلي بالضبط — راجع التعليق أعلاه
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        <p className="rounded-lg border border-danger bg-danger/5 px-3 py-2 text-sm text-danger">
+        <AuthAlert variant="error">
           {loadError || "This organization could not be found."}
-        </p>
+        </AuthAlert>
       </div>
     );
   }
@@ -131,7 +133,7 @@ export default function OrganizationDetailsPage() {
       <nav className="text-sm text-heading/50 mb-4" aria-label="Breadcrumb">
         <Link
           to={ROUTES.ORGANIZATIONS}
-          className="hover:text-primary rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+          className="hover:text-primary rounded transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
         >
           Organizations
         </Link>
@@ -141,17 +143,26 @@ export default function OrganizationDetailsPage() {
 
       {/* غلاف علوي: صورة/شعار (أصغر، محاذية لليسار من md فأكبر) + الاسم
           + المدينة + شارة التوثيق تحتها بنفس الترتيب الأصلي */}
-      <div className="w-full md:w-1/2 aspect-3/2 rounded-3xl overflow-hidden bg-primary/10 flex items-center justify-center mb-6">
-        {organization.profileImageUrl && !logoFailed ? (
-          <img
-            src={organization.profileImageUrl}
-            alt={organization.name}
-            onError={() => setLogoFailed(true)}
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <Building2 size={56} className="text-primary" aria-hidden="true" />
-        )}
+      <div className="w-full md:w-1/2 aspect-video rounded-3xl overflow-hidden bg-primary/10 flex items-center justify-center mb-6">
+        {/* src يتصفّر لما تفشل الصورة (logoFailed) — هيك ClickableAvatar
+            ما بيفتح Lightbox لنفس الصورة المكسورة يلي أصلًا رجعنا
+            لأيقونة Building2 بدالها */}
+        <ClickableAvatar
+          src={organization.profileImageUrl && !logoFailed ? organization.profileImageUrl : ""}
+          alt={organization.name}
+          className="h-full w-full"
+        >
+          {organization.profileImageUrl && !logoFailed ? (
+            <img
+              src={organization.profileImageUrl}
+              alt={organization.name}
+              onError={() => setLogoFailed(true)}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <Building2 size={56} className="text-primary" aria-hidden="true" />
+          )}
+        </ClickableAvatar>
       </div>
 
       <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
@@ -201,7 +212,7 @@ export default function OrganizationDetailsPage() {
           {organization.phone ? (
             <a
               href={`tel:${organization.phone}`}
-              className="flex items-center gap-2 text-sm text-heading hover:text-primary w-fit rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+              className="flex items-center gap-2 text-sm text-heading transition-colors hover:text-primary w-fit rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
             >
               <Phone size={16} className="text-primary shrink-0" aria-hidden="true" />
               {organization.phone}
@@ -213,7 +224,7 @@ export default function OrganizationDetailsPage() {
               href={organization.website}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2 text-sm text-primary hover:underline w-fit rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+              className="flex items-center gap-2 text-sm text-primary transition-colors hover:underline w-fit rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
             >
               <Globe size={16} className="shrink-0" aria-hidden="true" />
               {organization.website}
@@ -241,8 +252,8 @@ export default function OrganizationDetailsPage() {
           <CardSkeleton />
         </div>
       ) : opportunitiesError ? (
-        <div className="flex flex-col items-start gap-3 rounded-lg border border-danger bg-danger/5 px-4 py-3 text-sm text-danger">
-          <p>{opportunitiesError}</p>
+        <div className="flex flex-col items-start gap-3">
+          <AuthAlert variant="error">{opportunitiesError}</AuthAlert>
           <Button variant="danger" size="small" onClick={() => opportunitiesQuery.refetch()}>
             Retry
           </Button>

@@ -66,13 +66,10 @@ export default function ProfilePreview({ fullName, email, phone, availableSkills
                 const color = CATEGORY_COLORS[categoryName];
 
                 return (
-                  <span
-                    key={skill.id}
-                    className={`px-2.5 py-1 rounded-full text-xs border flex items-center gap-1.5 ${color}`}
-                  >
+                  <Chip key={skill.id} customStyle={color} className="gap-1.5">
                     {Icon && <Icon size={14} />}
                     {skill.name}
-                  </span>
+                  </Chip>
                 );
               })
             ) : (
