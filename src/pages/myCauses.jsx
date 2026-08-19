@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import Typography from "../components/ui/Typography";
 import Button from "../components/ui/Button";
 import MyCauseCard from "../components/organization/MyCauseCard";
+import MyCausesToolbar from "../components/organization/MyCausesToolbar";
 import VerificationStatusBanner from "../components/OrgProfile/VerificationStatusBanner";
 import CardSkeleton from "../components/ui/CardSkeleton";
 import EmptyState from "../components/common/EmptyState";
@@ -17,7 +18,18 @@ import { useOrganizationVerification } from "../hooks/useOrganizationVerificatio
 import { useToast } from "../hooks/useToast";
 import { useShowMore } from "../hooks/useShowMore";
 import { ROUTES } from "../constants/paths";
+import { OPPORTUNITY_STATUS } from "../constants/opportunityStatus";
 import { getOrganizationId } from "../utils/auth/getOrganizationId";
+
+// أولوية الحالة للترتيب الذكي الافتراضي — بالضبط بهالترتيب المتفق عليه
+// (Open > Closed > In Progress > Completed)، مش قائمة كل الحالات الممكنة
+// بترتيب عشوائي؛ رقم أصغر = أولوية أعلى بالعرض
+const CAUSE_STATUS_SORT_PRIORITY = {
+  [OPPORTUNITY_STATUS.REGISTRATION_OPEN]: 0,
+  [OPPORTUNITY_STATUS.REGISTRATION_CLOSED]: 1,
+  [OPPORTUNITY_STATUS.IN_PROGRESS]: 2,
+  [OPPORTUNITY_STATUS.COMPLETED]: 3,
+};
 
 export default function MyCauses() {
   const navigate = useNavigate();
@@ -34,7 +46,6 @@ export default function MyCauses() {
   const toggleStatusMutation = useToggleOpportunityStatusMutation(organizationId);
 
   const opportunities = useMemo(() => opportunitiesQuery.data ?? [], [opportunitiesQuery.data]);
-  const { visibleItems: visibleOpportunities, hasMore, remainingCount, showMore } = useShowMore(opportunities);
   const loading = opportunitiesQuery.isPending;
   // فشل الجلب لازم يظهر كخطأ صريح مع إعادة محاولة، مش كحالة "فاضية"
   // عادية — وإلا المستخدم بيظن إنه ما نشر قضايا أصلًا بينما فعليًا في
@@ -43,6 +54,57 @@ export default function MyCauses() {
     ? opportunitiesQuery.error?.message || "Failed to load your causes"
     : "";
   const { toast, showSuccess, showError, closeToast } = useToast();
+
+  // ————— بحث / فلترة / فرز (Client-side بالكامل، نفس نمط applicantsList.jsx) —————
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  // sortOrder يبدأ فارغًا عمدًا (مش "newest") — ما بيطابق أي قيمة فعلية
+  // بـ CAUSE_SORT_OPTIONS، فـ Dropdown.jsx بيعرض triggerLabel="Newest first"
+  // (نفس النص المتوقع بصريًا) بدون ما يعني إنه المستخدم اختارها فعليًا.
+  // هيك منقدر نميّز "لسا افتراضي" عن "المستخدم اختار Newest first صراحة"
+  // (راجع منطق الترتيب تحت)
+  const [sortOrder, setSortOrder] = useState("");
+
+  const visibleFilteredOpportunities = useMemo(() => {
+    const query = search.trim().toLowerCase();
+
+    const filtered = opportunities.filter((opportunity) => {
+      const matchesStatus = statusFilter === "all" || opportunity.status === statusFilter;
+      const matchesSearch = !query || opportunity.title?.toLowerCase().includes(query);
+      return matchesStatus && matchesSearch;
+    });
+
+    if (sortOrder === "newest") {
+      return [...filtered].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    }
+
+    if (sortOrder === "closest_start") {
+      return [...filtered].sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
+    }
+
+    // الترتيب الذكي الافتراضي: بأولوية الحالة أولًا، مش بتاريخ الإنشاء —
+    // فرصة مفتوحة للتسجيل أهم للمنظمة تشوفها أول من فرصة قديمة منتهية،
+    // بغض النظر متى اتنشرت الاثنتين. ضمن كل حالة، الأقرب موعد بدء
+    // (startDate) أول. لو statusFilter محدَّد لحالة وحدة بالذات، كل الفرص
+    // المفلترة بتشارك نفس الأولوية أصلًا، فالمقارنة بتتساوى دايمًا وبترجع
+    // فعليًا لترتيب startDate تصاعديًا لحاله — بدون أي حاجة لفرع منطق منفصل
+    return [...filtered].sort((a, b) => {
+      const priorityDiff =
+        (CAUSE_STATUS_SORT_PRIORITY[a.status] ?? 99) - (CAUSE_STATUS_SORT_PRIORITY[b.status] ?? 99);
+      if (priorityDiff !== 0) return priorityDiff;
+      return new Date(a.startDate) - new Date(b.startDate);
+    });
+  }, [opportunities, search, statusFilter, sortOrder]);
+
+  const {
+    visibleItems: pagedOpportunities,
+    hasMore,
+    remainingCount,
+    showMore,
+  } = useShowMore(visibleFilteredOpportunities);
+
+  const hasAnyOpportunities = opportunities.length > 0;
+  const hasFilteredResults = visibleFilteredOpportunities.length > 0;
 
   // جاي من "Volunteer Capacity by Cause" بالداشبورد (راجع
   // OpportunitiesBreakdownChart.jsx) — الـ id يوصل عبر router state
@@ -62,7 +124,7 @@ export default function MyCauses() {
   useEffect(() => {
     if (!highlightOpportunityId || loading || highlightHandledRef.current) return;
 
-    const isCurrentlyVisible = visibleOpportunities.some((item) => item.id === highlightOpportunityId);
+    const isCurrentlyVisible = pagedOpportunities.some((item) => item.id === highlightOpportunityId);
 
     if (!isCurrentlyVisible) {
       // موجودة بالقائمة الكاملة بس لسا مخفية خلف "Show more" — نكشفها
@@ -90,7 +152,7 @@ export default function MyCauses() {
       clearTimeout(revealTimeoutId);
       clearTimeout(clearTimeoutId);
     };
-  }, [highlightOpportunityId, loading, visibleOpportunities, opportunities, hasMore, showMore]);
+  }, [highlightOpportunityId, loading, pagedOpportunities, opportunities, hasMore, showMore]);
 
   const handleDelete = async (id) => {
     const result = await deleteMutation.mutateAsync(id);
@@ -124,7 +186,7 @@ export default function MyCauses() {
           </Typography>
         </div>
 
-        {!loading && opportunities.length > 0 && (
+        {!loading && hasAnyOpportunities && (
           <div className="flex flex-col items-end gap-1">
             <Button
               onClick={() => navigate(ROUTES.CREATE_CAUSE)}
@@ -154,7 +216,7 @@ export default function MyCauses() {
             Retry
           </Button>
         </div>
-      ) : opportunities.length === 0 ? (
+      ) : !hasAnyOpportunities ? (
         <EmptyState
           icon={FolderPlus}
           title={
@@ -172,22 +234,41 @@ export default function MyCauses() {
         />
       ) : (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-            {visibleOpportunities.map((opportunity) => (
-              <MyCauseCard
-                key={opportunity.id}
-                ref={(node) => {
-                  cardRefs.current[opportunity.id] = node;
-                }}
-                opportunity={opportunity}
-                onDelete={handleDelete}
-                onToggleStatus={handleToggleStatus}
-                isVerified={isVerified}
-                isHighlighted={opportunity.id === highlightedId}
-              />
-            ))}
-          </div>
-          {hasMore && <ShowMoreButton remainingCount={remainingCount} onClick={showMore} />}
+          <MyCausesToolbar
+            search={search}
+            onSearchChange={setSearch}
+            statusFilter={statusFilter}
+            onStatusFilterChange={setStatusFilter}
+            sortOrder={sortOrder}
+            onSortOrderChange={setSortOrder}
+          />
+
+          {!hasFilteredResults ? (
+            <EmptyState
+              icon={FolderPlus}
+              title="No matching causes"
+              description="Try a different search term or reset the status filter."
+            />
+          ) : (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                {pagedOpportunities.map((opportunity) => (
+                  <MyCauseCard
+                    key={opportunity.id}
+                    ref={(node) => {
+                      cardRefs.current[opportunity.id] = node;
+                    }}
+                    opportunity={opportunity}
+                    onDelete={handleDelete}
+                    onToggleStatus={handleToggleStatus}
+                    isVerified={isVerified}
+                    isHighlighted={opportunity.id === highlightedId}
+                  />
+                ))}
+              </div>
+              {hasMore && <ShowMoreButton remainingCount={remainingCount} onClick={showMore} />}
+            </>
+          )}
         </>
       )}
 

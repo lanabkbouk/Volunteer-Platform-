@@ -10,7 +10,7 @@ import Toast from '../../components/common/Toast'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../hooks/useToast'
 import { ROUTES } from '../../constants/paths'
-import { CARD_SURFACE, CARD_ELEVATION, PANEL_SURFACE } from '../../utils/surfaceStyles'
+import { ADMIN_CARD_SURFACE, ADMIN_PANEL_SURFACE, ADMIN_GHOST_BUTTON, ADMIN_CHECKBOX } from '../../utils/adminStyles'
 import { formatDateTime } from '../../utils/formatDateTime'
 import { useEffect, useState } from 'react'
 
@@ -67,24 +67,24 @@ export default function AdminSettings() {
       }
     >
       <div className="grid gap-6 lg:grid-cols-2 lg:gap-8">
-        <section className={`${PANEL_SURFACE} p-6 md:p-8`}>
+        <section className={`${ADMIN_PANEL_SURFACE} p-6 md:p-8`}>
           <div className="flex items-start gap-3">
-            <div className="rounded-2xl bg-primary/10 p-3 text-primary">
+            <div className="rounded-2xl bg-adminAccent/15 p-3 text-adminAccentSoft">
               <BellRing size={20} aria-hidden="true" />
             </div>
             <div>
-              <Typography variant="h4">Notification preferences</Typography>
-              <Typography variant="bodySm" className="mt-1 text-body">
+              <Typography variant="h4" className="text-adminTextHi!">Notification preferences</Typography>
+              <Typography variant="bodySm" className="mt-1 text-adminTextLo!">
                 Choose the admin notifications that matter for your workflow.
               </Typography>
             </div>
           </div>
 
           <div className="mt-6 space-y-4">
-            <label className={`${CARD_SURFACE} ${CARD_ELEVATION} flex items-center justify-between gap-4 p-4`}>
+            <label className={`${ADMIN_CARD_SURFACE} flex cursor-pointer items-center justify-between gap-4 p-4 transition-colors hover:bg-white/6`}>
               <div>
-                <Typography variant="h6">Verification emails</Typography>
-                <Typography variant="bodySm" className="mt-1 text-body">
+                <Typography variant="h6" className="text-adminTextHi!">Verification emails</Typography>
+                <Typography variant="bodySm" className="mt-1 text-adminTextLo!">
                   Receive a notice when a verification decision is submitted.
                 </Typography>
               </div>
@@ -92,14 +92,14 @@ export default function AdminSettings() {
                 type="checkbox"
                 checked={preferences.verificationEmails}
                 onChange={togglePreference('verificationEmails')}
-                className="h-5 w-5 rounded border-heading/20 text-primary focus:ring-primary/30"
+                className={ADMIN_CHECKBOX}
               />
             </label>
 
-            <label className={`${CARD_SURFACE} ${CARD_ELEVATION} flex items-center justify-between gap-4 p-4`}>
+            <label className={`${ADMIN_CARD_SURFACE} flex cursor-pointer items-center justify-between gap-4 p-4 transition-colors hover:bg-white/6`}>
               <div>
-                <Typography variant="h6">Weekly digest</Typography>
-                <Typography variant="bodySm" className="mt-1 text-body">
+                <Typography variant="h6" className="text-adminTextHi!">Weekly digest</Typography>
+                <Typography variant="bodySm" className="mt-1 text-adminTextLo!">
                   Get a compact summary of platform activity once per week.
                 </Typography>
               </div>
@@ -107,14 +107,14 @@ export default function AdminSettings() {
                 type="checkbox"
                 checked={preferences.weeklyDigest}
                 onChange={togglePreference('weeklyDigest')}
-                className="h-5 w-5 rounded border-heading/20 text-primary focus:ring-primary/30"
+                className={ADMIN_CHECKBOX}
               />
             </label>
 
-            <label className={`${CARD_SURFACE} ${CARD_ELEVATION} flex items-center justify-between gap-4 p-4`}>
+            <label className={`${ADMIN_CARD_SURFACE} flex cursor-pointer items-center justify-between gap-4 p-4 transition-colors hover:bg-white/6`}>
               <div>
-                <Typography variant="h6">Security alerts</Typography>
-                <Typography variant="bodySm" className="mt-1 text-body">
+                <Typography variant="h6" className="text-adminTextHi!">Security alerts</Typography>
+                <Typography variant="bodySm" className="mt-1 text-adminTextLo!">
                   Notify on new sign-ins and unusual account activity.
                 </Typography>
               </div>
@@ -122,7 +122,7 @@ export default function AdminSettings() {
                 type="checkbox"
                 checked={preferences.securityAlerts}
                 onChange={togglePreference('securityAlerts')}
-                className="h-5 w-5 rounded border-heading/20 text-primary focus:ring-primary/30"
+                className={ADMIN_CHECKBOX}
               />
             </label>
           </div>
@@ -134,65 +134,65 @@ export default function AdminSettings() {
           </div>
         </section>
 
-        <section className={`${PANEL_SURFACE} p-6 md:p-8`}>
+        <section className={`${ADMIN_PANEL_SURFACE} p-6 md:p-8`}>
           <div className="flex items-start gap-3">
-            <div className="rounded-2xl bg-emerald-500/10 p-3 text-emerald-700">
+            <div className="rounded-2xl bg-success/10 p-3 text-success">
               <ShieldCheck size={20} aria-hidden="true" />
             </div>
             <div>
-              <Typography variant="h4">Security and shortcuts</Typography>
-              <Typography variant="bodySm" className="mt-1 text-body">
+              <Typography variant="h4" className="text-adminTextHi!">Security and shortcuts</Typography>
+              <Typography variant="bodySm" className="mt-1 text-adminTextLo!">
                 Keep the account state visible and move quickly between account screens.
               </Typography>
             </div>
           </div>
 
           <div className="mt-6 space-y-3">
-            <div className={`${CARD_SURFACE} ${CARD_ELEVATION} p-4`}>
-              <Typography variant="overline" className="text-body/70">
+            <div className={`${ADMIN_CARD_SURFACE} p-4`}>
+              <Typography variant="overline" className="text-adminTextLo!">
                 Last login
               </Typography>
-              <Typography variant="h5" className="mt-2">
+              <Typography variant="h5" className="mt-2 text-adminTextHi!">
                 {lastLogin}
               </Typography>
             </div>
 
-            <div className={`${CARD_SURFACE} ${CARD_ELEVATION} p-4`}>
-              <Typography variant="overline" className="text-body/70">
+            <div className={`${ADMIN_CARD_SURFACE} p-4`}>
+              <Typography variant="overline" className="text-adminTextLo!">
                 Account status
               </Typography>
               <div className="mt-3 flex flex-wrap items-center gap-2">
-                <Badge label={user?.status || 'Active'} tone="success" />
-                <Badge label="System admin" tone="primary" />
+                <Badge label={user?.status || 'Active'} tone="success" dark />
+                <Badge label="System admin" tone="secondary" dark />
               </div>
             </div>
 
-            <div className={`${CARD_SURFACE} ${CARD_ELEVATION} p-4`}>
-              <Typography variant="overline" className="text-body/70">
+            <div className={`${ADMIN_CARD_SURFACE} p-4`}>
+              <Typography variant="overline" className="text-adminTextLo!">
                 Password
               </Typography>
-              <Typography variant="bodySm" className="mt-2 text-body">
+              <Typography variant="bodySm" className="mt-2 text-adminTextLo!">
                 Send a reset link to this account's email instead of changing the password directly from the
                 profile page.
               </Typography>
               <div className="mt-3">
-                <Button variant="ghost" onClick={() => setResetPasswordOpen(true)}>
+                <Button variant="ghost" onClick={() => setResetPasswordOpen(true)} className={ADMIN_GHOST_BUTTON}>
                   <KeyRound size={16} aria-hidden="true" />
                   <span className="ml-1.5">Reset password</span>
                 </Button>
               </div>
             </div>
 
-            <div className={`${CARD_SURFACE} ${CARD_ELEVATION} p-4`}>
-              <Typography variant="overline" className="text-body/70">
+            <div className={`${ADMIN_CARD_SURFACE} p-4`}>
+              <Typography variant="overline" className="text-adminTextLo!">
                 Quick actions
               </Typography>
 
               <div className="mt-3 flex flex-wrap gap-3">
-                <Button as={Link} to={ROUTES.ADMIN_PROFILE} variant="ghost">
+                <Button as={Link} to={ROUTES.ADMIN_PROFILE} variant="ghost" className={ADMIN_GHOST_BUTTON}>
                   Open profile
                 </Button>
-                <Button as={Link} to={ROUTES.ADMIN_DASHBOARD} variant="ghost">
+                <Button as={Link} to={ROUTES.ADMIN_DASHBOARD} variant="ghost" className={ADMIN_GHOST_BUTTON}>
                   Open dashboard
                 </Button>
               </div>

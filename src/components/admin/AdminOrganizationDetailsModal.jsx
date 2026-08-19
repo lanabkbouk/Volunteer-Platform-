@@ -79,7 +79,7 @@ export default function AdminOrganizationDetailsModal({
       {organization && (
         <div className="space-y-6">
           <div className="flex items-start gap-4">
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-primary/10 text-primary">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-secondary/10 text-secondary">
               {organization.imageUrl ? (
                 <img
                   src={organization.imageUrl}

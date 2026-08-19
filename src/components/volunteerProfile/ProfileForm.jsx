@@ -7,6 +7,7 @@ import Textarea from "../ui/Textarea";
 import Button from "../ui/Button";
 import Typography from "../ui/Typography";
 import SkillsSelector from "../common/SkillsSelector";
+import { SYRIAN_GOVERNORATES } from "../../services/syrianGovernorates";
 
 const GENDER_ITEMS = [
   { name: "Female", value: "Female" },
@@ -20,22 +21,15 @@ const EDUCATION_LEVEL_ITEMS = [
   { name: "Bachelor's Degree", value: "Bachelor's Degree" },
 ];
 
-const GOVERNORATE_ITEMS = [
-  "Damascus",
-  "Rif Dimashq (Damascus Countryside)",
-  "Aleppo",
-  "Homs",
-  "Hama",
-  "Latakia",
-  "Tartus",
-  "Idlib",
-  "Raqqa",
-  "Deir ez-Zor",
-  "Al-Hasakah",
-  "Daraa",
-  "As-Suwayda",
-  "Quneitra",
-].map((name) => ({ name, value: name.startsWith("Rif Dimashq") ? "Rif Dimashq" : name }));
+// المدن المعطّلة (isActive: false) تظهر بالقائمة دائمًا لكن كخيار معطّل
+// (disabled)، مش مستبعدة كليًا — راجع دعم item.disabled بـ ui/Dropdown.jsx.
+// هيك القيمة الحالية للمتطوع الموجود أصلًا (لو مدينته صارت معطّلة لاحقًا)
+// تضل تظهر بشكل صحيح بالـ trigger بدل ما تختفي من القائمة تمامًا
+const GOVERNORATE_ITEMS = SYRIAN_GOVERNORATES.map(({ nameEn, isActive }) => ({
+  name: nameEn,
+  value: nameEn === "Rural Damascus" ? "Rif Dimashq" : nameEn,
+  disabled: !isActive,
+}));
 
 export default function ProfileForm({ submitting, availableSkills = [], skillsLoading = false }) {
   const {

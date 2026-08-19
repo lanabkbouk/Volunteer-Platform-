@@ -8,12 +8,14 @@
 // الحركة (النبض) بتتعطّل تلقائيًا إذا المستخدم مفعّل "تقليل الحركة"
 // (راجع .animate-pulse بملف index.css).
 
-export default function Skeleton({ className = "" }) {
+export default function Skeleton({ className = "", dark = false }) {
+  // bg-heading/10 (تينت غامق خفيف) شبه غير مرئي فوق خلفية الأدمن الغامقة
+  // نفسها — dark=true يستخدم تينت أبيض خفيف بدلها بنفس المنطق
   return (
     <div
       role="presentation"
       aria-hidden="true"
-      className={`animate-pulse rounded-xl bg-heading/10 ${className}`}
+      className={`animate-pulse rounded-xl ${dark ? "bg-white/8" : "bg-heading/10"} ${className}`}
     />
   );
 }

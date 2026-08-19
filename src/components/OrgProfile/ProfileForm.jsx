@@ -17,9 +17,14 @@ import Typography from "../ui/Typography";
 
 import { SYRIAN_GOVERNORATES } from "../../services/syrianGovernorates";
 
-const GOVERNORATE_ITEMS = SYRIAN_GOVERNORATES.map(({ nameEn }) => ({
+// المدن المعطّلة (isActive: false) تظهر بالقائمة دائمًا لكن كخيار معطّل
+// (disabled)، مش مستبعدة كليًا — راجع دعم item.disabled بـ ui/Dropdown.jsx.
+// هيك القيمة الحالية لمنظمة موجودة أصلًا (لو مدينتها صارت معطّلة لاحقًا)
+// تضل تظهر بشكل صحيح بالـ trigger بدل ما تختفي من القائمة تمامًا
+const GOVERNORATE_ITEMS = SYRIAN_GOVERNORATES.map(({ nameEn, isActive }) => ({
   name: nameEn,
   value: nameEn === "Rural Damascus" ? "Rif Dimashq" : nameEn,
+  disabled: !isActive,
 }));
 
 export default function OrgProfileForm({ submitting }) {

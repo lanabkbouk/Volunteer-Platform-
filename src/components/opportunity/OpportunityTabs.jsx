@@ -5,21 +5,9 @@
 // بالضبط (activeTab/onChange) حتى ما تحتاج OpportunitiesListPage.jsx
 // أي تعديل.
 
-import { Sparkles, LayoutGrid } from "lucide-react";
 import Tabs from "../ui/Tabs";
-
-export const OPPORTUNITY_TABS = {
-  ALL: 'all',
-  SUGGESTED: 'suggested',
-}
-
-// LayoutGrid لتبويب التصفح العادي، Sparkles لتبويب المقترح — نفس
-// مستوى التفصيل البصري بين التبويبين، ما في وحدة "ناقصة" أيقونة
-const TABS = [
-  { id: OPPORTUNITY_TABS.ALL, label: 'All Opportunities', icon: LayoutGrid },
-  { id: OPPORTUNITY_TABS.SUGGESTED, label: 'Recommended for You', icon: Sparkles },
-]
+import { OPPORTUNITY_TAB_DEFS } from "../../constants/opportunityTabs";
 
 export default function OpportunityTabs({ activeTab, onChange }) {
-  return <Tabs tabs={TABS} activeTab={activeTab} onChange={onChange} ariaLabel="Opportunities view" />
+  return <Tabs tabs={OPPORTUNITY_TAB_DEFS} activeTab={activeTab} onChange={onChange} ariaLabel="Opportunities view" />
 }

@@ -17,6 +17,7 @@ export default function Input({
   className = '',
   labelClassName = 'text-heading',
   error = '',
+  warning = '',
   success = false,
   required = false,
   options = [],
@@ -62,6 +63,27 @@ export default function Input({
     .filter(Boolean)
     .join(' ')
 
+  const registerProps = register ? register(name, registerOptions) : {}
+
+  // register() ما بيرجّع onKeyDown/onPaste افتراضيًا، بس نضمن عدم فقدان
+  // أي معالج منها لو صار عندها بالمستقبل — ندمج كل زوج بدل ما نخلي
+  // props يلغي المعالج القادم من register بشكل صامت
+  const mergedOnKeyDown =
+    registerProps.onKeyDown && props.onKeyDown
+      ? (event) => {
+          registerProps.onKeyDown(event)
+          props.onKeyDown(event)
+        }
+      : props.onKeyDown || registerProps.onKeyDown
+
+  const mergedOnPaste =
+    registerProps.onPaste && props.onPaste
+      ? (event) => {
+          registerProps.onPaste(event)
+          props.onPaste(event)
+        }
+      : props.onPaste || registerProps.onPaste
+
   const sharedProps = {
     id: name,
     name,
@@ -70,8 +92,10 @@ export default function Input({
     'aria-invalid': Boolean(error),
     'aria-describedby': error ? `${name}-error` : undefined,
     className: classes,
-    ...(register ? register(name, registerOptions) : {}),
+    ...registerProps,
     ...props,
+    ...(mergedOnKeyDown ? { onKeyDown: mergedOnKeyDown } : {}),
+    ...(mergedOnPaste ? { onPaste: mergedOnPaste } : {}),
   }
 
   const iconColorClass = error ? 'text-danger' : 'text-primary'
@@ -130,6 +154,22 @@ export default function Input({
       {error && (
         <p id={`${name}-error`} className="mt-1 text-xs text-danger">
           {error}
+        </p>
+      )}
+
+      {/* تنبيه لحظي مؤقت (مثلًا محاولة كتابة حرف بحقل رقمي) — منفصل عن
+          error (أخطاء Zod عند الإرسال). لا يظهر الاثنان سوا، error أولوية.
+          text-warning/gold غير معرّفين ضمن @theme بـ index.css، فاستُخدم
+          amber-600 (نفس اللون الدلالي "gold" المستخدم فعليًا بـ
+          ApplicantsSummaryStats.jsx وOPPORTUNITY_STATUS_META) */}
+      {!error && warning && (
+        <p
+          id={`${name}-warning`}
+          role="status"
+          aria-live="polite"
+          className="mt-1 text-xs text-amber-600"
+        >
+          {warning}
         </p>
       )}
     </div>

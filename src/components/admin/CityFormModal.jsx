@@ -55,14 +55,30 @@ export default function CityFormModal({ open, city, onClose, onSubmit, isSubmitt
           placeholder="Example: Damascus"
         />
 
-        <Input
-          label="Name (English)"
-          name="nameEn"
-          required
-          value={form.nameEn}
-          onChange={handleChange('nameEn')}
-          placeholder="e.g. Damascus"
-        />
+        <div className="flex flex-col gap-1">
+          <Input
+            label="Name (English)"
+            name="nameEn"
+            required
+            value={form.nameEn}
+            onChange={handleChange('nameEn')}
+            placeholder="e.g. Damascus"
+            // ⚠️ اسم المدينة الإنجليزي (nameEn) هو القيمة المرجعية الوحيدة
+            // المخزّنة فعليًا بسجلات قديمة كثيرة (حقل city بالفرص وبروفايلات
+            // المستخدمين) — ما في حقل عرض منفصل آمن للتعديل متل id ثابت
+            // بمعزل عن الاسم. لو سمحنا بتغييره بعد الإنشاء، كل تلك السجلات
+            // القديمة كانت رح تشير فجأة لاسم غير موجود بالقائمة الحالية.
+            // بالتعديل فقط (isEditing) نقفله؛ بالإنشاء يضل قابل للتعديل
+            // بشكل طبيعي لأنه ما في أي سجل يعتمد عليه بعد
+            disabled={isEditing}
+          />
+          {isEditing && (
+            <p className="text-xs text-body/70">
+              City name cannot be changed after creation to avoid breaking existing records that
+              reference it.
+            </p>
+          )}
+        </div>
       </div>
     </Modal>
   )

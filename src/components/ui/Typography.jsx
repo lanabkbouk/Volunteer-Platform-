@@ -155,6 +155,17 @@ function resolveElement(variant) {
   return map[variant] || 'p'
 }
 
+// ⚠️ كل الـ variants فوق تفرض text-heading (أو text-body لبعضها) افتراضيًا
+// كـ class ثابت (نص غامق مصمَّم لخلفية الموقع العام الفاتحة). أي استخدام
+// Typography داخل لوحة الأدمن الغامقة الدائمة لازم يمرّر className صريح
+// text-adminTextHi! أو text-adminTextLo! (لاحظي علامة ! بآخر اسم الكلاس —
+// صيغة Tailwind v4 القانونية للـ important، بدل !text-x القديمة — بدونها
+// النص يبقى شبه غير مرئي أحيانًا: className عادي (بدون !) بنفس درجة التخصيص
+// (Specificity) متل text-heading/text-body الافتراضي، وTailwind بيفرز
+// أي تعارض كهذا حسب ترتيب توليد الـ CSS الداخلي، مش حسب ترتيب الكلاسات
+// بالـ JSX — تأكّدنا من هالمشكلة فعليًا بمراجعة بصرية حية لـ
+// /admin/settings). نفس النمط (! إلزامي) مطلوب اتباعه بأي استخدام
+// Typography مستقبلي داخل سياق غامق.
 export default function Typography({
   variant = 'body',
   as,

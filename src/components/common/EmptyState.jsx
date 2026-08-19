@@ -14,7 +14,14 @@ export default function EmptyState({
   description,
   actionLabel,
   onAction,
+  // نسخة لوحة الأدمن الغامقة — text-heading/text-body الافتراضيان
+  // (مصمَّمان لخلفية الموقع العام الفاتحة) شبه غير مرئيين فوق خلفية
+  // الأدمن الغامقة، فنبدّلهما بـ adminTextHi/adminTextLo عند dark=true
+  dark = false,
 }) {
+  const titleColor = dark ? 'text-adminTextHi' : 'text-heading'
+  const descriptionColor = dark ? 'text-adminTextLo' : 'text-body'
+
   return (
     <div className="flex flex-col items-center text-center gap-5 py-20 px-6">
       
@@ -39,10 +46,10 @@ export default function EmptyState({
         </div>
       )}
 
-      <h3 className="font-semibold text-heading text-lg">{title}</h3>
+      <h3 className={`font-semibold ${titleColor} text-lg`}>{title}</h3>
 
       {description && (
-        <p className="text-sm text-body max-w-sm leading-relaxed">
+        <p className={`text-sm ${descriptionColor} max-w-sm leading-relaxed`}>
           {description}
         </p>
       )}

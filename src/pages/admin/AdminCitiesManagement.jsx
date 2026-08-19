@@ -9,13 +9,12 @@ import ConfirmModal from '../../components/common/ConfirmModal'
 import Toast from '../../components/common/Toast'
 import Badge from '../../components/common/Badge'
 import Input from '../../components/ui/Input'
-import Button from '../../components/ui/Button'
 import Typography from '../../components/ui/Typography'
-import { PANEL_SURFACE } from '../../utils/surfaceStyles'
+import { ADMIN_PANEL_SURFACE } from '../../utils/adminStyles'
 import { useCitiesQuery } from '../../hooks/queries/useCitiesQuery'
 import { useCreateCityMutation } from '../../hooks/queries/useCreateCityMutation'
 import { useUpdateCityMutation } from '../../hooks/queries/useUpdateCityMutation'
-import { useDeleteCityMutation } from '../../hooks/queries/useDeleteCityMutation'
+import { useToggleCityStatusMutation } from '../../hooks/queries/useToggleCityStatusMutation'
 import { useToast } from '../../hooks/useToast'
 
 function normalizeName(value) {
@@ -32,12 +31,12 @@ export default function AdminCitiesManagement() {
 
   const [searchTerm, setSearchTerm] = useState('')
   const [cityModal, setCityModal] = useState(null)
-  const [cityToDelete, setCityToDelete] = useState(null)
+  const [cityToToggle, setCityToToggle] = useState(null)
   const [formError, setFormError] = useState('')
 
   const createCityMutation = useCreateCityMutation()
   const updateCityMutation = useUpdateCityMutation()
-  const deleteCityMutation = useDeleteCityMutation()
+  const toggleCityStatusMutation = useToggleCityStatusMutation()
 
   const isEditingCity = Boolean(cityModal && cityModal.id)
   const cityMutation = isEditingCity ? updateCityMutation : createCityMutation
@@ -48,7 +47,7 @@ export default function AdminCitiesManagement() {
     if (!normalizedSearch) return cities
 
     return cities.filter((city) => {
-      const haystack = [city.nameE].filter(Boolean).join(' ').toLowerCase()
+      const haystack = [city.nameEn, city.nameAr].filter(Boolean).join(' ').toLowerCase()
       return haystack.includes(normalizedSearch)
     })
   }, [cities, searchTerm])
@@ -88,17 +87,24 @@ export default function AdminCitiesManagement() {
     setFormError('')
   }
 
-  const handleDeleteCity = async () => {
-    if (!cityToDelete) return
+  // بدل الحذف الفعلي: تبديل isActive بس. المدن مرجعية بسجلات قديمة
+  // (فرص/بروفايلات) عبر nameEn، فالحذف الحقيقي كان رح يكسرها — راجع
+  // toggleGovernorateStatus بـ services/syrianGovernorates.js
+  const handleToggleCityStatus = async () => {
+    if (!cityToToggle) return
 
-    const result = await deleteCityMutation.mutateAsync(cityToDelete.id)
+    const nextIsActive = !(cityToToggle.isActive !== false)
+    const result = await toggleCityStatusMutation.mutateAsync({
+      cityId: cityToToggle.id,
+      isActive: nextIsActive,
+    })
     if (!result.success) {
-      showError(result.error || 'Failed to delete city')
+      showError(result.error || 'Failed to update city status')
       return
     }
 
-    showSuccess('City deleted.')
-    setCityToDelete(null)
+    showSuccess(nextIsActive ? 'City activated.' : 'City deactivated.')
+    setCityToToggle(null)
   }
 
   return (
@@ -108,9 +114,9 @@ export default function AdminCitiesManagement() {
       description="Manage the governorates/cities used across registration, profiles, and opportunity forms. Duplicate names are blocked before saving."
     >
       <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_220px] lg:gap-6">
-        <div className={`${PANEL_SURFACE} p-5 md:p-6`}>
-          <Typography variant="h4">Search cities</Typography>
-          <Typography variant="bodySm" className="mt-1 text-body">
+        <div className={`${ADMIN_PANEL_SURFACE} p-5 md:p-6`}>
+          <Typography variant="h4" className="text-adminTextHi!">Search cities</Typography>
+          <Typography variant="bodySm" className="mt-1 text-adminTextLo!">
             {cities.length} total cities currently configured.
           </Typography>
 
@@ -127,15 +133,15 @@ export default function AdminCitiesManagement() {
         </div>
 
         <div className="flex items-stretch">
-          <div className={`${PANEL_SURFACE} w-full p-5 md:p-6`}>
-            <Typography variant="overline" className="text-body/70">
+          <div className={`${ADMIN_PANEL_SURFACE} w-full p-5 md:p-6`}>
+            <Typography variant="overline" className="text-adminTextLo!">
               Total cities
             </Typography>
             <div className="mt-3 flex items-end justify-between gap-4">
-              <Typography variant="h2">{cities.length}</Typography>
-              <Badge label="Platform wide" tone="primary" />
+              <Typography variant="h2" className="text-adminTextHi!">{cities.length}</Typography>
+              <Badge label="Platform wide" tone="secondary" dark />
             </div>
-            <Typography variant="bodySm" className="mt-3 text-body">
+            <Typography variant="bodySm" className="mt-3 text-adminTextLo!">
               Used by registration, profile, and opportunity location fields.
             </Typography>
           </div>
@@ -164,8 +170,10 @@ export default function AdminCitiesManagement() {
             key={city.id}
             city={city}
             onEdit={openEditModal}
-            onDelete={setCityToDelete}
-            isDeleting={deleteCityMutation.isPending && deleteCityMutation.variables === city.id}
+            onToggleStatus={setCityToToggle}
+            isTogglingStatus={
+              toggleCityStatusMutation.isPending && toggleCityStatusMutation.variables?.cityId === city.id
+            }
           />
         )}
       />
@@ -184,15 +192,23 @@ export default function AdminCitiesManagement() {
       />
 
       <ConfirmModal
-        open={Boolean(cityToDelete)}
-        onClose={() => setCityToDelete(null)}
-        onConfirm={handleDeleteCity}
-        title={`Delete ${cityToDelete?.nameEn || 'city'}?`}
-        description="This city will be removed from the platform. Forms referencing it will need to be updated."
-        confirmLabel="Delete city"
-        confirmVariant="danger"
-        isLoading={deleteCityMutation.isPending}
-        loadingText="Deleting..."
+        open={Boolean(cityToToggle)}
+        onClose={() => setCityToToggle(null)}
+        onConfirm={handleToggleCityStatus}
+        title={
+          cityToToggle?.isActive !== false
+            ? `Deactivate ${cityToToggle?.nameEn || 'city'}?`
+            : `Activate ${cityToToggle?.nameEn || 'city'}?`
+        }
+        description={
+          cityToToggle?.isActive !== false
+            ? `Deactivate ${cityToToggle?.nameEn || 'this city'}? New opportunities and profiles won't be able to use it, and its currently-open opportunities will stop accepting new volunteers. Nothing already committed is affected.`
+            : `${cityToToggle?.nameEn || 'This city'} will be selectable again in registration, profile, and opportunity forms.`
+        }
+        confirmLabel={cityToToggle?.isActive !== false ? 'Deactivate city' : 'Activate city'}
+        confirmVariant={cityToToggle?.isActive !== false ? 'danger' : 'primary'}
+        isLoading={toggleCityStatusMutation.isPending}
+        loadingText="Saving..."
       />
 
       <Toast message={toast.message} variant={toast.variant} duration={7000} onClose={closeToast} />

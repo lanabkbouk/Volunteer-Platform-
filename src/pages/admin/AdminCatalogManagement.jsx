@@ -13,7 +13,7 @@ import Badge from '../../components/common/Badge'
 import Input from '../../components/ui/Input'
 import Button from '../../components/ui/Button'
 import Typography from '../../components/ui/Typography'
-import { PANEL_SURFACE } from '../../utils/surfaceStyles'
+import { ADMIN_PANEL_SURFACE } from '../../utils/adminStyles'
 import { useCategoriesQuery } from '../../hooks/queries/useCategoriesQuery'
 import { useCreateCategoryMutation } from '../../hooks/queries/useCreateCategoryMutation'
 import { useUpdateCategoryMutation } from '../../hooks/queries/useUpdateCategoryMutation'
@@ -203,9 +203,9 @@ export default function AdminCatalogManagement() {
           Categories
       ============================ */}
       <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_220px] lg:gap-6">
-        <div className={`${PANEL_SURFACE} p-5 md:p-6`}>
-          <Typography variant="h4">Search categories</Typography>
-          <Typography variant="bodySm" className="mt-1 text-body">
+        <div className={`${ADMIN_PANEL_SURFACE} p-5 md:p-6`}>
+          <Typography variant="h4" className="text-adminTextHi!">Search categories</Typography>
+          <Typography variant="bodySm" className="mt-1 text-adminTextLo!">
             {categories.length} total categories currently configured.
           </Typography>
 
@@ -222,15 +222,15 @@ export default function AdminCatalogManagement() {
         </div>
 
         <div className="flex items-stretch">
-          <div className={`${PANEL_SURFACE} w-full p-5 md:p-6`}>
-            <Typography variant="overline" className="text-body/70">
+          <div className={`${ADMIN_PANEL_SURFACE} w-full p-5 md:p-6`}>
+            <Typography variant="overline" className="text-adminTextLo!">
               Total categories
             </Typography>
             <div className="mt-3 flex items-end justify-between gap-4">
-              <Typography variant="h2">{categories.length}</Typography>
-              <Badge label="Platform wide" tone="primary" />
+              <Typography variant="h2" className="text-adminTextHi!">{categories.length}</Typography>
+              <Badge label="Platform wide" tone="secondary" dark />
             </div>
-            <Typography variant="bodySm" className="mt-3 text-body">
+            <Typography variant="bodySm" className="mt-3 text-adminTextLo!">
               Categories are shared across opportunities and related forms.
             </Typography>
           </div>
@@ -269,9 +269,9 @@ export default function AdminCatalogManagement() {
           Skills
       ============================ */}
       <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_220px] lg:gap-6">
-        <div className={`${PANEL_SURFACE} p-5 md:p-6`}>
-          <Typography variant="h4">Search skills</Typography>
-          <Typography variant="bodySm" className="mt-1 text-body">
+        <div className={`${ADMIN_PANEL_SURFACE} p-5 md:p-6`}>
+          <Typography variant="h4" className="text-adminTextHi!">Search skills</Typography>
+          <Typography variant="bodySm" className="mt-1 text-adminTextLo!">
             {skills.length} total skills currently configured.
           </Typography>
 
@@ -288,15 +288,15 @@ export default function AdminCatalogManagement() {
         </div>
 
         <div className="flex items-stretch">
-          <div className={`${PANEL_SURFACE} w-full p-5 md:p-6`}>
-            <Typography variant="overline" className="text-body/70">
+          <div className={`${ADMIN_PANEL_SURFACE} w-full p-5 md:p-6`}>
+            <Typography variant="overline" className="text-adminTextLo!">
               Total skills
             </Typography>
             <div className="mt-3 flex items-end justify-between gap-4">
-              <Typography variant="h2">{skills.length}</Typography>
-              <Badge label="Platform wide" tone="primary" />
+              <Typography variant="h2" className="text-adminTextHi!">{skills.length}</Typography>
+              <Badge label="Platform wide" tone="secondary" dark />
             </div>
-            <Typography variant="bodySm" className="mt-3 text-body">
+            <Typography variant="bodySm" className="mt-3 text-adminTextLo!">
               Skills are attached to a category and used to match volunteers with opportunities.
             </Typography>
           </div>

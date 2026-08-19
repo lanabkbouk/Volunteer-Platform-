@@ -16,7 +16,7 @@ import { useToast } from '../../hooks/useToast'
 import { useUpdateAdminProfileMutation } from '../../hooks/queries/useUpdateAdminProfileMutation'
 import { useChangeAdminPasswordMutation } from '../../hooks/queries/useChangeAdminPasswordMutation'
 import { ROUTES } from '../../constants/paths'
-import { CARD_BASE, PANEL_SURFACE } from '../../utils/surfaceStyles'
+import { ADMIN_CARD_BASE, ADMIN_PANEL_SURFACE, ADMIN_GHOST_BUTTON } from '../../utils/adminStyles'
 import { formatDateTime } from '../../utils/formatDateTime'
 
 const EMPTY_PROFILE = {
@@ -218,7 +218,7 @@ export default function AdminProfile() {
       description="Account-only profile information for the system administrator. Volunteer-specific data is intentionally excluded."
       actions={
         <>
-          <Button as={Link} to={ROUTES.ADMIN_SETTINGS} variant="ghost">
+          <Button as={Link} to={ROUTES.ADMIN_SETTINGS} variant="ghost" className={ADMIN_GHOST_BUTTON}>
             Settings
           </Button>
           <Button as={Link} to={ROUTES.ADMIN_DASHBOARD} variant="primary">
@@ -227,10 +227,10 @@ export default function AdminProfile() {
         </>
       }
     >
-      <section className={`${PANEL_SURFACE} p-6 md:p-8`}>
+      <section className={`${ADMIN_PANEL_SURFACE} p-6 md:p-8`}>
         <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-center gap-4">
-            <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-3xl bg-primary/10 text-primary">
+            <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-3xl bg-adminAccent/15 text-adminAccentSoft">
               {user?.avatarUrl ? (
                 <img
                   src={user.avatarUrl}
@@ -244,20 +244,20 @@ export default function AdminProfile() {
 
             <div>
               <div className="flex flex-wrap items-center gap-2">
-                <Typography variant="h3">{profile.name || 'System administrator'}</Typography>
-                <Badge label="System admin" tone="primary" />
+                <Typography variant="h3" className="text-adminTextHi!">{profile.name || 'System administrator'}</Typography>
+                <Badge label="System admin" tone="secondary" dark />
               </div>
-              <Typography variant="bodySm" className="mt-1 text-body">
+              <Typography variant="bodySm" className="mt-1 text-adminTextLo!">
                 {profile.email || 'No email provided'}
               </Typography>
             </div>
           </div>
 
           <div className="flex flex-wrap gap-2">
-            <Button variant="ghost" onClick={() => setEditOpen(true)}>
+            <Button variant="ghost" onClick={() => setEditOpen(true)} className={ADMIN_GHOST_BUTTON}>
               Edit profile
             </Button>
-            <Button variant="secondary" onClick={() => setPasswordOpen(true)}>
+            <Button variant="primary" onClick={() => setPasswordOpen(true)}>
               Change password
             </Button>
           </div>
@@ -265,23 +265,23 @@ export default function AdminProfile() {
       </section>
 
       <div className="grid gap-6 lg:grid-cols-2 lg:gap-8">
-        <section className={`${CARD_BASE} p-5 md:p-6`}>
-          <Typography variant="h4">Account information</Typography>
+        <section className={`${ADMIN_CARD_BASE} p-5 md:p-6`}>
+          <Typography variant="h4" className="text-adminTextHi!">Account information</Typography>
           <div className="mt-4 space-y-1.5">
-            <InfoRow label="Full name" value={profile.name || '—'} />
-            <InfoRow label="Email" value={profile.email || '—'} />
-            <InfoRow label="Phone number" value={profile.phone || '—'} />
-            <InfoRow label="Short bio" value={profile.bio || '—'} />
-            <InfoRow label="Role" value="System administrator" />
-            <InfoRow label="Account status" value={accountStatus} />
-            <InfoRow label="Created at" value={createdAt} />
-            <InfoRow label="Last login" value={lastLogin} />
+            <InfoRow dark label="Full name" value={profile.name || '—'} />
+            <InfoRow dark label="Email" value={profile.email || '—'} />
+            <InfoRow dark label="Phone number" value={profile.phone || '—'} />
+            <InfoRow dark label="Short bio" value={profile.bio || '—'} />
+            <InfoRow dark label="Role" value="System administrator" />
+            <InfoRow dark label="Account status" value={accountStatus} />
+            <InfoRow dark label="Created at" value={createdAt} />
+            <InfoRow dark label="Last login" value={lastLogin} />
           </div>
         </section>
 
-        <section className={`${CARD_BASE} p-5 md:p-6`}>
-          <Typography variant="h4">Account notes</Typography>
-          <div className="mt-4 space-y-3 text-sm text-body">
+        <section className={`${ADMIN_CARD_BASE} p-5 md:p-6`}>
+          <Typography variant="h4" className="text-adminTextHi!">Account notes</Typography>
+          <div className="mt-4 space-y-3 text-sm text-adminTextLo">
             <p>
               The admin profile intentionally keeps account data separate from volunteer and organization
               details.
@@ -291,8 +291,8 @@ export default function AdminProfile() {
               credentials when needed.
             </p>
             <div className="flex flex-wrap gap-2 pt-2">
-              <Badge label="Account only" tone="neutral" />
-              <Badge label="No volunteer fields" tone="success" />
+              <Badge label="Account only" tone="neutral" dark />
+              <Badge label="No volunteer fields" tone="success" dark />
             </div>
           </div>
         </section>

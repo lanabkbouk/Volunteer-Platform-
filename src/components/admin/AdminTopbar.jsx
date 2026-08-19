@@ -33,12 +33,12 @@ export default function AdminTopbar({ onOpenSidebar }) {
 
   return (
     
-    <header className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-heading/10 bg-bg/90 px-4 py-3 backdrop-blur sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-adminBorder bg-adminBg1 px-4 py-3 backdrop-blur sm:px-6 lg:px-8">
       <button
         type="button"
         onClick={onOpenSidebar}
         aria-label="Open admin menu"
-        className="flex h-10 w-10 items-center justify-center rounded-xl border border-heading/10 text-heading transition hover:bg-heading/5 lg:hidden"
+        className="flex h-10 w-10 items-center justify-center rounded-xl border border-adminBorder bg-adminBg2 text-adminTextHi transition hover:bg-white/6 lg:hidden"
       >
         <Menu size={20} aria-hidden="true" />
       </button>
@@ -49,14 +49,14 @@ export default function AdminTopbar({ onOpenSidebar }) {
           isOpen={isBellOpen}
           onToggle={() => setIsBellOpen((current) => !current)}
           onClose={() => setIsBellOpen(false)}
-          triggerClassName="relative flex h-10 w-10 items-center justify-center rounded-xl border border-heading/10 text-heading transition hover:bg-heading/5"
+          triggerClassName="relative flex h-10 w-10 items-center justify-center rounded-xl border border-adminBorder bg-adminBg2 text-adminTextHi transition hover:bg-white/6"
         />
 
         <NavbarDropdown
           isOpen={isProfileOpen}
           setIsOpen={setIsProfileOpen}
           trigger={
-            <div className="flex items-center gap-2 rounded-xl border border-heading/10 px-2.5 py-1.5 text-heading transition hover:bg-heading/5">
+            <div className="flex items-center gap-2 rounded-xl border border-adminBorder bg-adminBg2 px-2.5 py-1.5 text-adminTextHi transition hover:bg-white/6">
               {user?.avatarUrl ? (
                 <img
                   src={user.avatarUrl}
@@ -64,7 +64,7 @@ export default function AdminTopbar({ onOpenSidebar }) {
                   className="h-7 w-7 rounded-full object-cover"
                 />
               ) : (
-                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary">
+                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-adminAccent/15 text-adminAccentSoft">
                   <UserRound className="h-4 w-4" aria-hidden="true" />
                 </div>
               )}

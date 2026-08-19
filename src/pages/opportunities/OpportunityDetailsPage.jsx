@@ -129,13 +129,21 @@ export default function OpportunityDetailsPage() {
   // راجع utils/opportunityStatus.js) — أي حالة تانية تمنع الانضمام
   const isRegistrationOpen = opportunity.status === OPPORTUNITY_STATUS.REGISTRATION_OPEN;
 
-  const registrationClosedReason =
-    opportunity.status === OPPORTUNITY_STATUS.IN_PROGRESS ||
-    opportunity.status === OPPORTUNITY_STATUS.COMPLETED
-      ? "This opportunity is no longer accepting new volunteers."
-      : spotsLeft === 0
-        ? "This opportunity is fully booked."
-        : "Registration for this opportunity has closed.";
+  // ⚠️ اسم متغيّر مختلف عمدًا عن opportunity.registrationClosedReason
+  // (الحقل الخام 'organization' | 'city_deactivated' | null القادم من
+  // services/opportunities.js) — هون رسالة نصية جاهزة للعرض، مش القيمة
+  // الخام نفسها. أولوية 'city_deactivated' فوق كل شيء تحتها لأنه أوضح
+  // وأدق سبب ممكن نعطيه للمتطوع، حتى لو صادف كمان إنها fully booked
+  // أو IN_PROGRESS بنفس اللحظة
+  const registrationClosedMessage =
+    opportunity.registrationClosedReason === "city_deactivated"
+      ? "Registration is closed because this governorate is no longer served by the platform. Volunteers already joined can continue normally until this opportunity ends."
+      : opportunity.status === OPPORTUNITY_STATUS.IN_PROGRESS ||
+          opportunity.status === OPPORTUNITY_STATUS.COMPLETED
+        ? "This opportunity is no longer accepting new volunteers."
+        : spotsLeft === 0
+          ? "This opportunity is fully booked."
+          : "Registration for this opportunity has closed.";
 
   const participateLabel = isGuest
     ? "Participate"
@@ -227,7 +235,7 @@ export default function OpportunityDetailsPage() {
             Only volunteer accounts can join opportunities.
           </p>
         ) : !isGuest && !hasJoined && !isRegistrationOpen ? (
-          <p className="mt-2 text-sm text-heading/50">{registrationClosedReason}</p>
+          <p className="mt-2 text-sm text-heading/50">{registrationClosedMessage}</p>
         ) : isGuest ? (
           <p className="mt-2 text-sm text-heading/50">
             You'll need to create an account or sign in to join this opportunity.

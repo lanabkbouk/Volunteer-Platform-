@@ -15,8 +15,27 @@ const COLOR_STYLES = {
   gray: "bg-gray-100 text-gray-600 border-gray-200",
 };
 
-export default function Chip({ children, color = "primary", className = "", customStyle = "" }) {
-  const styles = customStyle || COLOR_STYLES[color] || COLOR_STYLES.primary;
+// نسخة Dark من نفس التوليفات — خلفية شفافة غامقة + حدّ رفيع بنفس اللون
+// + نص ساطع، بدل الباستيل الفاتح أعلاه المصمَّم لخلفية بيضاء. نفس
+// الصبغة اللونية الأساسية لكل لون (أحمر يبقى أحمر...)، تُستخدم داخل
+// لوحة الأدمن الغامقة فقط عبر prop الـ dark
+const DARK_COLOR_STYLES = {
+  primary: "bg-primary/10 text-primary border-primary/25",
+  secondary: "bg-adminAccent/15 text-adminAccentSoft border-adminAccent/30",
+  gold: "bg-amber-500/10 text-amber-400 border-amber-500/25",
+  silver: "bg-slate-400/10 text-slate-300 border-slate-400/25",
+  bronze: "bg-orange-500/10 text-orange-400 border-orange-500/25",
+  blue: "bg-info/10 text-info border-info/25",
+  purple: "bg-achievement/10 text-achievement border-achievement/25",
+  green: "bg-success/10 text-success border-success/25",
+  pink: "bg-pink-500/10 text-pink-400 border-pink-500/25",
+  red: "bg-danger/10 text-danger border-danger/25",
+  gray: "bg-gray-400/10 text-gray-300 border-gray-400/25",
+};
+
+export default function Chip({ children, color = "primary", dark = false, className = "", customStyle = "" }) {
+  const palette = dark ? DARK_COLOR_STYLES : COLOR_STYLES;
+  const styles = customStyle || palette[color] || palette.primary;
 
   return (
     <span

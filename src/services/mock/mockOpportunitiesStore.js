@@ -15,6 +15,9 @@ export const MOCK_OPPORTUNITIES = [
     description:
       'Help install and maintain clean water access points for underserved communities. No prior experience required — training is provided on site.',
     status: 'open',
+    // تاريخ إنشاء الفرصة الفعلي — ثابت بالماضي القريب، يُستخدم بتحقق
+    // startDate/registerStartAt (opportunityValidation.js) عند التعديل
+    createdAt: daysFromNow(-5),
     startDate: daysFromNow(14),
     endDate: daysFromNow(45),
     location: 'Rotterdam, Netherlands',
@@ -35,6 +38,7 @@ export const MOCK_OPPORTUNITIES = [
     description:
       'Support local students with homework help and basic literacy skills, twice a week in the afternoon.',
     status: 'open',
+    createdAt: daysFromNow(-8),
     startDate: daysFromNow(40),
     endDate: daysFromNow(160),
     location: 'The Hague, Netherlands',
@@ -55,6 +59,7 @@ export const MOCK_OPPORTUNITIES = [
     description:
       'Join a one-day beach and coastal cleanup effort to protect local marine ecosystems.',
     status: 'open',
+    createdAt: daysFromNow(-3),
     startDate: daysFromNow(20),
     endDate: daysFromNow(20),
     location: 'Scheveningen Beach, NL',
@@ -75,6 +80,7 @@ export const MOCK_OPPORTUNITIES = [
     description:
       'Sort, pack, and distribute food donations to families in need across the city.',
     status: 'open',
+    createdAt: daysFromNow(-30),
     startDate: daysFromNow(-10),
     endDate: daysFromNow(70),
     location: 'Rotterdam, Netherlands',
@@ -95,6 +101,7 @@ export const MOCK_OPPORTUNITIES = [
     description:
       'Collected and distributed warm clothing to families ahead of the winter season.',
     status: 'closed',
+    createdAt: daysFromNow(-120),
     startDate: daysFromNow(-90),
     endDate: daysFromNow(-50),
     location: 'Rotterdam, Netherlands',
@@ -115,6 +122,7 @@ export const MOCK_OPPORTUNITIES = [
     description:
       'A two-week reading and literacy camp for children in underserved neighborhoods.',
     status: 'closed',
+    createdAt: daysFromNow(-220),
     startDate: daysFromNow(-200),
     endDate: daysFromNow(-186),
     location: 'The Hague, Netherlands',

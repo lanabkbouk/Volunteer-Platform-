@@ -20,6 +20,7 @@ import { fetchAvailableSkills } from './skills'
 import { loadMockUsers } from './mock/mockUserStore'
 import { addMockParticipation, MOCK_PARTICIPATIONS } from './mock/mockParticipationsStore'
 import { MOCK_OPPORTUNITIES, MOCK_MY_ORGANIZATION_ID } from './mock/mockOpportunitiesStore'
+import { getGovernorateBySelectValue, getGovernorateSelectValue } from './syrianGovernorates'
 import { AUTH_STORAGE_KEY } from '../constants/auth/storage'
 import { normalizeOpportunityOrganization } from '../utils/api/apiResponseSchemas'
 import { PARTICIPATION_STATUS } from '../constants/participationStatus'
@@ -69,7 +70,22 @@ function attachComputedStatus(opportunity) {
     ...opportunity,
     currentVolunteers: computeLiveCurrentVolunteers(opportunity.id),
   }
+  // registrationClosedReason ('organization' | 'city_deactivated' | null)
+  // بينتقل تلقائيًا هون عبر الـ spread فوق (...withLiveCount بيحمل كل
+  // حقول opportunity الخام بما فيها هالحقل) — مافي داعي لسطر إضافي يعيد
+  // نسخه صراحة، بس هيك الواجهة (OpportunityDetailsPage.jsx مثلًا) دايمًا
+  // توصلها القيمة الصحيحة بكائن الفرصة النهائي المُرجَع
   return { ...withLiveCount, status: getEffectiveOpportunityStatus(withLiveCount) }
+}
+
+// يطبّع اسم حقل تاريخ الإنشاء القادم من الباك اند الحقيقي (على الأغلب
+// created_at بصيغة Laravel الافتراضية snake_case) إلى createdAt camelCase
+// الموحّد — نفس فلسفة normalizeOpportunityOrganization تمامًا (أعلاه)،
+// بمكان واحد بدل ما كل نقطة استجابة/validation تتعامل مع اسمين مختلفين
+// لنفس الحقل
+function normalizeOpportunityCreatedAt(item) {
+  if (!item) return item
+  return { ...item, createdAt: item.createdAt ?? item.created_at ?? null }
 }
 
 // يبني FormData لطلب إنشاء/تعديل فرصة، مع إرفاق الصورة إن وُجدت
@@ -124,60 +140,26 @@ function matchesFilters(opportunity, filters = {}) {
   return matchesSearch && matchesCategory && matchesSkill && matchesLocation
 }
 
-// ————————————————————————————————————————————————————————————
-// خوارزمية "الفرص المقترحة" — نظام نقاط (Matching Score) بدل فلترة
-// ثنائية (تظهر/ما تظهر). كل عامل بياخد وزن مختلف، وبنرتّب النتيجة من
-// الأعلى تطابقًا للأقل، بدل ما فرصة قريبة جدًا (بس ناقصها شرط واحد)
-// تختفي بالكامل وكأنها مش موجودة. الأوزان مبنية على 4 عوامل مبررة
-// بمعطيات موجودة أصلًا بالفرونت — صفر حاجة لأي بيانات جديدة من الباك اند
-// (لا تتبع تصفح، لا جدول جديد):
-//   +3 لكل مهارة مشتركة فعليًا (العامل الأقوى — تطابق مباشر ومباشر)
-//   +2 لو نفس مدينة المتطوع
-//   +1 لو سبق شارك بتصنيف الفرصة (اهتمام سابق موثّق)
-//   +2 إضافية لو سبق اتقبل بنفس التصنيف (نمط نجاح سابق)
-//   -1 لو سبق اترفض بنفس التصنيف (إشارة سلبية خفيفة، مش إقصاء كامل)
-// ————————————————————————————————————————————————————————————
-
-/**
- * يبني خريطة "سجل التصنيفات" للمتطوع من مشاركاته السابقة — لكل تصنيف:
- * كم مرة شارك فيه، وكم مرة اتقبل/اترفض. مبني بالكامل من بيانات
- * المشاركات الموجودة أصلًا (MOCK_PARTICIPATIONS)، بدون أي مصدر جديد.
- * @returns {Map<string, {total: number, accepted: number, rejected: number}>}
- */
-function buildCategoryHistory() {
-  const history = new Map()
-
-  MOCK_PARTICIPATIONS.forEach((participation) => {
-    const opportunity = MOCK_OPPORTUNITIES.find((item) => item.id === participation.opportunityId)
-    const categoryId = opportunity?.category?.id
-    if (!categoryId) return
-
-    const entry = history.get(categoryId) || { total: 0, accepted: 0, rejected: 0 }
-    entry.total += 1
-    if (participation.status === PARTICIPATION_STATUS.ACCEPTED) entry.accepted += 1
-    if (participation.status === PARTICIPATION_STATUS.REJECTED) entry.rejected += 1
-    history.set(categoryId, entry)
-  })
-
-  return history
-}
-
+// ⚠️ حساب تقريبي مبسّط بوضع mock فقط للعرض التجريبي — بيحاكي مدخلات
+// خوارزمية الباك اند الحقيقية (Naive Bayes على المهارات والمدينة فقط،
+// خصائص مستقلة احتماليًا عن بعضها) من دون تطبيق نفس الحساب الاحتمالي
+// الفعلي. سيُستبدل بالكامل باستدعاء /volunteers/me/suggested-opportunities
+// الحقيقي فور جاهزيته (راجع فرع الـ API الحقيقي بـ fetchSuggestedOpportunities
+// تحت). ⚠️ لا تُضيفي أي إشارة تالتة (متل تاريخ التصنيفات/المشاركات
+// السابقة) — الباك اند الفعلي بيعتمد بس على مهارات + مدينة، ولا وجود
+// لإشارة "تاريخ المشاركات" بمواصفاته إطلاقًا
 /**
  * يحسب نقاط تطابق فرصة معيّنة مع متطوع معيّن، وبيرجّع كمان أقوى سبب
  * تطابق كجملة مبسّطة (مش رقم خام) — نفس أسلوب LinkedIn/Netflix: سبب
  * واحد بس، الأقوى، مش قائمة كل الأسباب مع بعض (بيصير مزدحم بصريًا).
  * @param {object} opportunity
- * @param {{skillIds: string[], skillNames: Map<string,string>, city: string, categoryHistory: Map}} params
+ * @param {{skillIds: string[], skillNames: Map<string,string>, city: string}} params
  * @returns {{score: number, reason: string|null}}
  */
-function computeMatchScore(opportunity, { skillIds, skillNames, city, categoryHistory }) {
-  // كل سبب محتمل مع وزنه — نفس الأوزان المستخدمة بحساب score تمامًا،
-  // حتى "أقوى سبب" المعروض للمستخدم يطابق فعليًا أقوى عامل بالحساب
+function computeMatchScore(opportunity, { skillIds, skillNames, city }) {
   const reasons = []
 
   const opportunitySkills = Array.isArray(opportunity.skills) ? opportunity.skills : []
-  // نحسب عدد المهارات المشتركة مرة واحدة فقط، ونعيد استخدام نفس القيمة
-  // لكل من نص السبب المعروض وحساب الـ score (بدل حساب .filter() مرتين)
   const matchingSkillsCount = opportunitySkills.filter((skill) => skillIds.includes(skill.id)).length
   const matchingSkill = opportunitySkills.find((skill) => skillIds.includes(skill.id))
   if (matchingSkill) {
@@ -187,20 +169,6 @@ function computeMatchScore(opportunity, { skillIds, skillNames, city, categoryHi
     })
   }
 
-  const categoryId = opportunity.category?.id
-  const history = categoryId ? categoryHistory.get(categoryId) : null
-  let historyScore = 0
-  if (history) {
-    if (history.total > 0) historyScore += 1
-    if (history.accepted > 0) {
-      historyScore += 2
-      reasons.push({ weight: 2, text: "You've succeeded in similar opportunities before" })
-    } else if (history.total > 0) {
-      reasons.push({ weight: 1, text: "Matches your past interests" })
-    }
-    if (history.rejected > 0) historyScore -= 1
-  }
-
   const isSameCity = Boolean(
     city && opportunity.location?.toLowerCase().includes(city.trim().toLowerCase()),
   )
@@ -208,12 +176,9 @@ function computeMatchScore(opportunity, { skillIds, skillNames, city, categoryHi
     reasons.push({ weight: 2, text: 'Near your city' })
   }
 
-  const score = matchingSkillsCount * 3 + (isSameCity ? 2 : 0) + historyScore
+  const score = matchingSkillsCount * 3 + (isSameCity ? 2 : 0)
 
-  // أقوى سبب بس (أعلى وزن) — لو تعادل وزنين، أول واحد انضاف (المهارة
-  // دايمًا بتنضاف أول لو موجودة، فهي الأولوية بالتعادل تلقائيًا)
   reasons.sort((a, b) => b.weight - a.weight)
-
   return { score, reason: reasons[0]?.text || null }
 }
 
@@ -248,7 +213,7 @@ export async function fetchCompletedOpportunities() {
     })
     return response.data || []
   } catch (error) {
-    throw new Error(getApiErrorMessage(error, 'Failed to load completed opportunities'))
+    throw new Error(getApiErrorMessage(error, 'Failed to load completed opportunities'), { cause: error })
   }
 }
 
@@ -259,23 +224,30 @@ export async function fetchCompletedOpportunities() {
 export async function fetchOpportunities(filters = {}) {
   if (MOCK_MODE) {
     await wait()
-    return MOCK_OPPORTUNITIES.filter((opportunity) => matchesFilters(opportunity, filters)).map(
-      attachComputedStatus,
-    )
+    // ترتيب افتراضي تصاعديًا حسب registerEndAt (الأقرب لانتهاء نافذة
+    // التسجيل أول) — من مصدر البيانات نفسه لا بس من المكوّن المستهلك
+    // (OpportunitiesListPage.jsx)، تفاديًا لازدواجية نفس منطق الترتيب
+    // لو الدالة استُخدمت مستقبلًا بمكان تاني غير صفحة تصفح الفرص
+    return MOCK_OPPORTUNITIES.filter((opportunity) => matchesFilters(opportunity, filters))
+      .map(attachComputedStatus)
+      .sort((a, b) => new Date(a.registerEndAt) - new Date(b.registerEndAt))
   }
 
   try {
+    // TODO: لو الباك اند الحقيقي ما بيرجّع الفرص مرتّبة أصلًا حسب
+    // register_end_at، لازم تمرير معامل ترتيب صريح بالطلب هون (مثلًا
+    // params: { ...filters, sort: 'register_end_at' }) عند توفر الـ
+    // endpoint الحقيقي — نفس ترتيب فرع mock فوق بالضبط
     const response = await apiClient.get('/opportunities', { params: filters })
     const data = Array.isArray(response.data) ? response.data : []
-    // نفس التطبيع المطبَّق على fetchSuggestedOpportunities وfetchOpportunityDetails
-    // — بدون هالخطوة ممكن تختلف بنية organization بين نقاط النهاية المختلفة
+    // بدون هالخطوة ممكن تختلف بنية organization بين نقاط النهاية المختلفة
     // بالباك اند، وتنكسر أي Component بيعتمد على شكل موحّد لبيانات المنظمة
     return data.map((item) => ({
-      ...item,
+      ...normalizeOpportunityCreatedAt(item),
       organization: normalizeOpportunityOrganization(item.organization),
     }))
   } catch (error) {
-    throw new Error(getApiErrorMessage(error, 'Failed to load opportunities'))
+    throw new Error(getApiErrorMessage(error, 'Failed to load opportunities'), { cause: error })
   }
 }
 
@@ -298,14 +270,13 @@ export async function fetchOpportunities(filters = {}) {
 export async function fetchSuggestedOpportunities({ skillIds = [], city = '' } = {}) {
   if (MOCK_MODE) {
     await wait()
-    const categoryHistory = buildCategoryHistory()
     // لبناء جملة "Matches your X skill" محتاجين اسم المهارة، مش بس ID
     const allSkills = await fetchAvailableSkills()
     const skillNames = new Map(allSkills.map((skill) => [skill.id, skill.name]))
 
     return MOCK_OPPORTUNITIES.map((opportunity) => ({
       opportunity,
-      ...computeMatchScore(opportunity, { skillIds, skillNames, city, categoryHistory }),
+      ...computeMatchScore(opportunity, { skillIds, skillNames, city }),
     }))
       // بس الفرص يلي إلها تطابق حقيقي (نقاط > 0) — مش أي فرصة بالمنصة.
       // نقطة أدنى منطقية بدل عرض كل شي مرتّب بس بدون أي حد أدنى للصلة
@@ -349,7 +320,7 @@ export async function fetchSuggestedOpportunities({ skillIds = [], city = '' } =
       }
     })
   } catch (error) {
-    throw new Error(getApiErrorMessage(error, 'Failed to load suggested opportunities'))
+    throw new Error(getApiErrorMessage(error, 'Failed to load suggested opportunities'), { cause: error })
   }
 }
 
@@ -382,17 +353,20 @@ export async function fetchOpportunityById(id) {
     // لسا فاضي كليًا حاليًا)، هون بالضبط المكان الوحيد يلي لازم يتعدّل
     return {
       opportunity: data.opportunity
-        ? { ...data.opportunity, organization: normalizeOpportunityOrganization(data.opportunity.organization) }
+        ? {
+            ...normalizeOpportunityCreatedAt(data.opportunity),
+            organization: normalizeOpportunityOrganization(data.opportunity.organization),
+          }
         : null,
       similar: Array.isArray(data.similar)
         ? data.similar.map((item) => ({
-            ...item,
+            ...normalizeOpportunityCreatedAt(item),
             organization: normalizeOpportunityOrganization(item.organization),
           }))
         : [],
     }
   } catch (error) {
-    throw new Error(getApiErrorMessage(error, 'Failed to load opportunity details'))
+    throw new Error(getApiErrorMessage(error, 'Failed to load opportunity details'), { cause: error })
   }
 }
 
@@ -414,7 +388,7 @@ export async function fetchMyOpportunities() {
     const response = await apiClient.get('/organizations/me/opportunities')
     return response.data || []
   } catch (error) {
-    throw new Error(getApiErrorMessage(error, 'Failed to load your causes'))
+    throw new Error(getApiErrorMessage(error, 'Failed to load your causes'), { cause: error })
   }
 }
 
@@ -477,6 +451,16 @@ export async function deleteOpportunity(id) {
  * ينشئ فرصة جديدة (من طرف المنظمة).
  */
 export async function createOpportunity({ imageFile, ...payload }) {
+  // تحقق دفاعي مشترك بين وضعي mock وreal API: الفورم (CauseForm.jsx) أصلًا
+  // بيعرض محافظة معطّلة كخيار disabled غير قابل للاختيار (راجع دعم
+  // item.disabled بـ ui/Dropdown.jsx)، فهاد فقط خط دفاع ثانٍ ضد استدعاء
+  // مباشر للدالة بـ city معطّلة (تجاوز الفورم)
+  const selectedCityValue = payload.location ?? payload.city
+  const selectedGovernorate = selectedCityValue ? getGovernorateBySelectValue(selectedCityValue) : null
+  if (selectedGovernorate && selectedGovernorate.isActive === false) {
+    return { success: false, error: 'This governorate is no longer served by the platform.' }
+  }
+
   if (MOCK_MODE) {
     await wait()
 
@@ -494,7 +478,12 @@ export async function createOpportunity({ imageFile, ...payload }) {
     const newOpportunity = {
       ...payload,
       id: `o${Date.now()}`,
+      // لحظة الإنشاء الفعلية الثابتة — تُستخدم لاحقًا بتحقق startDate/
+      // registerStartAt (opportunityValidation.js) عند فتح شاشة التعديل
+      // لهاي الفرصة تحديدًا، فلازم تُخزَّن مرة وحدة هون ولا تتغيّر أبدًا
+      createdAt: new Date().toISOString(),
       registrationClosedManually: false,
+      registrationClosedReason: null,
       currentVolunteers: 0,
       organization: {
         id: MOCK_MY_ORGANIZATION_ID,
@@ -527,6 +516,10 @@ export async function updateOpportunity(id, { imageFile, ...payload }) {
     await wait()
     const index = MOCK_OPPORTUNITIES.findIndex((item) => item.id === id)
     if (index !== -1) {
+      // ⚠️ عمدًا ما منمرّر createdAt جوا payload هون ولا نعيد كتابتها —
+      // بتضل ثابتة على قيمتها الأصلية (لحظة الإنشاء الحقيقية) طول عمر
+      // الفرصة حتى بعد أي تعديل لاحق، فتحقق startDate/registerStartAt
+      // بمرات التعديل القادمة يضل يقارن بنفس المرجع الصحيح دايمًا
       MOCK_OPPORTUNITIES[index] = {
         ...MOCK_OPPORTUNITIES[index],
         ...payload,
@@ -666,10 +659,16 @@ export async function setOpportunityStatus(id, status) {
 
     // هالتبديل اليدوي مسموح بس بين "تسجيل مفتوح" و"تسجيل منتهي" (قبل ما
     // تبدأ الفرصة) — بنضبط علم registrationClosedManually فقط، والحالة
-    // النهائية المعروضة بتنحسب دايمًا عبر attachComputedStatus
+    // النهائية المعروضة بتنحسب دايمًا عبر attachComputedStatus.
+    // registrationClosedReason: 'organization' لما تُغلق من هون تحديدًا
+    // (تمييزها عن إغلاق تلقائي بسبب تعطيل محافظة — راجع
+    // closeCityOpportunitiesRegistration تحت)، وترجع null دايمًا عند
+    // إعادة الفتح بغض النظر شو كان السبب السابق
+    const isClosing = status === OPPORTUNITY_STATUS.REGISTRATION_CLOSED
     MOCK_OPPORTUNITIES[index] = {
       ...MOCK_OPPORTUNITIES[index],
-      registrationClosedManually: status === OPPORTUNITY_STATUS.REGISTRATION_CLOSED,
+      registrationClosedManually: isClosing,
+      registrationClosedReason: isClosing ? 'organization' : null,
     }
     return { success: true, data: attachComputedStatus(MOCK_OPPORTUNITIES[index]) }
   }
@@ -680,4 +679,33 @@ export async function setOpportunityStatus(id, status) {
   } catch (error) {
     return { success: false, error: getApiErrorMessage(error, 'Failed to update cause status') }
   }
+}
+
+/**
+ * يغلق تسجيل كل الفرص المفتوحة فعليًا (REGISTRATION_OPEN تحديدًا) بمحافظة
+ * معيّنة — تُستدعى من toggleGovernorateStatus (services/syrianGovernorates.js)
+ * لحظة تعطيل محافظة. إغلاق تسجيل عادي (نفس آلية setOpportunityStatus
+ * أعلاه، بس تلقائي وبالجملة)، وليس إلغاء فرصة: الفرصة تبقى موجودة وقابلة
+ * للعرض والتصفّح، بس ما تعود تقبل متطوعين جدد. لا تلمس أي فرصة
+ * IN_PROGRESS أو COMPLETED (اشتغلت أو خلصت فعلًا)، ولا فرصة
+ * REGISTRATION_CLOSED أصلًا لسبب تاني (إغلاق يدوي من المنظمة أو امتلأت
+ * العدد) — فقط اللي كانت REGISTRATION_OPEN تحديدًا لحظة التعطيل.
+ *
+ * ⚠️ إعادة تفعيل المحافظة لاحقًا (toggleGovernorateStatus بـ isActive:
+ * true) عمدًا ما بتعيد فتح هالفرص تلقائيًا — قرار نهائي ومقصود، مش Bug.
+ * لو المنظمة حابة تفتح تسجيل فرصتها من جديد بعد إعادة تفعيل محافظتها،
+ * تقدر تفتحه يدويًا بنفس زر القفل/الفتح (setOpportunityStatus) متل أي
+ * فرصة تانية — القرار برجع لها، مش تلقائي.
+ * @param {string} cityNameEn - الاسم الإنجليزي الخام للمحافظة (nameEn)
+ */
+export function closeCityOpportunitiesRegistration(cityNameEn) {
+  const cityValue = getGovernorateSelectValue(cityNameEn)
+
+  MOCK_OPPORTUNITIES.forEach((opportunity) => {
+    if (opportunity.location !== cityValue) return
+    if (getEffectiveOpportunityStatus(opportunity) !== OPPORTUNITY_STATUS.REGISTRATION_OPEN) return
+
+    opportunity.registrationClosedManually = true
+    opportunity.registrationClosedReason = 'city_deactivated'
+  })
 }

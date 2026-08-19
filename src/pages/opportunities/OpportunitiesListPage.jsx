@@ -4,7 +4,8 @@ import { Sparkles, SearchX, Loader2, SlidersHorizontal, ChevronDown } from "luci
 import Typography from "../../components/ui/Typography";
 import OpportunityCard from "../../components/opportunity/OpportunityCard";
 import CategorySidebar from "../../components/opportunity/CategorySidebar";
-import OpportunityTabs, { OPPORTUNITY_TABS } from "../../components/opportunity/OpportunityTabs";
+import OpportunityTabs from "../../components/opportunity/OpportunityTabs";
+import { OPPORTUNITY_TABS } from "../../constants/opportunityTabs";
 import CardSkeleton from "../../components/ui/CardSkeleton";
 import EmptyState from "../../components/common/EmptyState";
 import AuthAlert from "../../components/auth/AuthAlert";
@@ -72,15 +73,21 @@ export default function OpportunitiesListPage() {
   // للتسجيل فعليًا. أي حالة تانية (مقفولة/شغالة/منتهية) ما إلها قيمة
   // عملية لحدا لسا ما انضم — بتضل متاحة عبر رابط مباشر لصفحة التفاصيل،
   // أو بقسم "Past Opportunities" ببروفايل المنظمة، بس مش هون
-  const visibleOpportunities = useMemo(
-    () =>
-      Array.isArray(opportunities)
-        ? opportunities.filter(
-            (opportunity) => opportunity.status === OPPORTUNITY_STATUS.REGISTRATION_OPEN,
-          )
-        : [],
-    [opportunities],
-  );
+  const visibleOpportunities = useMemo(() => {
+    if (!Array.isArray(opportunities)) return [];
+
+    const openOnly = opportunities.filter(
+      (opportunity) => opportunity.status === OPPORTUNITY_STATUS.REGISTRATION_OPEN,
+    );
+
+    // تبويب "Suggested" بيحتفظ بترتيبه الخاص (الأعلى تطابقًا أولًا،
+    // محسوب مسبقًا بـ computeMatchScore عبر fetchSuggestedOpportunities)
+    // — ما منلمسه هون. الترتيب تصاعديًا حسب registerEndAt (الأقرب لانتهاء
+    // نافذة التسجيل أول) بس لتبويب "All": فرصة تسجيلها بيقفل قريب أكثر
+    // إلحاحًا لقرار الزائر/المتطوع من فرصة تسجيلها لسا مفتوح لفترة طويلة
+    if (isSuggestedTab) return openOnly;
+    return [...openOnly].sort((a, b) => new Date(a.registerEndAt) - new Date(b.registerEndAt));
+  }, [opportunities, isSuggestedTab]);
 
   // isPending = ما في أي بيانات لسا (أول تحميل فعلي لهالفلتر بالذات) —
   // بيختلف عن isFetching اللي بيصير true حتى أثناء إعادة الجلب بالخلفية
@@ -97,10 +104,10 @@ export default function OpportunitiesListPage() {
   }, [visibleOpportunities.length]);
 
   // بتبويب "Suggested" بس: تجميع بمستوى واحد حسب سبب الترشيح (سلوك
-  // المتطوع — مهاراته، مدينته، تاريخ مشاركاته)، مش حسب التصنيف. تصنيف
-  // الفرصة (Health/Education...) ضل داخل كل بطاقة كالمعتاد (Chip)،
-  // مش عنوان قسم خارجي. ترتيب الأقسام بيتبع ترتيب أول ظهور بالقائمة
-  // المرتّبة أصلًا بالنقاط، فالسبب الأقوى تطابقًا بيطلع أول قسم تلقائيًا
+  // المتطوع — مهاراته ومدينته)، مش حسب التصنيف. تصنيف الفرصة
+  // (Health/Education...) ضل داخل كل بطاقة كالمعتاد (Chip)، مش عنوان
+  // قسم خارجي. ترتيب الأقسام بيتبع ترتيب أول ظهور بالقائمة المرتّبة
+  // أصلًا بالنقاط، فالسبب الأقوى تطابقًا بيطلع أول قسم تلقائيًا
   const groupedByReason = useMemo(() => {
     if (!isSuggestedTab) return [];
 
@@ -188,11 +195,7 @@ export default function OpportunitiesListPage() {
           {isSuggestedTab ? (
             <div className="flex items-start gap-3 rounded-3xl bg-primary/5 border border-primary/15 p-4 mb-6">
               <Sparkles size={18} className="text-primary shrink-0 mt-0.5" aria-hidden="true" />
-              <p className="text-sm text-heading/70">
-                Picked for you based on your skills, city, and past participation history —
-                grouped by category, and this list updates automatically as you engage with the
-                platform.
-              </p>
+              <p className="text-sm text-heading/70">Picked for you based on your skills and city.</p>
             </div>
           ) : null}
 

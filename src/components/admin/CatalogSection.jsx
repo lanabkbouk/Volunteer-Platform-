@@ -9,7 +9,7 @@ import Skeleton from '../ui/Skeleton'
 import Button from '../ui/Button'
 import AuthAlert from '../auth/AuthAlert'
 import EmptyState from '../common/EmptyState'
-import { CARD_SURFACE } from '../../utils/surfaceStyles'
+import { ADMIN_CARD_SURFACE } from '../../utils/adminStyles'
 
 export default function CatalogSection({
   title,
@@ -33,9 +33,9 @@ export default function CatalogSection({
     <section>
       <div className="flex items-start justify-between gap-4 mb-4">
         <div>
-          <Typography variant="h4">{title}</Typography>
+          <Typography variant="h4" className="text-adminTextHi!">{title}</Typography>
           {description && (
-            <Typography variant="bodySm" className="text-body mt-1">
+            <Typography variant="bodySm" className="text-adminTextLo! mt-1">
               {description}
             </Typography>
           )}
@@ -50,7 +50,7 @@ export default function CatalogSection({
       {isLoading ? (
         <div className="flex flex-col gap-3">
           {Array.from({ length: 3 }).map((_, index) => (
-            <div key={index} className={`${CARD_SURFACE} p-4`}>
+            <div key={index} className={`${ADMIN_CARD_SURFACE} p-4`}>
               <Skeleton className="h-5 w-1/3 mb-2" />
               <Skeleton className="h-4 w-2/3" />
             </div>
@@ -67,7 +67,7 @@ export default function CatalogSection({
           )}
         </div>
       ) : items.length === 0 ? (
-        <EmptyState icon={emptyIcon} title={emptyTitle} description={emptyDescription} />
+        <EmptyState icon={emptyIcon} title={emptyTitle} description={emptyDescription} dark />
       ) : (
         <div className="flex flex-col gap-3">{items.map(renderItem)}</div>
       )}

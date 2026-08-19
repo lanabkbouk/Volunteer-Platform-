@@ -3,7 +3,7 @@ import { Ban, Building2, Eye, Mail, Phone } from 'lucide-react'
 import Badge from '../common/Badge'
 import Button from '../ui/Button'
 import Typography from '../ui/Typography'
-import { CARD_BASE } from '../../utils/surfaceStyles'
+import { ADMIN_CARD_BASE, ADMIN_GHOST_BUTTON } from '../../utils/adminStyles'
 import { ORGANIZATION_STATUS } from '../../constants/organizationStatus'
 import { formatDateTime } from '../../utils/formatDateTime'
 
@@ -38,10 +38,10 @@ export default function OrganizationReviewCard({
   const isSuspended = status === ORGANIZATION_STATUS.SUSPENDED
 
   return (
-    <article className={`${CARD_BASE} p-5 md:p-6`}>
+    <article className={`${ADMIN_CARD_BASE} p-5 md:p-6`}>
       <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
         <div className="flex min-w-0 gap-4">
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-primary/10 text-primary">
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-adminAccent/15 text-adminAccentSoft">
             {organization.imageUrl ? (
               <img
                 src={organization.imageUrl}
@@ -55,13 +55,13 @@ export default function OrganizationReviewCard({
 
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <Typography variant="h5" className="truncate">
+              <Typography variant="h5" className="truncate text-adminTextHi!">
                 {organization.name || 'Untitled organization'}
               </Typography>
-              <Badge label={getStatusLabel(status)} tone={statusTone} />
+              <Badge label={getStatusLabel(status)} tone={statusTone} dark />
             </div>
 
-            <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-body">
+            <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-adminTextLo">
               <span className="inline-flex items-center gap-2 truncate">
                 <Mail size={14} aria-hidden="true" />
                 {organization.email || 'No email provided'}
@@ -70,7 +70,7 @@ export default function OrganizationReviewCard({
                 <Phone size={14} aria-hidden="true" />
                 {organization.phone || 'No phone provided'}
               </span>
-              <span className="text-body/80">
+              <span className="text-adminTextLo">
                 Registered {formatDateTime(organization.requestedAt)}
               </span>
             </div>
@@ -78,7 +78,7 @@ export default function OrganizationReviewCard({
         </div>
 
         <div className="flex flex-wrap gap-2 xl:justify-end">
-          <Button variant="ghost" size="small" onClick={() => onViewDetails(organization)}>
+          <Button variant="ghost" size="small" onClick={() => onViewDetails(organization)} className={ADMIN_GHOST_BUTTON}>
             <Eye size={16} />
             <span className="ml-1">View details</span>
           </Button>
@@ -108,7 +108,7 @@ export default function OrganizationReviewCard({
               size="small"
               disabled={isUpdating}
               onClick={() => onSuspend(organization)}
-              className="flex items-center gap-1 text-heading/60 hover:bg-heading/5"
+              className={`flex items-center gap-1 ${ADMIN_GHOST_BUTTON}`}
             >
               <Ban size={16} />
               Suspend

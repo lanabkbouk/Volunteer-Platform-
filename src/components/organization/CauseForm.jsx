@@ -1,3 +1,4 @@
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useFormContext, Controller } from "react-hook-form";
 import { Link } from "react-router-dom";
 import { MapPin, Tag, ImagePlus, AlertTriangle } from "lucide-react";
@@ -12,10 +13,35 @@ import { getCategoryLabel } from "../../utils/categoryStyles";
 import { ROUTES } from "../../constants/paths";
 import { FIELD_LABEL, FIELD_ERROR } from "../../utils/fieldStyles";
 
-const GOVERNORATE_ITEMS = SYRIAN_GOVERNORATES.map(({ nameEn }) => ({
+// المدن المعطّلة (isActive: false) تظهر بالقائمة دائمًا لكن كخيار معطّل
+// (disabled)، مش مستبعدة كليًا — راجع دعم item.disabled بـ ui/Dropdown.jsx.
+// هيك القيمة الحالية لفرصة موجودة أصلًا (لو مدينتها صارت معطّلة لاحقًا)
+// تضل تظهر بشكل صحيح بالـ trigger بدل ما تختفي من القائمة تمامًا
+const GOVERNORATE_ITEMS = SYRIAN_GOVERNORATES.map(({ nameEn, isActive }) => ({
   name: nameEn,
   value: nameEn === "Rural Damascus" ? "Rif Dimashq" : nameEn,
+  disabled: !isActive,
 }));
+
+// إعداد الحقول الرقمية الخمسة: هل تسمح بكسور عشرية؟ — مصدر واحد بدل
+// بناء دالة/Closure منفصلة لكل حقل وقت الرندر (كان كل حقل عنده نسخته
+// الخاصة من createNumericKeyDownHandler/createNumericPasteHandler،
+// وبما إنهم كانوا يلمسوا warningTimeouts وهو ref، ESLint (قاعدة
+// react-hooks/refs من React Compiler) كان يرفضها صراحة: "قد تُقرأ قيمة
+// الـ ref أثناء الرندر". معالج واحد ثابت (useCallback) يقرأ اسم الحقل
+// من event.target.name بدل ما يُبنى نسخة لكل حقل يحل المشكلتين معًا)
+const NUMERIC_FIELD_CONFIG = {
+  minHours: { allowDecimal: true },
+  maxHours: { allowDecimal: true },
+  totalHours: { allowDecimal: true },
+  minVolunteers: { allowDecimal: false },
+  maxVolunteers: { allowDecimal: false },
+};
+
+const NUMERIC_CONTROL_KEYS = [
+  "Backspace", "Delete", "Tab", "Escape", "Enter",
+  "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End",
+];
 
 // عنوان قسم فرعي موحّد داخل الفورم — بدل تكرار نفس كلاسات Typography
 // بكل قسم على حدة (نفس مبدأ DRY المتبع بباقي المشروع)
@@ -61,6 +87,76 @@ export default function CauseForm({
     name: getCategoryLabel(category.name),
     value: category.id,
   }));
+
+  // رسالة تحذير مؤقتة لكل حقل رقمي على حدة — كائن واحد بدل 5 useState
+  // منفصلة (نفس روح DRY المتبعة بباقي الملف)
+  const [numericWarnings, setNumericWarnings] = useState({});
+  const warningTimeouts = useRef({});
+
+  // يعرض تنبيه مؤقت لحقل معيّن، ويلغي أي مؤقّت سابق لنفس الحقل قبل ما
+  // يبدأ مؤقّت جديد (لو المستخدم ضل يكتب حروف بسرعة متتالية). useCallback
+  // بدل دالة عادية: خليها Closure ثابتة عبر الرندرز (deps فاضية، لأن
+  // setNumericWarnings وwarningTimeouts.current كلاهما ثابتين أصلًا)
+  const showNumericWarning = useCallback((fieldName) => {
+    setNumericWarnings((prev) => ({ ...prev, [fieldName]: "Only numbers are allowed." }));
+    clearTimeout(warningTimeouts.current[fieldName]);
+    warningTimeouts.current[fieldName] = setTimeout(() => {
+      setNumericWarnings((prev) => ({ ...prev, [fieldName]: "" }));
+    }, 2000);
+  }, []);
+
+  // ينظّف كل المؤقّتات المعلّقة عند إزالة الكومبوننت — يمنع تحديث
+  // state بعد ما الصفحة غادرها المستخدم. نسخة محلية من الكائن (مش قراءة
+  // .current مباشرة جوا الـ cleanup) — نفس الكائن (مرجعه) بيضل واحد طول
+  // عمر الكومبوننت (بينتغيّر بس محتواه)، بس هيك التزام بنمط React الموصى
+  // فيه لتفادي قراءة ref.current وقت التنظيف مباشرة
+  useEffect(() => {
+    const timeouts = warningTimeouts.current;
+    return () => Object.values(timeouts).forEach(clearTimeout);
+  }, []);
+
+  // يسمح فقط بالأرقام (0-9) + مفاتيح التحكم الأساسية (حذف، تنقّل،
+  // Tab) — Whitelist صارم بدل استثناء رموز معيّنة، لضمان منع أي حرف
+  // أو رمز إطلاقًا مهما كان، وليس فقط e/E/+/- الخاصة بالصيغة العلمية.
+  // الحقول التي تسمح بنقطة عشرية واحدة (الساعات) محددة بـ
+  // NUMERIC_FIELD_CONFIG أعلاه، حسب اسم الحقل (event.target.name) —
+  // معالج واحد يخدم الحقول الخمسة، بدل نسخة منفصلة لكل حقل
+  const handleNumericKeyDown = useCallback(
+    (event) => {
+      const config = NUMERIC_FIELD_CONFIG[event.target.name];
+      if (!config) return;
+      if (NUMERIC_CONTROL_KEYS.includes(event.key)) return;
+      if (event.ctrlKey || event.metaKey) return; // يسمح بـ Ctrl/Cmd+C/V/A/X
+
+      const isDigit = /^[0-9]$/.test(event.key);
+      const isAllowedDecimalPoint =
+        config.allowDecimal && event.key === "." && !event.currentTarget.value.includes(".");
+
+      if (!isDigit && !isAllowedDecimalPoint) {
+        event.preventDefault();
+        showNumericWarning(event.target.name);
+      }
+    },
+    [showNumericWarning],
+  );
+
+  // يفحص المحتوى الملصوق (Paste) ويرفضه بالكامل لو فيه أي حرف غير
+  // رقمي (أو أكثر من نقطة عشرية واحدة) — بدل السماح بلصق نص فيه حروف
+  // ثم الاعتماد على Zod بس بعد الإرسال لرفضه
+  const handleNumericPaste = useCallback(
+    (event) => {
+      const config = NUMERIC_FIELD_CONFIG[event.target.name];
+      if (!config) return;
+
+      const pattern = config.allowDecimal ? /^\d*\.?\d*$/ : /^\d*$/;
+      const pastedText = event.clipboardData.getData("text");
+      if (!pattern.test(pastedText)) {
+        event.preventDefault();
+        showNumericWarning(event.target.name);
+      }
+    },
+    [showNumericWarning],
+  );
 
   return (
     <div className="flex flex-col gap-8">
@@ -246,6 +342,9 @@ export default function CauseForm({
             name="minHours"
             type="number"
             min="1"
+            onKeyDown={handleNumericKeyDown}
+            onPaste={handleNumericPaste}
+            warning={numericWarnings.minHours}
             register={register}
             error={errors.minHours?.message}
             required
@@ -255,6 +354,9 @@ export default function CauseForm({
             name="maxHours"
             type="number"
             min="1"
+            onKeyDown={handleNumericKeyDown}
+            onPaste={handleNumericPaste}
+            warning={numericWarnings.maxHours}
             register={register}
             error={errors.maxHours?.message}
             required
@@ -264,6 +366,9 @@ export default function CauseForm({
             name="totalHours"
             type="number"
             min="1"
+            onKeyDown={handleNumericKeyDown}
+            onPaste={handleNumericPaste}
+            warning={numericWarnings.totalHours}
             register={register}
             error={errors.totalHours?.message}
             required
@@ -276,6 +381,9 @@ export default function CauseForm({
             name="minVolunteers"
             type="number"
             min="1"
+            onKeyDown={handleNumericKeyDown}
+            onPaste={handleNumericPaste}
+            warning={numericWarnings.minVolunteers}
             register={register}
             error={errors.minVolunteers?.message}
             required
@@ -285,6 +393,9 @@ export default function CauseForm({
             name="maxVolunteers"
             type="number"
             min="1"
+            onKeyDown={handleNumericKeyDown}
+            onPaste={handleNumericPaste}
+            warning={numericWarnings.maxVolunteers}
             register={register}
             error={errors.maxVolunteers?.message}
             required

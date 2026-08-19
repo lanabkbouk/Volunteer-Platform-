@@ -42,9 +42,20 @@
      عن باقي الألوان الدلالية (نجاح/تحذير/خطأ) */
   --color-achievement: #7F56D9;
 
-  /* خلفية لوحة الأدمن — نفس درجة canvas تمامًا الآن، حتى تبقى كل
-     الصفحات (عامة أو أدمن) على نفس لغة الخلفية الموحّدة */
-  --color-adminBg: #F5F7FA;
+  /* لوحة الأدمن Dark بشكل دائم — هوية تصميم أساسية وحيدة (بلا Theme
+     اختياري ولا زر تبديل فاتح/غامق)، لتمييزها بأقوى شكل ممكن عن الموقع
+     العام الفاتح والدافئ. ثلاث درجات غامقة فقط (bg0 الأعمق للـ canvas،
+     bg1 للسايدبار/التوبار/الكروت الرئيسية، bg2 للعناصر الداخلية)،
+     برتقالي primary محجوز للّوغو والأزرار الأساسية فقط، وadminAccent
+     (نفس قيمة secondary الحالية) للون حالة "النشاط/التحديد" بالتنقّل. */
+  --color-adminBg0: #161D2B;
+  --color-adminBg1: #1D2537;
+  --color-adminBg2: #242D42;
+  --color-adminBorder: rgba(255, 255, 255, 0.08);
+  --color-adminTextHi: #F3F5F8;
+  --color-adminTextLo: rgba(243, 245, 248, 0.55);
+  --color-adminAccent: var(--color-secondary);
+  --color-adminAccentSoft: #5EEAD4;
 
   --font-display: 'Cairo', system-ui, sans-serif;
   --font-body: 'Inter', system-ui, sans-serif;

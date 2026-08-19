@@ -20,23 +20,23 @@ import { useReviewOrganizationMutation } from '../../hooks/queries/useReviewOrga
 import { useToast } from '../../hooks/useToast'
 import { ORGANIZATION_STATUS } from '../../constants/organizationStatus'
 import { ROUTES } from '../../constants/paths'
-import { CARD_BASE, PANEL_SURFACE } from '../../utils/surfaceStyles'
+import { ADMIN_CARD_BASE, ADMIN_PANEL_SURFACE, ADMIN_GHOST_BUTTON } from '../../utils/adminStyles'
 
 function AdminOrganizationsSkeleton() {
   return (
     <div className="space-y-3">
       {Array.from({ length: 4 }).map((_, index) => (
-        <div key={index} className={`${CARD_BASE} p-5`}>
+        <div key={index} className={`${ADMIN_CARD_BASE} p-5`}>
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="space-y-3">
-              <Skeleton className="h-6 w-56" />
-              <Skeleton className="h-4 w-72" />
-              <Skeleton className="h-4 w-48" />
+              <Skeleton dark className="h-6 w-56" />
+              <Skeleton dark className="h-4 w-72" />
+              <Skeleton dark className="h-4 w-48" />
             </div>
             <div className="flex gap-2">
-              <Skeleton className="h-10 w-28 rounded-xl" />
-              <Skeleton className="h-10 w-28 rounded-xl" />
-              <Skeleton className="h-10 w-32 rounded-xl" />
+              <Skeleton dark className="h-10 w-28 rounded-xl" />
+              <Skeleton dark className="h-10 w-28 rounded-xl" />
+              <Skeleton dark className="h-10 w-32 rounded-xl" />
             </div>
           </div>
         </div>
@@ -176,20 +176,20 @@ export default function AdminOrganizationsReview() {
       description="Review every organization, keep approved and rejected items visible, and use the status badges to track the queue at a glance."
       actions={
         <>
-          <Button variant="ghost" as="a" href={ROUTES.ADMIN_DASHBOARD}>
+          <Button variant="ghost" as="a" href={ROUTES.ADMIN_DASHBOARD} className={ADMIN_GHOST_BUTTON}>
             Dashboard
           </Button>
-          <Button variant="ghost" as="a" href={ROUTES.ADMIN_CATEGORIES}>
+          <Button variant="ghost" as="a" href={ROUTES.ADMIN_CATEGORIES} className={ADMIN_GHOST_BUTTON}>
             Categories
           </Button>
         </>
       }
     >
-      <section className={`${PANEL_SURFACE} p-5 md:p-6`}>
+      <section className={`${ADMIN_PANEL_SURFACE} p-5 md:p-6`}>
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <Typography variant="h4">Review queue</Typography>
-            <Typography variant="bodySm" className="mt-1 text-body">
+            <Typography variant="h4" className="text-adminTextHi!">Review queue</Typography>
+            <Typography variant="bodySm" className="mt-1 text-adminTextLo!">
               Search by organization name, email, phone, city, or current status.
             </Typography>
           </div>
@@ -197,21 +197,21 @@ export default function AdminOrganizationsReview() {
           {/* أرقام إجمالية بس للاستئناس البصري — عرضها كنص/عداد عادي (بدون
               حدود/pill/hover) بدل Badge، حتى ما توهم الأدمن بإنها فلاتر
               قابلة للنقر بينما هي مجرد أرقام إعلامية بجانب مربع البحث */}
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 text-sm text-body">
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 text-sm text-adminTextLo">
             <span>
-              All <span className="font-semibold tabular-nums text-heading">{totals.all}</span>
+              All <span className="font-semibold tabular-nums text-adminTextHi">{totals.all}</span>
             </span>
             <span>
-              Pending <span className="font-semibold tabular-nums text-heading">{totals.pending}</span>
+              Pending <span className="font-semibold tabular-nums text-adminTextHi">{totals.pending}</span>
             </span>
             <span>
-              Approved <span className="font-semibold tabular-nums text-heading">{totals.approved}</span>
+              Approved <span className="font-semibold tabular-nums text-adminTextHi">{totals.approved}</span>
             </span>
             <span>
-              Rejected <span className="font-semibold tabular-nums text-heading">{totals.rejected}</span>
+              Rejected <span className="font-semibold tabular-nums text-adminTextHi">{totals.rejected}</span>
             </span>
             <span>
-              Suspended <span className="font-semibold tabular-nums text-heading">{totals.suspended}</span>
+              Suspended <span className="font-semibold tabular-nums text-adminTextHi">{totals.suspended}</span>
             </span>
           </div>
         </div>
@@ -249,6 +249,7 @@ export default function AdminOrganizationsReview() {
               ? 'Try a different keyword or clear the search.'
               : 'Organizations will appear here once they register.'
           }
+          dark
         />
       ) : (
         <>

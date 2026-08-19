@@ -66,7 +66,7 @@ export default function AdminResetPasswordModal({ open, onClose, email }) {
     >
       {isSent ? (
         <div className="flex flex-col items-center gap-3 py-2 text-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-success/10 text-success">
             <MailCheck size={22} aria-hidden="true" />
           </div>
           <Typography variant="bodySm" className="text-body">
@@ -77,7 +77,7 @@ export default function AdminResetPasswordModal({ open, onClose, email }) {
       ) : (
         <div className="space-y-4">
           <div className="flex items-start gap-3">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-secondary/10 text-secondary">
               <KeyRound size={20} aria-hidden="true" />
             </div>
             <Typography variant="bodySm" className="text-body">

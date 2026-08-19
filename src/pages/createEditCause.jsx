@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useForm, FormProvider, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate, useParams } from "react-router-dom";
@@ -17,7 +17,7 @@ import { useOpportunityDetailsQuery } from "../hooks/queries/useOpportunityDetai
 import { useSaveOpportunityMutation } from "../hooks/queries/useSaveOpportunityMutation";
 import { useImageUpload } from "../hooks/useImageUpload";
 import { useToast } from "../hooks/useToast";
-import { opportunitySchema } from "../utils/opportunityValidation";
+import { createOpportunitySchema } from "../utils/opportunityValidation";
 import { isOrganizationProfileComplete } from "../utils/auth/profileCompletion";
 import { ROUTES } from "../constants/paths";
 import { getOrganizationId } from "../utils/auth/getOrganizationId";
@@ -109,6 +109,22 @@ export default function CreateEditCause() {
     file: imageFile,
     setPreviewUrl,
   } = useImageUpload();
+
+  // createdAt الفعلي المستخدم بتحقق startDate/registerStartAt: بوضع
+  // "تعديل" هو لحظة إنشاء الفرصة الأصلية الثابتة (opportunity.createdAt
+  // القادمة من الباك اند/Mock)، وليس new Date() وقت فتح شاشة التعديل —
+  // وإلا فتح الفورم بعد أيام من الإنشاء كان رح يرفض startDate/registerStartAt
+  // الأصليين بالغلط. بوضع "إنشاء" (لا opportunity بعد) نستخدم اللحظة
+  // الحالية فعليًا، لأنها هي فعلًا لحظة الإنشاء المرتقبة
+  const createdAt = useMemo(() => {
+    if (isEditMode && opportunity && opportunity.createdAt) return new Date(opportunity.createdAt);
+    return new Date();
+  }, [isEditMode, opportunity]);
+
+  // الـ schema تُعاد بناؤها فقط لما createdAt يتغيّر فعليًا (مثلًا لحظة
+  // ما بيانات فرصة التعديل توصل)، مش بكل render — resolver react-hook-form
+  // بيقرأ أحدث schema تلقائيًا بكل تحقق (props.resolver تتحدّث كل render)
+  const opportunitySchema = useMemo(() => createOpportunitySchema(createdAt), [createdAt]);
 
   const methods = useForm({
     resolver: zodResolver(opportunitySchema),

@@ -42,7 +42,11 @@ export default function Dropdown({
     if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return;
     event.preventDefault();
 
-    const options = Array.from(event.currentTarget.querySelectorAll('[role="option"]'));
+    // العناصر المعطّلة (item.disabled) مستبعدة من التنقّل بالكيبورد هون
+    // فقط — تبقى ظاهرة بصريًا بالقائمة، بس السهم/Home/End يتخطاها تلقائيًا
+    const options = Array.from(
+      event.currentTarget.querySelectorAll('[role="option"]:not([disabled])'),
+    );
     if (options.length === 0) return;
 
     const currentIndex = options.indexOf(document.activeElement);
@@ -150,14 +154,24 @@ export default function Dropdown({
                     type="button"
                     role="option"
                     aria-selected={selectedItem?.value === item.value}
-                    onClick={() => handleItemClick(item)}
+                    aria-disabled={item.disabled || undefined}
+                    disabled={item.disabled}
+                    // ممنوع استدعاء handleItemClick إطلاقًا لو معطّل — منع
+                    // فعلي للاختيار، مش بس تنسيق بصري شكلي
+                    onClick={() => {
+                      if (item.disabled) return;
+                      handleItemClick(item);
+                    }}
                     className={`w-full text-left block px-4 py-3 rounded-md transition-colors ${
-                      selectedItem?.value === item.value
-                        ? "bg-primary/15 text-primary border border-primary/30"
-                        : "hover:bg-primary/10 hover:text-primary"
+                      item.disabled
+                        ? "text-body/40 cursor-not-allowed"
+                        : selectedItem?.value === item.value
+                          ? "bg-primary/15 text-primary border border-primary/30"
+                          : "hover:bg-primary/10 hover:text-primary"
                     }`}
                   >
                     {item.name}
+                    {item.disabled && <span className="ml-1.5 text-xs text-body/40">(Inactive)</span>}
                   </button>
                 </li>
               )

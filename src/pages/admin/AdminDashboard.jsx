@@ -22,7 +22,7 @@ import { useCategoriesQuery } from '../../hooks/queries/useCategoriesQuery'
 import { useAdminOrganizationsQuery } from '../../hooks/queries/useAdminOrganizationsQuery'
 import { ORGANIZATION_STATUS } from '../../constants/organizationStatus'
 import { ROUTES } from '../../constants/paths'
-import { CARD_BASE, CARD_SURFACE, CARD_ELEVATION, PANEL_SURFACE } from '../../utils/surfaceStyles'
+import { ADMIN_CARD_BASE, ADMIN_CARD_SURFACE, ADMIN_PANEL_SURFACE, ADMIN_GHOST_BUTTON } from '../../utils/adminStyles'
 import { formatDateTime } from '../../utils/formatDateTime'
 
 function getStatusTone(status) {
@@ -42,32 +42,32 @@ function AdminDashboardSkeleton() {
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {Array.from({ length: 6 }).map((_, index) => (
-          <div key={index} className={`${CARD_BASE} p-5 md:p-6`}>
-            <Skeleton className="h-4 w-28" />
-            <Skeleton className="mt-4 h-10 w-20" />
-            <Skeleton className="mt-4 h-4 w-40" />
+          <div key={index} className={`${ADMIN_CARD_BASE} p-5 md:p-6`}>
+            <Skeleton dark className="h-4 w-28" />
+            <Skeleton dark className="mt-4 h-10 w-20" />
+            <Skeleton dark className="mt-4 h-4 w-40" />
           </div>
         ))}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
-        <div className={`${PANEL_SURFACE} lg:col-span-2 p-6 md:p-8`}>
-          <Skeleton className="h-6 w-56" />
+        <div className={`${ADMIN_PANEL_SURFACE} lg:col-span-2 p-6 md:p-8`}>
+          <Skeleton dark className="h-6 w-56" />
           <div className="mt-6 space-y-3">
             {Array.from({ length: 4 }).map((_, index) => (
-              <div key={index} className="rounded-2xl border border-heading/10 p-4">
-                <Skeleton className="h-5 w-48" />
-                <Skeleton className="mt-3 h-4 w-56" />
+              <div key={index} className="rounded-2xl border border-adminBorder p-4">
+                <Skeleton dark className="h-5 w-48" />
+                <Skeleton dark className="mt-3 h-4 w-56" />
               </div>
             ))}
           </div>
         </div>
 
-        <div className={`${PANEL_SURFACE} p-6 md:p-8`}>
-          <Skeleton className="h-6 w-40" />
+        <div className={`${ADMIN_PANEL_SURFACE} p-6 md:p-8`}>
+          <Skeleton dark className="h-6 w-40" />
           <div className="mt-6 space-y-3">
             {Array.from({ length: 4 }).map((_, index) => (
-              <Skeleton key={index} className="h-12 w-full rounded-2xl" />
+              <Skeleton dark key={index} className="h-12 w-full rounded-2xl" />
             ))}
           </div>
         </div>
@@ -136,7 +136,7 @@ export default function AdminDashboard() {
           <Button as={Link} to={ROUTES.ADMIN_ORGANIZATIONS} variant="primary">
             Review organizations
           </Button>
-          <Button as={Link} to={ROUTES.ADMIN_CATEGORIES} variant="ghost">
+          <Button as={Link} to={ROUTES.ADMIN_CATEGORIES} variant="ghost" className={ADMIN_GHOST_BUTTON}>
             Manage categories
           </Button>
         </div>
@@ -169,7 +169,7 @@ export default function AdminDashboard() {
               value={volunteersCount}
               description="Registered volunteer accounts on the platform."
               icon={Users}
-              accent="primary"
+              accent="secondary"
             />
             <AdminStatCard
               label="Total organizations"
@@ -204,21 +204,21 @@ export default function AdminDashboard() {
               value={totalOpportunities}
               description="Published volunteering opportunities."
               icon={Megaphone}
-              accent="primary"
+              accent="secondary"
             />
           </div>
 
           <div className="grid gap-6 lg:grid-cols-3 lg:gap-8">
-            <section className={`${PANEL_SURFACE} lg:col-span-2 p-6 md:p-8`}>
+            <section className={`${ADMIN_PANEL_SURFACE} lg:col-span-2 p-6 md:p-8`}>
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <Typography variant="h4">Verification queue</Typography>
-                  <Typography variant="bodySm" className="mt-1 text-body">
+                  <Typography variant="h4" className="text-adminTextHi!">Verification queue</Typography>
+                  <Typography variant="bodySm" className="mt-1 text-adminTextLo!">
                     Keep verified and rejected organizations visible while you review status changes.
                   </Typography>
                 </div>
 
-                <Badge label={`${pendingVerifications} pending`} tone="warning" />
+                <Badge label={`${pendingVerifications} pending`} tone="warning" dark />
               </div>
 
               <div className="mt-6 space-y-3">
@@ -227,26 +227,27 @@ export default function AdminDashboard() {
                     icon={LayoutDashboard}
                     title="No organizations yet"
                     description="New organizations will appear here once they register."
+                    dark
                   />
                 ) : (
                   recentOrganizations.map((organization) => (
                     <div
                       key={organization.id}
-                      className={`${CARD_SURFACE} ${CARD_ELEVATION} px-4 py-3`}
+                      className={`${ADMIN_CARD_SURFACE} px-4 py-3`}
                     >
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <div className="min-w-0">
-                          <Typography variant="h6" className="truncate">
+                          <Typography variant="h6" className="truncate text-adminTextHi!">
                             {organization.name || 'Untitled organization'}
                           </Typography>
-                          <Typography variant="bodySm" className="mt-1 truncate text-body">
+                          <Typography variant="bodySm" className="mt-1 truncate text-adminTextLo!">
                             {organization.email || 'No email provided'}
                           </Typography>
                         </div>
 
                         <div className="flex flex-wrap items-center gap-2">
-                          <Badge label={getStatusLabel(organization.status)} tone={getStatusTone(organization.status)} />
-                          <span className="text-xs text-body">
+                          <Badge label={getStatusLabel(organization.status)} tone={getStatusTone(organization.status)} dark />
+                          <span className="text-xs text-adminTextLo">
                             {formatDateTime(organization.requestedAt)}
                           </span>
                         </div>
@@ -257,9 +258,9 @@ export default function AdminDashboard() {
               </div>
             </section>
 
-            <section className={`${PANEL_SURFACE} p-6 md:p-8`}>
-              <Typography variant="h4">Platform monitoring</Typography>
-              <Typography variant="bodySm" className="mt-1 text-body">
+            <section className={`${ADMIN_PANEL_SURFACE} p-6 md:p-8`}>
+              <Typography variant="h4" className="text-adminTextHi!">Platform monitoring</Typography>
+              <Typography variant="bodySm" className="mt-1 text-adminTextLo!">
                 A quick health snapshot for the admin workspace.
               </Typography>
 
@@ -267,38 +268,38 @@ export default function AdminDashboard() {
                 {/* المقاييس هون مقصودة تكون مختلفة عن بطاقات الإحصاءات
                     بالأعلى (raw totals)، مش تكرارًا لها — راجع تعليق
                     verificationRate/oldestPendingOrganization/newestOrganization أعلاه */}
-                <div className={`${CARD_SURFACE} ${CARD_ELEVATION} px-4 py-3`}>
-                  <Typography variant="overline" className="text-body/70">
+                <div className={`${ADMIN_CARD_SURFACE} px-4 py-3`}>
+                  <Typography variant="overline" className="text-adminTextLo!">
                     Verification rate
                   </Typography>
-                  <Typography variant="h5" className="mt-1">
+                  <Typography variant="h5" className="mt-1 text-adminTextHi!">
                     {verificationRate}%
                   </Typography>
                 </div>
 
-                <div className={`${CARD_SURFACE} ${CARD_ELEVATION} px-4 py-3`}>
-                  <Typography variant="overline" className="text-body/70">
+                <div className={`${ADMIN_CARD_SURFACE} px-4 py-3`}>
+                  <Typography variant="overline" className="text-adminTextLo!">
                     Rejected organizations
                   </Typography>
-                  <Typography variant="h5" className="mt-1">
+                  <Typography variant="h5" className="mt-1 text-adminTextHi!">
                     {rejectedOrganizations}
                   </Typography>
                 </div>
 
-                <div className={`${CARD_SURFACE} ${CARD_ELEVATION} px-4 py-3`}>
-                  <Typography variant="overline" className="text-body/70">
+                <div className={`${ADMIN_CARD_SURFACE} px-4 py-3`}>
+                  <Typography variant="overline" className="text-adminTextLo!">
                     Newest organization
                   </Typography>
-                  <Typography variant="h5" className="mt-1 truncate">
+                  <Typography variant="h5" className="mt-1 truncate text-adminTextHi!">
                     {newestOrganization?.name || 'No organizations yet'}
                   </Typography>
                 </div>
 
-                <div className={`${CARD_SURFACE} ${CARD_ELEVATION} px-4 py-3`}>
-                  <Typography variant="overline" className="text-body/70">
+                <div className={`${ADMIN_CARD_SURFACE} px-4 py-3`}>
+                  <Typography variant="overline" className="text-adminTextLo!">
                     Oldest pending request
                   </Typography>
-                  <Typography variant="h5" className="mt-1">
+                  <Typography variant="h5" className="mt-1 text-adminTextHi!">
                     {oldestPendingOrganization ? formatDateTime(oldestPendingOrganization.requestedAt) : 'None pending'}
                   </Typography>
                 </div>
@@ -308,7 +309,7 @@ export default function AdminDashboard() {
                 <Button as={Link} to={ROUTES.ADMIN_ORGANIZATIONS} variant="primary" fullWidth>
                   Open review queue
                 </Button>
-                <Button as={Link} to={ROUTES.ADMIN_PROFILE} variant="ghost" fullWidth>
+                <Button as={Link} to={ROUTES.ADMIN_PROFILE} variant="ghost" fullWidth className={ADMIN_GHOST_BUTTON}>
                   Review account details
                 </Button>
               </div>

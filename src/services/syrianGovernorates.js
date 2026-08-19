@@ -8,26 +8,28 @@
  * بحيث عند استبدال هذا الملف باستدعاء API حقيقي (fetch/axios لهذا الملف نفسه)
  * لا تحتاج أي Component لتغيير طريقة التعامل مع البيانات.
  *
- * id     : المعرف الفعلي الذي يُرسل/يُستقبل من الباك اند (Foreign Key لاحقًا)
- * nameAr : اسم المحافظة بالعربية (لعرضها في الواجهة)
- * nameEn : اسم المحافظة بالإنجليزية (يُستخدم حاليًا كقيمة حقل "city")
- * slug   : معرف نصي مختصر (مفيد للروابط أو الفلترة في الـ URL)
+ * id       : المعرف الفعلي الذي يُرسل/يُستقبل من الباك اند (Foreign Key لاحقًا)
+ * nameAr   : اسم المحافظة بالعربية (لعرضها في الواجهة)
+ * nameEn   : اسم المحافظة بالإنجليزية (يُستخدم حاليًا كقيمة حقل "city")
+ * slug     : معرف نصي مختصر (مفيد للروابط أو الفلترة في الـ URL)
+ * isActive : تفعيل/تعطيل المدينة (افتراضيًا true) — راجع toggleGovernorateStatus
+ *   بالأسفل لسبب استخدام تعطيل بدل حذف فعلي
  */
 export const syrianGovernorates = [
-  { id: 1,  nameEn: "Damascus", nameAr: "دمشق", slug: "damascus" },
-  { id: 2,  nameEn: "Rural Damascus", nameAr: "ريف دمشق", slug: "rural-damascus" },
-  { id: 3,  nameEn: "Aleppo", nameAr: "حلب", slug: "aleppo" },
-  { id: 4,  nameEn: "Homs", nameAr: "حمص", slug: "homs" },
-  { id: 5,  nameEn: "Hama", nameAr: "حماة", slug: "hama" },
-  { id: 6,  nameEn: "Latakia", nameAr: "اللاذقية", slug: "latakia" },
-  { id: 7,  nameEn: "Tartus", nameAr: "طرطوس", slug: "tartus" },
-  { id: 8,  nameEn: "Idlib", nameAr: "إدلب", slug: "idlib" },
-  { id: 9,  nameEn: "Daraa", nameAr: "درعا", slug: "daraa" },
-  { id: 10, nameEn: "As-Suwayda", nameAr: "السويداء", slug: "as-suwayda" },
-  { id: 11, nameEn: "Quneitra", nameAr: "القنيطرة", slug: "quneitra" },
-  { id: 12, nameEn: "Deir ez-Zor", nameAr: "دير الزور", slug: "deir-ez-zor" },
-  { id: 13, nameEn: "Raqqa", nameAr: "الرقة", slug: "raqqa" },
-  { id: 14, nameEn: "Al-Hasakah", nameAr: "الحسكة", slug: "al-hasakah" },
+  { id: 1,  nameEn: "Damascus", nameAr: "دمشق", slug: "damascus", isActive: true },
+  { id: 2,  nameEn: "Rural Damascus", nameAr: "ريف دمشق", slug: "rural-damascus", isActive: true },
+  { id: 3,  nameEn: "Aleppo", nameAr: "حلب", slug: "aleppo", isActive: true },
+  { id: 4,  nameEn: "Homs", nameAr: "حمص", slug: "homs", isActive: true },
+  { id: 5,  nameEn: "Hama", nameAr: "حماة", slug: "hama", isActive: true },
+  { id: 6,  nameEn: "Latakia", nameAr: "اللاذقية", slug: "latakia", isActive: true },
+  { id: 7,  nameEn: "Tartus", nameAr: "طرطوس", slug: "tartus", isActive: true },
+  { id: 8,  nameEn: "Idlib", nameAr: "إدلب", slug: "idlib", isActive: true },
+  { id: 9,  nameEn: "Daraa", nameAr: "درعا", slug: "daraa", isActive: true },
+  { id: 10, nameEn: "As-Suwayda", nameAr: "السويداء", slug: "as-suwayda", isActive: true },
+  { id: 11, nameEn: "Quneitra", nameAr: "القنيطرة", slug: "quneitra", isActive: true },
+  { id: 12, nameEn: "Deir ez-Zor", nameAr: "دير الزور", slug: "deir-ez-zor", isActive: true },
+  { id: 13, nameEn: "Raqqa", nameAr: "الرقة", slug: "raqqa", isActive: true },
+  { id: 14, nameEn: "Al-Hasakah", nameAr: "الحسكة", slug: "al-hasakah", isActive: true },
 ];
 
 /**
@@ -57,6 +59,32 @@ export const getGovernorateByNameEn = (nameEn) =>
   syrianGovernorates.find((governorate) => governorate.nameEn === nameEn);
 
 /**
+ * المحافظات المفعّلة فقط (isActive !== false) — هاي القائمة يلي لازم تُستخدم
+ * بأي قائمة اختيار مدينة بفورمات المستخدمين (تسجيل، بروفايل، إنشاء فرصة).
+ * المدن المعطّلة تضل موجودة بالمصفوفة الكاملة (لأن سجلات قديمة عبر
+ * nameEn لسا بترجع لها)، بس ما لازم تظهر كخيار جديد قابل للاختيار —
+ * فقط بصفحة إدارة المدن نفسها (أدمن) يقدر الأدمن يشوفها ويعيد تفعيلها.
+ */
+export const getActiveGovernorates = () =>
+  syrianGovernorates.filter((governorate) => governorate.isActive !== false);
+
+// نفس تحويل "Rural Damascus" → "Rif Dimashq" المستخدم فعليًا بكل فورمات
+// اختيار المحافظة (قيمة الحقل المُرسلة/المخزّنة تختلف عن nameEn لهاي
+// المحافظة تحديدًا) — دالة واحدة هون تُستخدم بأي منطق داخل هالملف يحتاج
+// يطابق قيمة مُختارة بمحافظتها الفعلية، بدل تكرار نفس الشرط أكثر من مرة
+export const getGovernorateSelectValue = (nameEn) =>
+  nameEn === 'Rural Damascus' ? 'Rif Dimashq' : nameEn
+
+/**
+ * يبحث عن محافظة عبر قيمتها المستخدمة فعليًا بحقول الاختيار (value)،
+ * وليس nameEn الخام — مهم تحديدًا لمحافظة "Rural Damascus" يلي قيمتها
+ * المُرسلة "Rif Dimashq" (راجع getGovernorateSelectValue فوق).
+ * @param {string} value
+ */
+export const getGovernorateBySelectValue = (value) =>
+  syrianGovernorates.find((governorate) => getGovernorateSelectValue(governorate.nameEn) === value)
+
+/**
  * تحويل القائمة إلى شكل عناصر Dropdown/Select
  * (value = id, label = الاسم بالعربية)
  */
@@ -81,12 +109,13 @@ export default syrianGovernorates;
 // القائمة عبر useQuery متل باقي البيانات، بدل استيراد ثابت وقت البناء.
 //
 // TODO: لما يجهز الباك اند، استبدلي الفرع غير-mock هون بنداءات حقيقية:
-// POST /api/governorates, PUT /api/governorates/{id}, DELETE /api/governorates/{id}
+// POST /api/governorates, PUT /api/governorates/{id}, PATCH /api/governorates/{id}/status
 // ————————————————————————————————————————————————————————————
 
 import { apiClient, getApiErrorMessage } from './api/client'
 import { isMockMode } from './api/mockMode'
 import { wait } from './api/delay'
+import { closeCityOpportunitiesRegistration } from './opportunities'
 
 const MOCK_MODE = isMockMode()
 
@@ -162,24 +191,46 @@ export async function updateGovernorate(governorateId, payload) {
 }
 
 /**
- * يحذف محافظة/مدينة.
+ * يبدّل حالة تفعيل/تعطيل محافظة (بدل حذفها فعليًا).
+ *
+ * ⚠️ ما منحذف أي سجل مدينة نهائيًا — لا هون بوضع mock، ولا مستقبلًا مع
+ * الـ API الحقيقي (لا يوجد DELETE endpoint هون أصلًا). المدن مرجعية بسجلات
+ * قديمة كثيرة عبر nameEn (حقل city بالفرص وبروفايلات المستخدمين)، فحذفها
+ * فعليًا كان رح يترك تلك السجلات تشير لمدينة غير موجودة (بيانات يتيمة/
+ * مكسورة). التعطيل فقط بيمنعها من الظهور كخيار جديد بقوائم الاختيار
+ * (راجع getActiveGovernorates أعلاه)، مع إبقاء كل سجل قديم سليمًا تمامًا.
  * @param {number|string} governorateId
+ * @param {boolean} isActive - الحالة الجديدة المطلوبة (يحسبها الطرف الطالب
+ *   من الحالة الحالية، بنفس نمط setOpportunityStatus بـ services/opportunities.js)
  */
-export async function deleteGovernorate(governorateId) {
+export async function toggleGovernorateStatus(governorateId, isActive) {
   if (MOCK_MODE) {
     await wait()
 
-    const index = syrianGovernorates.findIndex((item) => item.id === governorateId)
-    if (index === -1) return { success: false, error: 'City not found' }
+    const governorate = syrianGovernorates.find((item) => item.id === governorateId)
+    if (!governorate) return { success: false, error: 'City not found' }
 
-    syrianGovernorates.splice(index, 1)
-    return { success: true }
+    governorate.isActive = isActive
+
+    // إغلاق تسجيل تلقائي (مش إلغاء) — بس عند التعطيل، مش عند إعادة
+    // التفعيل: المحافظة صارت خارج نطاق خدمة المنصة، فأي فرصة فيها لسا
+    // مسجّلة تسجيل مفتوح فعليًا بتوقف عن قبول متطوعين جدد. التفاصيل
+    // والاستثناءات (IN_PROGRESS/COMPLETED/مقفولة أصلًا لسبب تاني) بالكامل
+    // جوا closeCityOpportunitiesRegistration (services/opportunities.js)
+    if (isActive === false) {
+      closeCityOpportunitiesRegistration(governorate.nameEn)
+    }
+
+    // ⚠️ إعادة التفعيل (isActive: true) عمدًا ما بتعيد فتح أي فرصة اتقفل
+    // تسجيلها بسبب التعطيل تلقائيًا — قرار نهائي ومقصود (راجع تعليق
+    // closeCityOpportunitiesRegistration لتفاصيل السبب)، مش Bug
+    return { success: true, data: governorate }
   }
 
   try {
-    await apiClient.delete(`/governorates/${governorateId}`)
-    return { success: true }
+    const response = await apiClient.patch(`/governorates/${governorateId}/status`, { isActive })
+    return { success: true, data: response.data }
   } catch (error) {
-    return { success: false, error: getApiErrorMessage(error, 'Failed to delete city') }
+    return { success: false, error: getApiErrorMessage(error, 'Failed to update city status') }
   }
 }
