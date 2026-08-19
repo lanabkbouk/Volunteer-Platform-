@@ -37,6 +37,8 @@ const Notifications = lazy(() => import('./pages/notifications'))
 const Dashboard = lazy(() => import('./pages/dashboard'))
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'))
 const AdminOrganizationsReview = lazy(() => import('./pages/admin/AdminOrganizationsReview'))
+const AdminVolunteers = lazy(() => import('./pages/admin/AdminVolunteers'))
+const AdminOpportunities = lazy(() => import('./pages/admin/AdminOpportunities'))
 const AdminCatalogManagement = lazy(() => import('./pages/admin/AdminCatalogManagement'))
 const AdminCitiesManagement = lazy(() => import('./pages/admin/AdminCitiesManagement'))
 const AdminProfile = lazy(() => import('./pages/admin/AdminProfile'))
@@ -99,6 +101,8 @@ const router = createBrowserRouter(
           <Route element={<ProtectedRoute allowedAccountTypes={[ACCOUNT_TYPES.ADMIN]} />}>
             <Route path={ROUTES.ADMIN_DASHBOARD} element={<AdminDashboard />} />
             <Route path={ROUTES.ADMIN_ORGANIZATIONS} element={<AdminOrganizationsReview />} />
+            <Route path={ROUTES.ADMIN_VOLUNTEERS} element={<AdminVolunteers />} />
+            <Route path={ROUTES.ADMIN_OPPORTUNITIES} element={<AdminOpportunities />} />
             <Route path={ROUTES.ADMIN_CATEGORIES} element={<AdminCatalogManagement />} />
             <Route path={ROUTES.ADMIN_CITIES} element={<AdminCitiesManagement />} />
             <Route path={ROUTES.ADMIN_PROFILE} element={<AdminProfile />} />

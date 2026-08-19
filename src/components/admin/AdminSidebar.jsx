@@ -6,10 +6,12 @@ import {
   LayoutDashboard,
   LogOut,
   MapPin,
+  Megaphone,
   Settings2,
   ShieldCheck,
   Tags,
   UserCircle2,
+  Users,
   X,
 } from 'lucide-react'
 
@@ -25,6 +27,8 @@ const navigationSections = [
     items: [
       { label: 'Dashboard', to: ROUTES.ADMIN_DASHBOARD, icon: LayoutDashboard },
       { label: 'Organization verification', to: ROUTES.ADMIN_ORGANIZATIONS, icon: ShieldCheck },
+      { label: 'Volunteers', to: ROUTES.ADMIN_VOLUNTEERS, icon: Users },
+      { label: 'Opportunities', to: ROUTES.ADMIN_OPPORTUNITIES, icon: Megaphone },
       { label: 'Categories', to: ROUTES.ADMIN_CATEGORIES, icon: Tags },
       { label: 'Cities', to: ROUTES.ADMIN_CITIES, icon: MapPin },
     ],

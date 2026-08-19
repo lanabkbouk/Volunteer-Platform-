@@ -31,7 +31,8 @@ export default function useRecentUpdates() {
   const isNotifiable =
     isAuthenticated &&
     (accountType === ACCOUNT_TYPES.VOLUNTEER ||
-      (accountType === ACCOUNT_TYPES.ORGANIZATION && Boolean(organizationId)));
+      (accountType === ACCOUNT_TYPES.ORGANIZATION && Boolean(organizationId)) ||
+      accountType === ACCOUNT_TYPES.ADMIN);
   const [items, setItems] = useState([]);
 
   useEffect(() => {

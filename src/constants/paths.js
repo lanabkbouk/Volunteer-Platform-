@@ -23,6 +23,8 @@ export const ROUTES = {
   // Admin — مساحة العمل الإدارية
   ADMIN_DASHBOARD: '/admin',
   ADMIN_ORGANIZATIONS: '/admin/organizations',
+  ADMIN_VOLUNTEERS: '/admin/volunteers',
+  ADMIN_OPPORTUNITIES: '/admin/opportunities',
   ADMIN_CATEGORIES: '/admin/categories',
   ADMIN_CITIES: '/admin/cities',
   ADMIN_PROFILE: '/admin/profile',

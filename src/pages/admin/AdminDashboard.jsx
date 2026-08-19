@@ -20,6 +20,8 @@ import Typography from '../../components/ui/Typography'
 import { usePlatformStatsQuery } from '../../hooks/queries/usePlatformStatsQuery'
 import { useCategoriesQuery } from '../../hooks/queries/useCategoriesQuery'
 import { useAdminOrganizationsQuery } from '../../hooks/queries/useAdminOrganizationsQuery'
+import { useAdminVolunteersQuery } from '../../hooks/queries/useAdminVolunteersQuery'
+import { useAdminOpportunitiesQuery } from '../../hooks/queries/useAdminOpportunitiesQuery'
 import { ORGANIZATION_STATUS } from '../../constants/organizationStatus'
 import { ROUTES } from '../../constants/paths'
 import { ADMIN_CARD_BASE, ADMIN_CARD_SURFACE, ADMIN_PANEL_SURFACE, ADMIN_GHOST_BUTTON } from '../../utils/adminStyles'
@@ -35,6 +37,29 @@ function getStatusLabel(status) {
   if (status === ORGANIZATION_STATUS.VERIFIED) return 'Verified'
   if (status === ORGANIZATION_STATUS.REJECTED) return 'Rejected'
   return 'Pending'
+}
+
+// يقارن بالتاريخ فقط (منتصف الليل)، بدون الوقت الدقيق — نفس منطق
+// toDateOnly بـ utils/opportunityValidation.js بالضبط
+function toDateOnly(value) {
+  const date = new Date(value)
+  date.setHours(0, 0, 0, 0)
+  return date
+}
+
+// عدد العناصر التي createdAt خلال آخر days يوم — تُستخدم لبطاقة
+// "This week" بالأسفل، محسوبة بالكامل هون بالفرونت من بيانات محمّلة
+// أصلًا (بلا أي endpoint إضافي)
+function countCreatedSince(items, days) {
+  const today = toDateOnly(new Date())
+  const cutoff = toDateOnly(new Date())
+  cutoff.setDate(cutoff.getDate() - days)
+
+  return items.filter((item) => {
+    if (!item.createdAt) return false
+    const createdDate = toDateOnly(item.createdAt)
+    return createdDate >= cutoff && createdDate <= today
+  }).length
 }
 
 function AdminDashboardSkeleton() {
@@ -80,10 +105,14 @@ export default function AdminDashboard() {
   const platformStatsQuery = usePlatformStatsQuery()
   const categoriesQuery = useCategoriesQuery()
   const organizationsQuery = useAdminOrganizationsQuery()
+  const volunteersQuery = useAdminVolunteersQuery()
+  const opportunitiesQuery = useAdminOpportunitiesQuery()
 
   const stats = platformStatsQuery.data?.success ? platformStatsQuery.data.data : null
   const categories = categoriesQuery.data ?? []
   const organizations = organizationsQuery.data ?? []
+  const volunteers = volunteersQuery.data ?? []
+  const opportunities = opportunitiesQuery.data ?? []
 
   const volunteersCount = stats?.volunteersCount ?? 0
   const totalOrganizations = stats?.organizationsCount ?? organizations.length
@@ -100,7 +129,11 @@ export default function AdminDashboard() {
   ).length
 
   const loading =
-    platformStatsQuery.isPending || categoriesQuery.isPending || organizationsQuery.isPending
+    platformStatsQuery.isPending ||
+    categoriesQuery.isPending ||
+    organizationsQuery.isPending ||
+    volunteersQuery.isPending ||
+    opportunitiesQuery.isPending
 
   const errorMessage =
     (platformStatsQuery.isFetched && !platformStatsQuery.data?.success
@@ -108,7 +141,23 @@ export default function AdminDashboard() {
       : '') ||
     categoriesQuery.error?.message ||
     organizationsQuery.error?.message ||
+    volunteersQuery.error?.message ||
+    opportunitiesQuery.error?.message ||
     ''
+
+  // بطاقة "This week" — محسوبة بالكامل هون وقت فتح الصفحة من بيانات
+  // المتطوعين/الفرص/المنظمات المحمّلة أصلًا، بلا أي endpoint إضافي. مش
+  // تقرير مجدول حقيقي من الباك اند، فدقتها مرتبطة بلحظة التحميل فقط —
+  // لو انضاف متطوع جديد بعد فتح الصفحة، الرقم ما بيتحدّث إلا بإعادة تحميل
+  const newVolunteersThisWeek = countCreatedSince(volunteers, 7)
+  const newOpportunitiesThisWeek = countCreatedSince(opportunities, 7)
+  // organizations بتخزّن تاريخ التسجيل بحقل requestedAt (راجع
+  // toOrganizationSummary بـ services/admin.js) مش createdAt، فنمرّرها
+  // بنفس شكل {createdAt} المتوقّع من countCreatedSince بدل تعديل توقيعها
+  const newOrganizationsThisWeek = countCreatedSince(
+    organizations.map((organization) => ({ createdAt: organization.requestedAt })),
+    7,
+  )
 
   const recentOrganizations = [...organizations]
     .sort((a, b) => new Date(b.requestedAt || 0) - new Date(a.requestedAt || 0))
@@ -152,6 +201,8 @@ export default function AdminDashboard() {
               platformStatsQuery.refetch()
               categoriesQuery.refetch()
               organizationsQuery.refetch()
+              volunteersQuery.refetch()
+              opportunitiesQuery.refetch()
             }}
           >
             Retry
@@ -315,6 +366,42 @@ export default function AdminDashboard() {
               </div>
             </section>
           </div>
+
+          <section className={`${ADMIN_PANEL_SURFACE} p-6 md:p-8`}>
+            <Typography variant="h4" className="text-adminTextHi!">This week</Typography>
+            <Typography variant="bodySm" className="mt-1 text-adminTextLo!">
+              New signups and listings over the last 7 days.
+            </Typography>
+
+            <div className="mt-6 grid gap-4 sm:grid-cols-3">
+              <div className={`${ADMIN_CARD_SURFACE} px-4 py-3`}>
+                <Typography variant="overline" className="text-adminTextLo!">
+                  New volunteers
+                </Typography>
+                <Typography variant="h5" className="mt-1 text-adminTextHi!">
+                  {newVolunteersThisWeek}
+                </Typography>
+              </div>
+
+              <div className={`${ADMIN_CARD_SURFACE} px-4 py-3`}>
+                <Typography variant="overline" className="text-adminTextLo!">
+                  New organizations
+                </Typography>
+                <Typography variant="h5" className="mt-1 text-adminTextHi!">
+                  {newOrganizationsThisWeek}
+                </Typography>
+              </div>
+
+              <div className={`${ADMIN_CARD_SURFACE} px-4 py-3`}>
+                <Typography variant="overline" className="text-adminTextLo!">
+                  New opportunities
+                </Typography>
+                <Typography variant="h5" className="mt-1 text-adminTextHi!">
+                  {newOpportunitiesThisWeek}
+                </Typography>
+              </div>
+            </div>
+          </section>
         </>
       )}
     </AdminLayout>

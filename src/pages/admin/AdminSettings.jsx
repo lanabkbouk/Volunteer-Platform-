@@ -19,16 +19,15 @@ const STORAGE_KEY = 'admin-settings-preferences'
 function loadPreferences() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return { verificationEmails: true, weeklyDigest: true, securityAlerts: true }
+    if (!raw) return { newOrganizationAlerts: true, weeklyDigest: true }
 
     const parsed = JSON.parse(raw)
     return {
-      verificationEmails: Boolean(parsed.verificationEmails),
+      newOrganizationAlerts: Boolean(parsed.newOrganizationAlerts),
       weeklyDigest: Boolean(parsed.weeklyDigest),
-      securityAlerts: Boolean(parsed.securityAlerts),
     }
   } catch {
-    return { verificationEmails: true, weeklyDigest: true, securityAlerts: true }
+    return { newOrganizationAlerts: true, weeklyDigest: true }
   }
 }
 
@@ -83,15 +82,15 @@ export default function AdminSettings() {
           <div className="mt-6 space-y-4">
             <label className={`${ADMIN_CARD_SURFACE} flex cursor-pointer items-center justify-between gap-4 p-4 transition-colors hover:bg-white/6`}>
               <div>
-                <Typography variant="h6" className="text-adminTextHi!">Verification emails</Typography>
+                <Typography variant="h6" className="text-adminTextHi!">New organization alerts</Typography>
                 <Typography variant="bodySm" className="mt-1 text-adminTextLo!">
-                  Receive a notice when a verification decision is submitted.
+                  Get notified in-app when a new organization is waiting for verification.
                 </Typography>
               </div>
               <input
                 type="checkbox"
-                checked={preferences.verificationEmails}
-                onChange={togglePreference('verificationEmails')}
+                checked={preferences.newOrganizationAlerts}
+                onChange={togglePreference('newOrganizationAlerts')}
                 className={ADMIN_CHECKBOX}
               />
             </label>
@@ -107,21 +106,6 @@ export default function AdminSettings() {
                 type="checkbox"
                 checked={preferences.weeklyDigest}
                 onChange={togglePreference('weeklyDigest')}
-                className={ADMIN_CHECKBOX}
-              />
-            </label>
-
-            <label className={`${ADMIN_CARD_SURFACE} flex cursor-pointer items-center justify-between gap-4 p-4 transition-colors hover:bg-white/6`}>
-              <div>
-                <Typography variant="h6" className="text-adminTextHi!">Security alerts</Typography>
-                <Typography variant="bodySm" className="mt-1 text-adminTextLo!">
-                  Notify on new sign-ins and unusual account activity.
-                </Typography>
-              </div>
-              <input
-                type="checkbox"
-                checked={preferences.securityAlerts}
-                onChange={togglePreference('securityAlerts')}
                 className={ADMIN_CHECKBOX}
               />
             </label>

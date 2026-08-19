@@ -52,6 +52,8 @@ export const queryKeys = {
     // قائمة طلبات توثيق المنظمات بانتظار مراجعة الأدمن
     pendingOrganizations: ['admin', 'organizations', 'pending'],
     organizations: ['admin', 'organizations', 'all'],
+    volunteers: ['admin', 'volunteers'],
+    opportunities: ['admin', 'opportunities'],
     dashboard: ['admin', 'dashboard'],
   },
 

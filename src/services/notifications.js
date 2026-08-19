@@ -18,11 +18,13 @@ import { fetchVolunteerAchievements } from './achievements'
 import { fetchMyParticipations, fetchApplicantsForOpportunity } from './participations'
 import { fetchOrganizationProfile } from './organization'
 import { fetchMyOpportunities } from './opportunities'
+import { fetchPendingOrganizations } from './admin'
 import { getSeenAchievementIds, markAchievementIdsSeen } from '../utils/achievementSeenTracker'
 import { getSeenHoursMap, markHoursSeen } from '../utils/hoursSeenTracker'
 import { getSeenStatusMap, markStatusSeen } from '../utils/participationStatusSeenTracker'
 import { getSeenOrganizationStatusMap, markOrganizationStatusSeen } from '../utils/organizationVerificationSeenTracker'
 import { getSeenApplicantStatusMap, markApplicantStatusSeen } from '../utils/organizationApplicantSeenTracker'
+import { getSeenPendingOrganizationIds, markPendingOrganizationSeen } from '../utils/pendingOrganizationSeenTracker'
 import { PARTICIPATION_STATUS } from '../constants/participationStatus'
 import { ORGANIZATION_STATUS } from '../constants/organizationStatus'
 import { ACCOUNT_TYPES } from '../constants/auth/accountTypes'
@@ -206,6 +208,27 @@ async function buildApplicantActivityItems(seenApplicantStatus) {
   return items
 }
 
+// يبني عناصر تنبيه من المنظمات المعلّقة (Pending) لسا ما "انشافت" من
+// الأدمن — نفس فلسفة seen-tracking المستخدمة لباقي أنواع التنبيهات
+// (إنجازات، حالة مشاركة...)، هون خاص بمعرّف كل منظمة على حدة (id→seen)
+// لأن أكتر من منظمة ممكن تكون معلّقة بنفس الوقت
+function buildPendingOrganizationItems(pendingOrganizations, seenOrgIds) {
+  return pendingOrganizations
+    .filter((organization) => !seenOrgIds.has(String(organization.id)))
+    .map((organization) => ({
+      id: `pending-org:${organization.id}`,
+      type: 'pending_organization',
+      title: 'New organization awaiting verification',
+      description: organization.name || 'Untitled organization',
+      href: ROUTES.ADMIN_ORGANIZATIONS,
+      onDismiss: () =>
+        markPendingOrganizationSeen(
+          organization.id,
+          new Set([...seenOrgIds, String(organization.id)]),
+        ),
+    }))
+}
+
 /**
  * يجلب التنبيهات الحديثة غير المقروءة للحساب الحالي — متطوع أو منظمة.
  *
@@ -236,6 +259,14 @@ export async function fetchRecentNotifications({ accountType, organizationId } =
         : []
 
     return [...verificationItems, ...applicantActivityItems]
+  }
+
+  // مسار الأدمن: منظمات pending فقط — fetchPendingOrganizations أصلًا
+  // بتتعامل مع mock/real داخليًا (راجع services/admin.js)، فما في داعي
+  // نكرر فرع MOCK_MODE هون كمان، نفس منطق مسار المنظمة فوق بالضبط
+  if (accountType === ACCOUNT_TYPES.ADMIN) {
+    const pendingOrganizations = await fetchPendingOrganizations()
+    return buildPendingOrganizationItems(pendingOrganizations, getSeenPendingOrganizationIds())
   }
 
   if (MOCK_MODE) {

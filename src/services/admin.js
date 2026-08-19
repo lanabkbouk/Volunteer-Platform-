@@ -17,9 +17,19 @@ import { isMockMode } from './api/mockMode'
 import { wait } from './api/delay'
 import { ACCOUNT_TYPES } from '../constants/auth/accountTypes'
 import { ORGANIZATION_STATUS } from '../constants/organizationStatus'
+import { OPPORTUNITY_STATUS } from '../constants/opportunityStatus'
 import { loadMockUsers, updateMockUser } from './mock/mockUserStore'
 
 const MOCK_MODE = isMockMode()
+
+// تواريخ نسبية لـ Date.now() بدل تواريخ تقويمية ثابتة — نفس نمط
+// mockOpportunitiesStore.js بالضبط، حتى بطاقة "This week" بالداشبورد
+// تلاقي دايمًا عناصر ضمن آخر 7 أيام بغض النظر عن تاريخ فتح المشروع
+function daysFromNow(offset) {
+  const date = new Date()
+  date.setDate(date.getDate() + offset)
+  return date.toISOString()
+}
 
 /**
  * يحوّل مستخدم Mock (accountType=organization) لشكل موحّد يشبه
@@ -146,5 +156,112 @@ export async function reviewOrganization(organizationId, decision) {
     return { success: true, status: decision.status, reason: trimmedReason }
   } catch (error) {
     return { success: false, error: getApiErrorMessage(error, 'Failed to submit this decision') }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// عرض ومراقبة فقط (Read-only) — قوائم المتطوعين والفرص بلوحة الأدمن.
+// لا يوجد أي إجراء (تعليق/حذف/تعديل) على أي منهما، فقط جلب للعرض.
+//
+// ⚠️ الباك اند الحقيقي: نفس وضع reviewOrganization أعلاه — الـ routes
+// التالية لم تُضَف بعد بمستودع الباك اند:
+//   GET /api/admin/volunteers
+//   GET /api/admin/opportunities
+// المتوقّع محميّتين بنفس middleware('role:admin').
+//
+// بوضع Mock: مصفوفتان ثابتتان محليتان (مش مبنيتان من mockUserStore/
+// mockOpportunitiesStore الحقيقيين) — حتى نضمن دايمًا 8-10 متطوعين
+// و6-8 فرص بتواريخ إنشاء متنوعة تغطي آخر أسبوعين على الأقل، بغض النظر
+// عمّا سجّله المستخدم فعليًا بالمتصفح، لتبقى بطاقة "This week" بالداشبورد
+// قابلة للاختبار دايمًا.
+// ═══════════════════════════════════════════════════════════════════
+
+const MOCK_ADMIN_VOLUNTEERS = [
+  { id: 'v1', name: 'Lina Haddad', email: 'lina.haddad@example.com', city: 'Damascus', createdAt: daysFromNow(-1), skillsCount: 4, opportunitiesJoinedCount: 3 },
+  { id: 'v2', name: 'Omar Al-Khatib', email: 'omar.khatib@example.com', city: 'Aleppo', createdAt: daysFromNow(-2), skillsCount: 2, opportunitiesJoinedCount: 1 },
+  { id: 'v3', name: 'Sara Youssef', email: 'sara.youssef@example.com', city: 'Homs', createdAt: daysFromNow(-4), skillsCount: 5, opportunitiesJoinedCount: 6 },
+  { id: 'v4', name: 'Khaled Mostafa', email: 'khaled.mostafa@example.com', city: 'Latakia', createdAt: daysFromNow(-6), skillsCount: 3, opportunitiesJoinedCount: 2 },
+  { id: 'v5', name: 'Nour Al-Amin', email: 'nour.alamin@example.com', city: 'Tartus', createdAt: daysFromNow(-8), skillsCount: 1, opportunitiesJoinedCount: 0 },
+  { id: 'v6', name: 'Rami Sabbagh', email: 'rami.sabbagh@example.com', city: 'Hama', createdAt: daysFromNow(-10), skillsCount: 6, opportunitiesJoinedCount: 4 },
+  { id: 'v7', name: 'Dana Kanaan', email: 'dana.kanaan@example.com', city: 'Daraa', createdAt: daysFromNow(-13), skillsCount: 2, opportunitiesJoinedCount: 2 },
+  { id: 'v8', name: 'Yousef Barakat', email: 'yousef.barakat@example.com', city: 'Idlib', createdAt: daysFromNow(-18), skillsCount: 3, opportunitiesJoinedCount: 1 },
+  { id: 'v9', name: 'Mona Al-Sayed', email: 'mona.alsayed@example.com', city: 'Al-Hasakah', createdAt: daysFromNow(-25), skillsCount: 4, opportunitiesJoinedCount: 5 },
+]
+
+const MOCK_ADMIN_OPPORTUNITIES = [
+  { id: 'op1', title: 'Clean Water for All', organizationName: 'Blue Drop Foundation', city: 'Damascus', status: OPPORTUNITY_STATUS.REGISTRATION_OPEN, createdAt: daysFromNow(-1), startDate: daysFromNow(14) },
+  { id: 'op2', title: 'After-School Tutoring Program', organizationName: 'Bright Minds NGO', city: 'Aleppo', status: OPPORTUNITY_STATUS.REGISTRATION_OPEN, createdAt: daysFromNow(-3), startDate: daysFromNow(20) },
+  { id: 'op3', title: 'Coastal Cleanup Day', organizationName: 'Green Coast Initiative', city: 'Latakia', status: OPPORTUNITY_STATUS.REGISTRATION_CLOSED, createdAt: daysFromNow(-9), startDate: daysFromNow(5) },
+  { id: 'op4', title: 'Community Food Bank Support', organizationName: 'Hope Kitchen', city: 'Homs', status: OPPORTUNITY_STATUS.IN_PROGRESS, createdAt: daysFromNow(-16), startDate: daysFromNow(-3) },
+  { id: 'op5', title: 'Winter Clothing Drive', organizationName: 'Warm Hearts Society', city: 'Hama', status: OPPORTUNITY_STATUS.COMPLETED, createdAt: daysFromNow(-30), startDate: daysFromNow(-20) },
+  { id: 'op6', title: 'Elderly Companionship Visits', organizationName: 'Silver Years Care', city: 'Tartus', status: OPPORTUNITY_STATUS.REGISTRATION_OPEN, createdAt: daysFromNow(-5), startDate: daysFromNow(10) },
+  { id: 'op7', title: 'Youth Coding Bootcamp', organizationName: 'Future Builders', city: 'Daraa', status: OPPORTUNITY_STATUS.IN_PROGRESS, createdAt: daysFromNow(-12), startDate: daysFromNow(-2) },
+]
+
+function mapApiVolunteer(raw) {
+  if (!raw) return null
+
+  return {
+    id: raw.id,
+    name: raw.name || [raw.first_name, raw.last_name].filter(Boolean).join(' '),
+    email: raw.email || '',
+    city: raw.city || '',
+    createdAt: raw.created_at || raw.createdAt || null,
+    skillsCount: raw.skills_count ?? raw.skillsCount,
+    opportunitiesJoinedCount: raw.opportunities_joined_count ?? raw.opportunitiesJoinedCount,
+  }
+}
+
+/**
+ * يجلب كل المتطوعين المسجّلين بالمنصة — عرض ومراقبة فقط، بلا أي فلترة
+ * أو إجراء.
+ * @returns {Promise<Array<object>>}
+ */
+export async function fetchAdminVolunteers() {
+  if (MOCK_MODE) {
+    await wait()
+    return MOCK_ADMIN_VOLUNTEERS
+  }
+
+  try {
+    const response = await apiClient.get('/admin/volunteers')
+    const list = Array.isArray(response.data) ? response.data : response.data?.data || []
+    return list.map(mapApiVolunteer)
+  } catch (error) {
+    throw new Error(getApiErrorMessage(error, 'Failed to load admin volunteers'), { cause: error })
+  }
+}
+
+function mapApiOpportunity(raw) {
+  if (!raw) return null
+
+  return {
+    id: raw.id,
+    title: raw.title || '',
+    organizationName: raw.organization_name || raw.organizationName || raw.organization?.name || '',
+    city: raw.city || raw.location || '',
+    status: raw.status || OPPORTUNITY_STATUS.REGISTRATION_OPEN,
+    createdAt: raw.created_at || raw.createdAt || null,
+    startDate: raw.start_date || raw.startDate || null,
+  }
+}
+
+/**
+ * يجلب كل الفرص المنشورة على المنصة — عرض ومراقبة فقط، بلا أي فلترة
+ * أو إجراء.
+ * @returns {Promise<Array<object>>}
+ */
+export async function fetchAdminOpportunities() {
+  if (MOCK_MODE) {
+    await wait()
+    return MOCK_ADMIN_OPPORTUNITIES
+  }
+
+  try {
+    const response = await apiClient.get('/admin/opportunities')
+    const list = Array.isArray(response.data) ? response.data : response.data?.data || []
+    return list.map(mapApiOpportunity)
+  } catch (error) {
+    throw new Error(getApiErrorMessage(error, 'Failed to load admin opportunities'), { cause: error })
   }
 }
