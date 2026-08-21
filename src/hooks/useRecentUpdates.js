@@ -34,30 +34,68 @@ export default function useRecentUpdates() {
       (accountType === ACCOUNT_TYPES.ORGANIZATION && Boolean(organizationId)) ||
       accountType === ACCOUNT_TYPES.ADMIN);
   const [items, setItems] = useState([]);
+  // فشل الجلب كان يُبتلع بصمت (setItems([]) بس) — ما في أي فرق بالعرض
+  // بين "لا توجد تنبيهات فعليًا" و"فشل الجلب"، لا للمستخدم ولا للمطوّر.
+  // هلق منعلّم حالة خطأ صريحة تنعرض لحالها (راجع notifications.jsx)
+  const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
     if (!isNotifiable) return undefined;
 
     let isMounted = true;
+    let intervalId = null;
 
     function checkForUpdates() {
       fetchRecentNotifications({ accountType, organizationId })
         .then((nextItems) => {
-          if (isMounted) setItems(nextItems);
+          if (!isMounted) return;
+          setItems(nextItems);
+          setHasError(false);
         })
         .catch(() => {
-          if (isMounted) setItems([]);
+          if (!isMounted) return;
+          setItems([]);
+          setHasError(true);
         });
     }
 
-    checkForUpdates();
-    const intervalId = setInterval(checkForUpdates, POLL_INTERVAL_MS);
+    function startPolling() {
+      checkForUpdates();
+      if (intervalId) return;
+      intervalId = setInterval(checkForUpdates, POLL_INTERVAL_MS);
+    }
+
+    function stopPolling() {
+      if (!intervalId) return;
+      clearInterval(intervalId);
+      intervalId = null;
+    }
+
+    // ⚠️ ما في داعي نضرب السيرفر كل 5 ثواني لجلسة مفتوحة بتبويب بالخلفية
+    // (مثلًا المستخدم فاتح تبويب تاني لساعات) — نوقف الاستطلاع بالكامل
+    // لما التبويب يختفي، ونعيد جلب فوري + تشغيل الاستطلاع من جديد لما
+    // يرجع ظاهر، بدل ما نستنى دورة الـ 5 ثواني التالية
+    function handleVisibilityChange() {
+      if (document.hidden) {
+        stopPolling();
+      } else {
+        startPolling();
+      }
+    }
+
+    if (!document.hidden) startPolling();
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
       isMounted = false;
-      clearInterval(intervalId);
+      stopPolling();
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [isNotifiable, accountType, organizationId, location.pathname]);
 
-  return { items: isNotifiable ? items : [], hasUnseen: isNotifiable && items.length > 0 };
+  return {
+    items: isNotifiable ? items : [],
+    hasUnseen: isNotifiable && items.length > 0,
+    hasError: isNotifiable && hasError,
+  };
 }

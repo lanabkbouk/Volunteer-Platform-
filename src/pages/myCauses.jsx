@@ -46,7 +46,10 @@ export default function MyCauses() {
   const toggleStatusMutation = useToggleOpportunityStatusMutation(organizationId);
 
   const opportunities = useMemo(() => opportunitiesQuery.data ?? [], [opportunitiesQuery.data]);
-  const loading = opportunitiesQuery.isPending;
+  // isLoading (isPending && isFetching) مش isPending لحالها: isPending
+  // بتضل true للأبد لما الاستعلام يكون enabled:false مؤقتًا (organizationId
+  // ما وصل بعد) — نفس الإصلاح المطبَّق بـ orgProfile.jsx/dashboard.jsx
+  const loading = opportunitiesQuery.isLoading;
   // فشل الجلب لازم يظهر كخطأ صريح مع إعادة محاولة، مش كحالة "فاضية"
   // عادية — وإلا المستخدم بيظن إنه ما نشر قضايا أصلًا بينما فعليًا في
   // خطأ شبكة/سيرفر

@@ -14,6 +14,7 @@ import { getEffectiveParticipationStatus, PARTICIPATION_STATUS } from '../consta
 import { MOCK_PARTICIPATIONS, MOCK_VOLUNTEER_PROFILES } from './mock/mockParticipationsStore'
 import { fetchVolunteerAchievements } from './achievements'
 import { buildVolunteerHoursSummary } from '../utils/volunteerHoursSummary'
+import { extractPhotoUrl } from '../utils/extractPhotoUrl'
 // ✅ بدون خطر Circular Import: participationPolicy.js يعتمد بس على
 // constants/participationStatus وutils/opportunityStatus وutils/participationDisplayStatus
 // (كلها utils/constants صرفة، ولا وحدة منهم بترجع تستورد من services)،
@@ -127,7 +128,17 @@ export async function fetchApplicantsForOpportunity(opportunityId) {
           committedHours: participation.committedHours,
           hoursLogged: participation.hoursLogged,
           volunteer: volunteerProfile
-            ? { ...volunteerProfile, completedOpportunitiesCount, totalHoursVolunteered, achievements }
+            ? {
+                ...volunteerProfile,
+                // نفس المعالجة الدفاعية المستخدمة بـ normalizeUser.js —
+                // راجعي utils/extractPhotoUrl.js. هون بمنطق mock دايمًا
+                // null فبيضل '', بس نطبّقها بنفس الشكل زي الفرع الحقيقي
+                // تحت حتى ما يفترق سلوك الحقلين بين الوضعين
+                photo: extractPhotoUrl(volunteerProfile.photo),
+                completedOpportunitiesCount,
+                totalHoursVolunteered,
+                achievements,
+              }
             : null,
         }
       }),
@@ -136,7 +147,18 @@ export async function fetchApplicantsForOpportunity(opportunityId) {
 
   try {
     const response = await apiClient.get(`/opportunities/${opportunityId}/participants`)
-    return response.data || []
+    const applicants = response.data || []
+    // نفس باگ VolunteerResource.php الموثّق بـ utils/extractPhotoUrl.js
+    // (كائن Media خام بدل رابط نصي) بيصيب صورة المتقدّم هون بالضبط متل
+    // ما بيصيب صورة المستخدم الحالي — لازم نفس المعالجة الدفاعية، وإلا
+    // Avatar.jsx بينكسر فعليًا (src.startsWith is not a function) لما
+    // الوضع الحقيقي يشتغل
+    return applicants.map((applicant) => ({
+      ...applicant,
+      volunteer: applicant.volunteer
+        ? { ...applicant.volunteer, photo: extractPhotoUrl(applicant.volunteer.photo) }
+        : applicant.volunteer,
+    }))
   } catch (error) {
     throw new Error(getApiErrorMessage(error, 'Failed to load applicants'))
   }

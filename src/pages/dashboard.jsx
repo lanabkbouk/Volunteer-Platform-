@@ -86,14 +86,12 @@ export default function Dashboard() {
   // متوفر بعد)، فكانت الصفحة رح تعلق بالـ Skeleton بشكل دائم (نفس ملاحظة
   // orgProfile.jsx بالضبط)
   const loading = dashboardQuery.isLoading;
-  // الخدمة بترجع { success, data } دايمًا (ما بترمي استثناء)، فمنطق
-  // التحقق يضل هون بدل الاعتماد على query.isError
-  const data = dashboardQuery.data?.success ? dashboardQuery.data.data : null;
-  // isFetched (مو !loading): الاستعلام لازم يكون نفّذ فعليًا مرة عالأقل
-  // قبل ما نعتبرها "فشلت" — تفاديًا لظهور رسالة خطأ لحظية بوضع real
-  // بينما لسا منستنى organizationId يوصل من AuthContext
-  const error = dashboardQuery.isFetched && !dashboardQuery.data?.success
-    ? dashboardQuery.data?.error || "Unable to load dashboard data"
+  // fetchOrganizationDashboard هلق بترمي (throw) عند الفشل متل باقي دوال
+  // fetch* بالمشروع، فـ query.isError صار يشتغل فعليًا — راجع
+  // services/dashboard.js
+  const data = dashboardQuery.data ?? null;
+  const error = dashboardQuery.isError
+    ? dashboardQuery.error?.message || "Unable to load dashboard data"
     : "";
 
   return (

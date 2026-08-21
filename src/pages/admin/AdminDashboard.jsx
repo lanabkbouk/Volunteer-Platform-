@@ -65,12 +65,12 @@ function countCreatedSince(items, days) {
 function AdminDashboardSkeleton() {
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-3">
         {Array.from({ length: 6 }).map((_, index) => (
-          <div key={index} className={`${ADMIN_CARD_BASE} p-5 md:p-6`}>
-            <Skeleton dark className="h-4 w-28" />
-            <Skeleton dark className="mt-4 h-10 w-20" />
-            <Skeleton dark className="mt-4 h-4 w-40" />
+          <div key={index} className={`${ADMIN_CARD_BASE} p-4 sm:p-5 md:p-6`}>
+            <Skeleton dark className="h-4 w-20 sm:w-28" />
+            <Skeleton dark className="mt-3 sm:mt-4 h-8 sm:h-10 w-16 sm:w-20" />
+            <Skeleton dark className="mt-3 sm:mt-4 h-4 w-28 sm:w-40" />
           </div>
         ))}
       </div>
@@ -214,7 +214,7 @@ export default function AdminDashboard() {
         <AdminDashboardSkeleton />
       ) : (
         <>
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-3">
             <AdminStatCard
               label="Total volunteers"
               value={volunteersCount}

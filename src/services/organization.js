@@ -49,8 +49,14 @@ const EMPTY_ORGANIZATION = {
 }
 
 /**
+ * ⚠️ ترمي (throw) عند الفشل بدل ما ترجع {success,error} — نفس نمط كل
+ * دوال fetch* الأخرى بالمشروع (opportunities.js, organizations.js,
+ * achievements.js, participations.js...)، بدل ما تكون الاستثناء الوحيد.
+ * هيك useOrganizationProfileQuery.isError/.error بيشتغلوا طبيعيًا مع
+ * React Query (retry تلقائي، حالة خطأ حقيقية)، بدل ما orgProfile.jsx
+ * يفحص .success يدويًا ويفوّت أي فشل شبكة فعلي بصمت.
  * @param {number|string} organizationId - يجب أن يصل من AuthContext (user.organization.id)
- * @returns {Promise<{success: boolean, data?: object, error?: string}>}
+ * @returns {Promise<object>}
  */
 export async function fetchOrganizationProfile(organizationId) {
   if (MOCK_MODE) {
@@ -59,32 +65,29 @@ export async function fetchOrganizationProfile(organizationId) {
     const email = getCurrentSessionEmail()
     const mockUser = email ? loadMockUsers().find((u) => u.email === email) : null
 
-    if (!mockUser) return { success: true, data: EMPTY_ORGANIZATION }
+    if (!mockUser) return EMPTY_ORGANIZATION
 
     return {
-      success: true,
-      data: {
-        id: mockUser.organizationId || null,
-        name: mockUser.orgName || '',
-        // ⚠️ كان ناقص هون قبل — الإيميل كان موجود بس جوا owner.email،
-        // بينما orgProfile.jsx وOrgProfilePreview بيقرأوا organization.email
-        // مباشرة (نفس الشكل يلي organizationProfileResponseSchema بيرجعه
-        // بوضع real)، فكان يظهر فاضي دايمًا بوضع mock رغم إنه محفوظ فعليًا
-        email: mockUser.email || '',
-        contactPerson: mockUser.contactPerson || '',
-        description: mockUser.description || '',
-        city: mockUser.city || '',
-        website: mockUser.website || '',
-        imageUrl: mockUser.imageUrl || null,
-        verificationDocumentUrl: mockUser.verificationDocumentUrl || null,
-        status: mockUser.status || ORGANIZATION_STATUS.PENDING,
-        owner: { id: mockUser.id, name: mockUser.name, email: mockUser.email },
-      },
+      id: mockUser.organizationId || null,
+      name: mockUser.orgName || '',
+      // ⚠️ كان ناقص هون قبل — الإيميل كان موجود بس جوا owner.email،
+      // بينما orgProfile.jsx وOrgProfilePreview بيقرأوا organization.email
+      // مباشرة (نفس الشكل يلي organizationProfileResponseSchema بيرجعه
+      // بوضع real)، فكان يظهر فاضي دايمًا بوضع mock رغم إنه محفوظ فعليًا
+      email: mockUser.email || '',
+      contactPerson: mockUser.contactPerson || '',
+      description: mockUser.description || '',
+      city: mockUser.city || '',
+      website: mockUser.website || '',
+      imageUrl: mockUser.imageUrl || null,
+      verificationDocumentUrl: mockUser.verificationDocumentUrl || null,
+      status: mockUser.status || ORGANIZATION_STATUS.PENDING,
+      owner: { id: mockUser.id, name: mockUser.name, email: mockUser.email },
     }
   }
 
   if (!organizationId) {
-    return { success: false, error: 'Organization id is required to load the profile' }
+    throw new Error('Organization id is required to load the profile')
   }
 
   try {
@@ -93,11 +96,11 @@ export async function fetchOrganizationProfile(organizationId) {
     // نتحقق من شكل الاستجابة (OrganizationResource الحقيقي) قبل ما توصل
     // لأي Component — لو حقل ناقص أو النوع غلط، هون التحقق بيرجّع خطأ واضح
     const validation = validateOrganizationProfileResponse(response.data)
-    if (!validation.success) return validation
+    if (!validation.success) throw new Error(validation.error)
 
-    return { success: true, data: validation.data }
+    return validation.data
   } catch (error) {
-    return { success: false, error: getApiErrorMessage(error, 'Failed to load organization profile') }
+    throw new Error(getApiErrorMessage(error, 'Failed to load organization profile'))
   }
 }
 

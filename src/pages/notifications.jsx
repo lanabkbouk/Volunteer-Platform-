@@ -18,6 +18,7 @@ import EmptyState from "../components/common/EmptyState";
 import ShowMoreButton from "../components/common/ShowMoreButton";
 import NotificationListItem from "../components/notifications/NotificationListItem";
 import Toast from "../components/common/Toast";
+import AuthAlert from "../components/auth/AuthAlert";
 import { useToast } from "../hooks/useToast";
 import useRecentUpdates from "../hooks/useRecentUpdates";
 import { useShowMore } from "../hooks/useShowMore";
@@ -34,7 +35,7 @@ import {
 const MARK_ALL_UNDO_WINDOW_MS = 5000;
 
 export default function Notifications() {
-  const { items } = useRecentUpdates();
+  const { items, hasError } = useRecentUpdates();
   const [dismissedIds, setDismissedIds] = useState(() => new Set());
   const [activeTab, setActiveTab] = useState("all");
   const { toast, showToast, closeToast } = useToast();
@@ -163,6 +164,15 @@ export default function Notifications() {
           </Button>
         )}
       </div>
+
+      {hasError && (
+        // ⚠️ ما منخفي القائمة تحتها لو كان عندها عناصر قديمة لسا محفوظة
+        // بالذاكرة (آخر جلب ناجح) — بس المستخدم لازم يعرف إنه آخر محاولة
+        // فشلت، مش يظن إنه القائمة الظاهرة محدّثة 100% لهلق
+        <div className="mb-4">
+          <AuthAlert variant="error">Couldn't refresh notifications. Retrying automatically.</AuthAlert>
+        </div>
+      )}
 
       {visibleAllItems.length === 0 ? (
         <EmptyState

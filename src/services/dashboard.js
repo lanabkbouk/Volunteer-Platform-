@@ -209,121 +209,116 @@ function buildAnalyticsTrends(opportunities, applicantsPerOpportunity) {
 
 /**
  * يجلب ويجمّع كل بيانات لوحة تحكم المنظمة الحالية.
+ *
+ * ⚠️ ترمي (throw) عند الفشل بدل {success,error} — نفس نمط باقي دوال
+ * fetch* بالمشروع. fetchMyOpportunities وfetchApplicantsForOpportunity
+ * (المستوردتين فوق) أصلًا بيرميان الخطأ مباشرة، فما في داعي هون نلقطه
+ * ونغلّفه بشكل مختلف — نتركه ينتشر طبيعيًا لـ useOrganizationDashboardQuery
+ * (React Query)، حتى isError/error يشتغلوا فعليًا بدل ما يضلوا معطّلين
+ * دايمًا لأن الاستعلام ما كان يفشل أبدًا من وجهة نظره (كان يرجّع دايمًا
+ * {success:true/false} كبيانات ناجحة، مهما كان محتواها).
  * @param {string} organizationId - هوية المنظمة الحالية (من AuthContext)
- * @returns {Promise<{success: boolean, data?: OrganizationDashboardData, error?: string}>}
+ * @returns {Promise<OrganizationDashboardData>}
  */
 export async function fetchOrganizationDashboard(organizationId) {
-  try {
-    const opportunities = await fetchMyOpportunities(organizationId)
+  const opportunities = await fetchMyOpportunities(organizationId)
 
-    if (opportunities.length === 0) {
-      return {
-        success: true,
-        data: {
-          totalOpportunities: 0,
-          openOpportunities: 0,
-          totalVolunteers: 0,
-          pendingRequests: 0,
-          completionRate: 0,
-          totalHoursPledged: 0,
-          opportunitiesBreakdown: [],
-          recentActivity: [],
-          analyticsTrends: {
-            metrics: ANALYTICS_METRICS,
-            weekly: [],
-            monthly: [],
-          },
-        },
-      }
-    }
-
-    // نجيب المتقدّمين لكل فرصة بالتوازي (Promise.all) بدل واحد ورا الثاني
-    const applicantsPerOpportunity = await Promise.all(
-      opportunities.map((opportunity) => fetchApplicantsForOpportunity(opportunity.id)),
-    )
-
-    const totalOpportunities = opportunities.length
-    // "مفتوحة" هلق تعني فعليًا registration_open بس (لسا تقبل متطوعين
-    // جدد) — قيد العمل ما بتُحسب هون لأنها ما عادت تقبل تسجيل جديد
-    const openOpportunities = opportunities.filter(
-      (item) => item.status === OPPORTUNITY_STATUS.REGISTRATION_OPEN,
-    ).length
-    const completedOpportunities = opportunities.filter(
-      (item) => item.status === OPPORTUNITY_STATUS.COMPLETED,
-    ).length
-
-    const totalVolunteers = opportunities.reduce(
-      (sum, item) => sum + (Number(item.currentVolunteers) || 0),
-      0,
-    )
-
-    const allApplicants = applicantsPerOpportunity.flat()
-    const pendingRequests = allApplicants.filter(
-      (applicant) => applicant.status === PARTICIPATION_STATUS.PENDING,
-    ).length
-
-    // مجموع الساعات الملتزم فيها (committedHours) عبر كل المتقدمين، بغض
-    // النظر عن الفرصة — نستثني المرفوضين لأنهم لم يلتزموا فعليًا بشي،
-    // وما بنستخدم hoursLogged هون لأنه لسا فاضي (null) لحد ما فرص تخلص
-    // وتتأكد المنظمة منها فرصة فرصة (راجع ManageHoursModal)
-    const totalHoursPledged = allApplicants
-      .filter((applicant) => applicant.status !== PARTICIPATION_STATUS.REJECTED)
-      .reduce((sum, applicant) => sum + (Number(applicant.committedHours) || 0), 0)
-
-    // معدل اكتمال الفرص: نسبة الفرص "المنتهية فعليًا" (completed) من
-    // إجمالي الفرص المنشورة — بدل نسبة "غير المفتوحة" سابقًا، يلي كانت
-    // بتحسب الفرص "قيد العمل" خطأً كـ "منتهية"
-    const completionRate = Math.round((completedOpportunities / totalOpportunities) * 100)
-
-    const opportunitiesBreakdown = opportunities.map((opportunity) => ({
-      id: opportunity.id,
-      title: opportunity.title,
-      currentVolunteers: Number(opportunity.currentVolunteers) || 0,
-      maxVolunteers: Number(opportunity.maxVolunteers) || 0,
-    }))
-
-    // نبني قائمة نشاطات موحّدة — بس الطلبات يلي لسا بانتظار مراجعة المنظمة
-    // (PENDING)، مش كل طلب بغض النظر عن حالته — "أحدث النشاطات" بالداشبورد
-    // المقصود منها تلفت نظر المنظمة للي محتاج فعل منها فعليًا، مش سجل عام
-    // بيتضمّن طلبات مقبولة/مرفوضة خلص انتهى أمرها. الفلترة قبل الـ slice(0,5)
-    // (مش بعده) عشان نضمن آخر 5 طلبات pending فعليًا، مش آخر 5 طلبات
-    // بأي حالة يصير منها pending بالصدفة أقل من 5
-    const recentActivity = opportunities
-      .flatMap((opportunity, index) =>
-        applicantsPerOpportunity[index]
-          .filter((applicant) => applicant.status === PARTICIPATION_STATUS.PENDING)
-          .map((applicant) => ({
-            id: applicant.id,
-            volunteerName: applicant.volunteer?.name || 'A volunteer',
-            opportunityTitle: opportunity.title,
-            opportunityId: opportunity.id,
-            status: applicant.status,
-            date: applicant.participatedAt,
-          })),
-      )
-      .sort((a, b) => new Date(b.date) - new Date(a.date))
-      .slice(0, 5)
-
-    const analyticsTrends = buildAnalyticsTrends(opportunities, applicantsPerOpportunity)
-
+  if (opportunities.length === 0) {
     return {
-      success: true,
-      data: {
-        totalOpportunities,
-        openOpportunities,
-        totalVolunteers,
-        pendingRequests,
-        completionRate,
-        totalHoursPledged,
-        opportunitiesBreakdown,
-        recentActivity,
-        analyticsTrends,
+      totalOpportunities: 0,
+      openOpportunities: 0,
+      totalVolunteers: 0,
+      pendingRequests: 0,
+      completionRate: 0,
+      totalHoursPledged: 0,
+      opportunitiesBreakdown: [],
+      recentActivity: [],
+      analyticsTrends: {
+        metrics: ANALYTICS_METRICS,
+        weekly: [],
+        monthly: [],
       },
     }
-  } catch (error) {
-    return {
-      success: false,
-      error: error?.message || 'Unable to load dashboard data',
-    }
+  }
+
+  // نجيب المتقدّمين لكل فرصة بالتوازي (Promise.all) بدل واحد ورا الثاني
+  const applicantsPerOpportunity = await Promise.all(
+    opportunities.map((opportunity) => fetchApplicantsForOpportunity(opportunity.id)),
+  )
+
+  const totalOpportunities = opportunities.length
+  // "مفتوحة" هلق تعني فعليًا registration_open بس (لسا تقبل متطوعين
+  // جدد) — قيد العمل ما بتُحسب هون لأنها ما عادت تقبل تسجيل جديد
+  const openOpportunities = opportunities.filter(
+    (item) => item.status === OPPORTUNITY_STATUS.REGISTRATION_OPEN,
+  ).length
+  const completedOpportunities = opportunities.filter(
+    (item) => item.status === OPPORTUNITY_STATUS.COMPLETED,
+  ).length
+
+  const totalVolunteers = opportunities.reduce(
+    (sum, item) => sum + (Number(item.currentVolunteers) || 0),
+    0,
+  )
+
+  const allApplicants = applicantsPerOpportunity.flat()
+  const pendingRequests = allApplicants.filter(
+    (applicant) => applicant.status === PARTICIPATION_STATUS.PENDING,
+  ).length
+
+  // مجموع الساعات الملتزم فيها (committedHours) عبر كل المتقدمين، بغض
+  // النظر عن الفرصة — نستثني المرفوضين لأنهم لم يلتزموا فعليًا بشي،
+  // وما بنستخدم hoursLogged هون لأنه لسا فاضي (null) لحد ما فرص تخلص
+  // وتتأكد المنظمة منها فرصة فرصة (راجع ManageHoursModal)
+  const totalHoursPledged = allApplicants
+    .filter((applicant) => applicant.status !== PARTICIPATION_STATUS.REJECTED)
+    .reduce((sum, applicant) => sum + (Number(applicant.committedHours) || 0), 0)
+
+  // معدل اكتمال الفرص: نسبة الفرص "المنتهية فعليًا" (completed) من
+  // إجمالي الفرص المنشورة — بدل نسبة "غير المفتوحة" سابقًا، يلي كانت
+  // بتحسب الفرص "قيد العمل" خطأً كـ "منتهية"
+  const completionRate = Math.round((completedOpportunities / totalOpportunities) * 100)
+
+  const opportunitiesBreakdown = opportunities.map((opportunity) => ({
+    id: opportunity.id,
+    title: opportunity.title,
+    currentVolunteers: Number(opportunity.currentVolunteers) || 0,
+    maxVolunteers: Number(opportunity.maxVolunteers) || 0,
+  }))
+
+  // نبني قائمة نشاطات موحّدة — بس الطلبات يلي لسا بانتظار مراجعة المنظمة
+  // (PENDING)، مش كل طلب بغض النظر عن حالته — "أحدث النشاطات" بالداشبورد
+  // المقصود منها تلفت نظر المنظمة للي محتاج فعل منها فعليًا، مش سجل عام
+  // بيتضمّن طلبات مقبولة/مرفوضة خلص انتهى أمرها. الفلترة قبل الـ slice(0,5)
+  // (مش بعده) عشان نضمن آخر 5 طلبات pending فعليًا، مش آخر 5 طلبات
+  // بأي حالة يصير منها pending بالصدفة أقل من 5
+  const recentActivity = opportunities
+    .flatMap((opportunity, index) =>
+      applicantsPerOpportunity[index]
+        .filter((applicant) => applicant.status === PARTICIPATION_STATUS.PENDING)
+        .map((applicant) => ({
+          id: applicant.id,
+          volunteerName: applicant.volunteer?.name || 'A volunteer',
+          opportunityTitle: opportunity.title,
+          opportunityId: opportunity.id,
+          status: applicant.status,
+          date: applicant.participatedAt,
+        })),
+    )
+    .sort((a, b) => new Date(b.date) - new Date(a.date))
+    .slice(0, 5)
+
+  const analyticsTrends = buildAnalyticsTrends(opportunities, applicantsPerOpportunity)
+
+  return {
+    totalOpportunities,
+    openOpportunities,
+    totalVolunteers,
+    pendingRequests,
+    completionRate,
+    totalHoursPledged,
+    opportunitiesBreakdown,
+    recentActivity,
+    analyticsTrends,
   }
 }

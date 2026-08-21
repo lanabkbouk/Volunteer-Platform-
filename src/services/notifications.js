@@ -246,15 +246,23 @@ export async function fetchRecentNotifications({ accountType, organizationId } =
   if (accountType === ACCOUNT_TYPES.ORGANIZATION) {
     if (!organizationId) return []
 
-    const profileResult = await fetchOrganizationProfile(organizationId)
-    const verificationItems = profileResult.success
-      ? buildOrganizationVerificationItems(profileResult.data, getSeenOrganizationStatusMap())
-      : []
+    // fetchOrganizationProfile هلق بترمي (throw) عند الفشل بدل ما ترجع
+    // {success,error} (راجع services/organization.js) — بنلقطها هون
+    // ونرجّع قائمة فاضية بنفس سلوك الفرع القديم (فشل تحميل البروفايل
+    // ما لازم يكسر جرس الإشعارات كله، بس يعني "ولا عنصر جديد هلق")
+    let profile
+    try {
+      profile = await fetchOrganizationProfile(organizationId)
+    } catch {
+      return []
+    }
+
+    const verificationItems = buildOrganizationVerificationItems(profile, getSeenOrganizationStatusMap())
 
     // نشاط المتقدّمين (انضمام جديد/انسحاب) متاح فقط لمنظمة موثّقة فعليًا
     // (غير موثّقة أصلًا ما إلها فرص منشورة أو متقدّمين حقيقيين)
     const applicantActivityItems =
-      profileResult.success && profileResult.data?.status === ORGANIZATION_STATUS.VERIFIED
+      profile?.status === ORGANIZATION_STATUS.VERIFIED
         ? await buildApplicantActivityItems(getSeenApplicantStatusMap())
         : []
 

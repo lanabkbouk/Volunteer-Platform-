@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   LogIn,
   Menu,
@@ -11,6 +11,7 @@ import {
   ChevronDown,
   Globe,
   Compass,
+  LayoutDashboard,
 } from "lucide-react";
 
 import { ROUTES } from "../../constants/paths";
@@ -28,6 +29,7 @@ import { getOrganizationId } from "../../utils/auth/getOrganizationId";
 
 export default function Navbar({ role = "guest" }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, accountType, isAuthenticated, logout } = useAuth();
   const { items: recentUpdates } = useRecentUpdates();
   // بيوصل من AuthContext (real API) أو محليًا (mock mode بعد التسجيل —
@@ -92,12 +94,24 @@ export default function Navbar({ role = "guest" }) {
     (link) => link.name !== "Dashboard" || Boolean(organizationId)
   );
 
-  // شاشات الأدمن عندها تنقّلها الخاص بالكامل بـ AdminSidebar (يسار
-  // الشاشة) — أي رابط تاني هون بيصير تكرار. النافبار هون بيقتصر على
-  // رابط وحيد وواضح: "View site"، أي مخرج صريح لوضع المستخدم العادي،
-  // بدل قائمة Home/About Us العامة يلي ما إلها معنى واضح جوا سياق إدارة
+  // شاشات الأدمن (/admin/*) عندها تنقّلها الخاص بالكامل بـ AdminSidebar
+  // (يسار الشاشة) — أي رابط تاني هون بيصير تكرار، فالنافبار هناك يقتصر
+  // على رابط وحيد وواضح: "View site". لكن لو الأدمن خرج فعليًا من /admin
+  // وعم يتصفّح صفحات الموقع العامة (About, Opportunities...) — زي أي
+  // زائر عادي بالضبط بهالحالة — لازم يشوف نفس روابط guest حتى يقدر يتنقّل
+  // بينها، بالإضافة لرابط رجوع واضح للوحة الأدمن
+  const isWithinAdminArea =
+    location.pathname === ROUTES.ADMIN_DASHBOARD || location.pathname.startsWith(`${ROUTES.ADMIN_DASHBOARD}/`);
+
   const allLinks = isAdmin
-    ? [{ name: "View site", href: ROUTES.HOME, icon: Globe }]
+    ? isWithinAdminArea
+      ? [{ name: "View site", href: ROUTES.HOME, icon: Globe }]
+      : [
+          ...baseLinks,
+          ...linksByRole.guest,
+          aboutLink,
+          { name: "Back to Admin", href: ROUTES.ADMIN_DASHBOARD, icon: LayoutDashboard },
+        ]
     : [...baseLinks, ...roleLinks, aboutLink];
 
   const linkClass = ({ isActive }) =>

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Search, Users } from 'lucide-react'
+import { Megaphone, Search, Sparkles, Users } from 'lucide-react'
 
 import AdminLayout from '../../layouts/admin/AdminLayout'
 import AuthAlert from '../../components/auth/AuthAlert'
@@ -10,6 +10,7 @@ import Input from '../../components/ui/Input'
 import Skeleton from '../../components/ui/Skeleton'
 import Typography from '../../components/ui/Typography'
 import Button from '../../components/ui/Button'
+import VolunteerProfilePreviewModal from '../../components/organization/VolunteerProfilePreviewModal'
 import { useShowMore } from '../../hooks/useShowMore'
 import { useAdminVolunteersQuery } from '../../hooks/queries/useAdminVolunteersQuery'
 import { formatDateTime } from '../../utils/formatDateTime'
@@ -37,12 +38,28 @@ function AdminVolunteersSkeleton() {
   )
 }
 
-function VolunteerRow({ volunteer }) {
+function VolunteerRow({ volunteer, onSelect }) {
   const hasSkillsCount = typeof volunteer.skillsCount === 'number'
   const hasOpportunitiesJoinedCount = typeof volunteer.opportunitiesJoinedCount === 'number'
 
   return (
-    <div className={`${ADMIN_CARD_BASE} p-5`}>
+    // role="button" + onKeyDown بدل <button> حقيقي يلف الكارد بالكامل —
+    // نفس نمط الـ Trigger بـ NavbarDropdown.jsx (role/tabIndex/Enter+Space)،
+    // حتى نتجنب تعقيد لف Badge/أزرار داخلية بعنصر button (semantics متداخلة
+    // غير صالحة بـ HTML: button جوا button)
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={() => onSelect(volunteer)}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault()
+          onSelect(volunteer)
+        }
+      }}
+      aria-label={`View profile for ${volunteer.name || 'volunteer'}`}
+      className={`${ADMIN_CARD_BASE} p-5 cursor-pointer transition-colors hover:bg-white/6 focus:outline-none focus-visible:ring-2 focus-visible:ring-adminAccent/40`}
+    >
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="min-w-0 space-y-1">
           <Typography variant="h6" className="truncate text-adminTextHi!">
@@ -77,6 +94,7 @@ export default function AdminVolunteers() {
   const volunteers = useMemo(() => volunteersData ?? [], [volunteersData])
 
   const [searchTerm, setSearchTerm] = useState('')
+  const [selectedVolunteer, setSelectedVolunteer] = useState(null)
 
   const filteredVolunteers = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase()
@@ -154,12 +172,32 @@ export default function AdminVolunteers() {
         <>
           <div className="space-y-3">
             {visibleVolunteers.map((volunteer) => (
-              <VolunteerRow key={volunteer.id} volunteer={volunteer} />
+              <VolunteerRow key={volunteer.id} volunteer={volunteer} onSelect={setSelectedVolunteer} />
             ))}
           </div>
           {hasMore && <ShowMoreButton remainingCount={remainingCount} onClick={showMore} />}
         </>
       )}
+
+      {/* بيانات المتطوع بلوحة الأدمن (useAdminVolunteersQuery) عدّادات
+          بس — skillsCount/opportunitiesJoinedCount منصّة-wide فعليًا
+          (مش مربوطة بمنظمة وحدة زي سياق ApplicantCard)، بدون ساعات أو
+          إنجازات مفصّلة أصلًا بهالـ endpoint. فبدل ما نعرض "0 hours"/
+          "0 achievements" مضلِّلة بافتراضيات المودال الأصلية (مصمّمة
+          لسياق المنظمة)، منمرر stats الحقيقية المتوفرة فقط — راجع
+          VolunteerProfilePreviewModal.jsx لتفاصيل الـ prop */}
+      <VolunteerProfilePreviewModal
+        open={Boolean(selectedVolunteer)}
+        volunteer={selectedVolunteer}
+        onClose={() => setSelectedVolunteer(null)}
+        stats={
+          selectedVolunteer && [
+            { icon: Sparkles, value: selectedVolunteer.skillsCount ?? 0, label: 'Skills' },
+            { icon: Megaphone, value: selectedVolunteer.opportunitiesJoinedCount ?? 0, label: 'Opportunities joined' },
+          ]
+        }
+        statsNote="Platform-wide totals — not tied to a single organization."
+      />
     </AdminLayout>
   )
 }

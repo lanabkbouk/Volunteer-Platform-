@@ -26,12 +26,34 @@ function StatBlock({ icon: Icon, value, label }) {
   );
 }
 
-export default function VolunteerProfilePreviewModal({ open, onClose, volunteer }) {
+// إحصاءات المودال الافتراضية (سياق المنظمة: ساعات/إنجازات/فرص مكتملة
+// "هون بالذات") — قابلة للاستبدال بالكامل عبر prop اختياري stats لأي
+// سياق تاني ما إله نفس شكل البيانات (مثلًا الأدمن: بيانات المتطوع هناك
+// مجرد عدّادات — skillsCount/opportunitiesJoinedCount — بلا ساعات ولا
+// إنجازات مفصّلة أصلًا، فبدل ما نعرض "0 hours"/"0 achievements" مضلِّلة،
+// الصفحة المستدعية بتمرر إحصاءاتها الحقيقية هي). statsNote بنفس المبدأ
+// لجملة التوضيح تحت الإحصاءات. الافتراضي (بدون تمرير أي منهم) يبقى
+// تمامًا كما كان — صفر تأثير على استخدام ApplicantCard الحالي.
+function buildDefaultStats(volunteer, unlockedAchievementsCount) {
+  return [
+    { icon: Clock3, value: volunteer.totalHoursVolunteered ?? 0, label: "Hours here" },
+    { icon: Trophy, value: unlockedAchievementsCount, label: "Achievements" },
+    { icon: CheckCircle2, value: volunteer.completedOpportunitiesCount ?? 0, label: "Completed here" },
+  ];
+}
+
+const DEFAULT_STATS_NOTE =
+  "Hours and completed opportunities are with your organization specifically. Achievements are earned across the whole platform.";
+
+export default function VolunteerProfilePreviewModal({ open, onClose, volunteer, stats, statsNote }) {
   if (!volunteer) return null;
 
   const age = calculateAge(volunteer.dateOfBirth);
   const achievements = volunteer.achievements || [];
   const unlockedAchievements = achievements.filter((achievement) => achievement.unlocked);
+
+  const resolvedStats = stats || buildDefaultStats(volunteer, unlockedAchievements.length);
+  const resolvedStatsNote = statsNote !== undefined ? statsNote : DEFAULT_STATS_NOTE;
 
   return (
     // ⚠️ عنوان المودال هو اسم المتقدّم نفسه (وليس نص عام مثل "Volunteer
@@ -50,18 +72,16 @@ export default function VolunteerProfilePreviewModal({ open, onClose, volunteer 
         )}
       </div>
 
-      {/* إحصائيات سريعة — الساعات والفرص المكتملة محسوبة "لدى هالمنظمة
-          بالذات" (مش إجمالي المنصة)، تساعد المنظمة تقيّم خبرة المتطوع
-          معها هي تحديدًا قبل ما تقرر */}
-      <div className="grid grid-cols-3 gap-2 mb-1">
-        <StatBlock icon={Clock3} value={volunteer.totalHoursVolunteered ?? 0} label="Hours here" />
-        <StatBlock icon={Trophy} value={unlockedAchievements.length} label="Achievements" />
-        <StatBlock icon={CheckCircle2} value={volunteer.completedOpportunitiesCount ?? 0} label="Completed here" />
+      {/* إحصائيات سريعة — بالسياق الافتراضي (منظمة): الساعات والفرص
+          المكتملة محسوبة "لدى هالمنظمة بالذات" (مش إجمالي المنصة)، تساعد
+          المنظمة تقيّم خبرة المتطوع معها هي تحديدًا قبل ما تقرر. سياقات
+          تانية (الأدمن مثلًا) بتمرر stats مختلفة تمامًا عبر الـ prop */}
+      <div className={`grid gap-2 mb-1 ${resolvedStats.length === 2 ? "grid-cols-2" : "grid-cols-3"}`}>
+        {resolvedStats.map((stat) => (
+          <StatBlock key={stat.label} icon={stat.icon} value={stat.value} label={stat.label} />
+        ))}
       </div>
-      <p className="text-[11px] text-heading/40 mb-5">
-        Hours and completed opportunities are with your organization specifically. Achievements
-        are earned across the whole platform.
-      </p>
+      {resolvedStatsNote && <p className="text-[11px] text-heading/40 mb-5">{resolvedStatsNote}</p>}
 
       {unlockedAchievements.length > 0 && (
         <div className="mb-5">

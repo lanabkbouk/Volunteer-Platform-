@@ -8,18 +8,19 @@ import Button from "../ui/Button";
 import Typography from "../ui/Typography";
 import SkillsSelector from "../common/SkillsSelector";
 import { SYRIAN_GOVERNORATES } from "../../services/syrianGovernorates";
+import { EDUCATION_LEVELS } from "../../constants/educationLevels";
 
 const GENDER_ITEMS = [
   { name: "Female", value: "Female" },
   { name: "Male", value: "Male" },
 ];
 
-const EDUCATION_LEVEL_ITEMS = [
-  { name: "No Formal Education", value: "No Formal Education" },
-  { name: "High School", value: "High School" },
-  { name: "Diploma", value: "Diploma" },
-  { name: "Bachelor's Degree", value: "Bachelor's Degree" },
-];
+// مصدر واحد مشترك مع VolunteerProfileValidation.js — راجع
+// constants/educationLevels.js
+const EDUCATION_LEVEL_ITEMS = EDUCATION_LEVELS.map((level) => ({
+  name: level,
+  value: level,
+}));
 
 // المدن المعطّلة (isActive: false) تظهر بالقائمة دائمًا لكن كخيار معطّل
 // (disabled)، مش مستبعدة كليًا — راجع دعم item.disabled بـ ui/Dropdown.jsx.

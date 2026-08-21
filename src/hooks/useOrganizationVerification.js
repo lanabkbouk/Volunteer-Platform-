@@ -18,25 +18,27 @@ import { getOrganizationId } from "../utils/auth/getOrganizationId";
 export function useOrganizationVerification() {
   const { user } = useAuth();
   const organizationId = getOrganizationId(user);
-  const { data, isLoading } = useOrganizationProfileQuery(organizationId);
+  const { data, isLoading, isError } = useOrganizationProfileQuery(organizationId);
 
-  // الخدمة بترجع { success, data } دايمًا (ما بترمي استثناء عند الفشل)
-  const status = data?.success ? data.data?.status : null;
+  // fetchOrganizationProfile هلق بترمي (throw) عند الفشل بدل ما ترجع
+  // {success,data} — راجع services/organization.js. isError صار مصدر
+  // الحقيقة المباشر لفشل التحميل بدل فحص success يدويًا
+  const status = data?.status ?? null;
   // ⚠️ كانت ناقصة قبل — الـ Banner بيدعم عرض السبب أصلًا، بس 4 من 5
   // صفحات بتستخدم هالـ hook ما كانت توصلها لأنها ما كانت موجودة هون
-  const rejectionReason = data?.success ? data.data?.rejectionReason : null;
+  const rejectionReason = data?.rejectionReason ?? null;
 
   // ⚠️ مهم: status=null بيصير بحالتين مختلفتين تمامًا:
   // 1) الطلب نجح لكن ما في organization/status (نادر) → مفيش خطأ فعلي
-  // 2) الطلب فشل فعليًا (data.success === false) → لازم نعرف هاد الفرق
-  // وإلا الواجهة بتصمت تمامًا وكأنه "ما في داعي لأي Banner"، بينما
-  // الحقيقة إنه فشل تحميل الحالة ولازم يظهر خطأ واضح للمستخدم
-  const hasLoadError = Boolean(data && data.success === false);
+  // 2) الطلب فشل فعليًا (isError) → لازم نعرف هاد الفرق وإلا الواجهة
+  // بتصمت تمامًا وكأنه "ما في داعي لأي Banner"، بينما الحقيقة إنه فشل
+  // تحميل الحالة ولازم يظهر خطأ واضح للمستخدم
+  const hasLoadError = isError;
 
   // كائن المنظمة الكامل (description, city...) — مطلوب لتذكير اكتمال
   // البروفايل (isOrganizationProfileComplete) بدون أي طلب شبكة إضافي،
   // لأنه أصلًا محمّل ومخزّن بكاش useOrganizationProfileQuery
-  const organization = data?.success ? data.data : null;
+  const organization = data ?? null;
 
   return {
     status,

@@ -23,6 +23,7 @@ import Skeleton from "../components/ui/Skeleton";
 import Modal from "../components/ui/Modal";
 import Button from "../components/ui/Button";
 import Toast from "../components/common/Toast";
+import AuthAlert from "../components/auth/AuthAlert";
 import { useToast } from "../hooks/useToast";
 import { getOrganizationId } from "../utils/auth/getOrganizationId";
 
@@ -36,9 +37,13 @@ export default function OrgProfile() {
   // بتضل true للأبد لما الاستعلام يكون enabled:false (organizationId
   // غير متوفر بعد)، فكانت الصفحة بتعلق بالـ Skeleton بشكل دائم
   const isLoading = organizationQuery.isLoading;
-  // الخدمة بترجع { success, data } دايمًا (ما بترمي استثناء)، فمنطق
-  // التحقق يضل هون بدل الاعتماد على query.isError
-  const organization = organizationQuery.data?.success ? organizationQuery.data.data : null;
+  // fetchOrganizationProfile هلق بترمي (throw) عند الفشل متل باقي
+  // دوال fetch* بالمشروع، فـ query.isError صار يشتغل فعليًا — راجع
+  // services/organization.js
+  const organization = organizationQuery.data ?? null;
+  const loadError = organizationQuery.isError
+    ? organizationQuery.error?.message || 'Failed to load organization profile'
+    : '';
 
   const updateProfileMutation = useUpdateOrganizationProfileMutation(organizationId);
 
@@ -125,10 +130,13 @@ export default function OrgProfile() {
 
       // ندمج قيم الفورم المحفوظة مباشرة بكاش React Query — وإلا رأس
       // الصفحة (الاسم، الشارة) يضل عارض البيانات القديمة للأبد بنفس
-      // الجلسة، رغم إنه الحفظ نجح فعليًا بالتخزين
+      // الجلسة، رغم إنه الحفظ نجح فعليًا بالتخزين. الشكل هون مسطّح
+      // مباشرة (بدون {success,data}) — نفس شكل fetchOrganizationProfile
+      // الحقيقي هلق بعد ما صار يرمي (throw) بدل ما يرجّع {success,...}
       queryClient.setQueryData(queryKeys.organization.profile(organizationId), (current) => ({
-        success: true,
-        data: { ...(current?.data ?? {}), ...data, imageUrl: savedImageUrl },
+        ...(current ?? {}),
+        ...data,
+        imageUrl: savedImageUrl,
       }));
 
       methods.reset(data);
@@ -182,6 +190,12 @@ export default function OrgProfile() {
     <FormProvider {...methods}>
       <div className="mx-auto w-full flex-1 max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="container mx-auto px-4 md:px-16 py-10 md:py-14">
+
+          {loadError && (
+            <div className="mb-4">
+              <AuthAlert variant="error">{loadError}</AuthAlert>
+            </div>
+          )}
 
           {isRejected ? (
             <RejectedVerificationPanel

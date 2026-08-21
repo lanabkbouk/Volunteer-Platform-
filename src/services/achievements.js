@@ -52,6 +52,81 @@ const ACHIEVEMENT_DEFINITIONS = [
 ]
 
 /**
+ * نواة حساب حالة فتح كل إنجاز — دالة نقية (Pure) تاخد قائمة مشاركات
+ * مُجهَّزة مسبقًا (نفس شكل fetchMyParticipations: كل عنصر معه
+ * participation.opportunity كاملة، وopportunity.status هي الحالة
+ * الفعلية المحسوبة). مفصولة عمدًا عن computeAchievementsForVolunteer
+ * تحت (يلي بيبني هالقائمة من MOCK_PARTICIPATIONS/MOCK_OPPORTUNITIES)
+ * حتى تنكتب اختبارات وحدة مباشرة عليها بمعطيات ثابتة، بدل الاعتماد على
+ * بيانات mock مشتركة وتواريخها النسبية (daysFromNow) المتغيّرة مع
+ * الوقت الحقيقي — راجع achievements.test.js
+ * @param {Array<{status:string, joinedDate:string, opportunity:{status:string, isGroup?:boolean}|null}>} participations
+ */
+export function computeAchievementsFromParticipations(participations) {
+  const { totalConfirmedHours, completedOpportunitiesCount } = buildVolunteerHoursSummary(participations)
+
+  // نفس شرط "مكتملة ومقبولة" المستخدم جوا buildVolunteerHoursSummary —
+  // معاد هون فقط لتحديد earnedDate (أقدم فرصة أكملها المتطوع)، مش لحساب
+  // أي رقم ساعات من جديد
+  const completed = participations.filter(
+    (participation) =>
+      participation.status === PARTICIPATION_STATUS.ACCEPTED &&
+      participation.opportunity?.status === OPPORTUNITY_STATUS.COMPLETED,
+  )
+
+  // أقدم فرصة مكتملة (تاريخًا) — تُستخدم كـ earnedDate لإنجاز "أول فرصة"
+  const earliestCompleted = [...completed].sort(
+    (a, b) => new Date(a.joinedDate) - new Date(b.joinedDate),
+  )[0]
+
+  // ⚠️ إنجاز a3 اسمه صراحة "Completion of THREE GROUP Activities" — لازم
+  // يتحقق فعليًا من isGroup === true على الفرصة، مش أي 3 فرص مكتملة
+  // بغض النظر عن نوعها (كان الوضع سابقًا: نفس completedOpportunitiesCount
+  // المستخدم لـ a1، بدون أي فلترة — تناقض مباشر بين وصف الإنجاز ومنطق
+  // احتسابه). نفس شرط "مكتملة ومقبولة" أعلاه (completed)، بس مع فلتر
+  // إضافي على opportunity.isGroup — راجع OpportunityCard.jsx/CauseForm.jsx
+  // لنفس الفحص === true صراحة (مش أي قيمة فولسي) المستخدم بأماكن تانية
+  const completedGroup = completed.filter(
+    (participation) => participation.opportunity?.isGroup === true,
+  )
+  const completedGroupOpportunitiesCount = completedGroup.length
+
+  // أقدم فرصة جماعية مكتملة تحديدًا — earnedDate الصحيح لـ a3، بدل
+  // earliestCompleted العام (يلي ممكن يكون تاريخ فرصة فردية ما علاقة
+  // إلها بإنجاز الأنشطة الجماعية أصلًا)
+  const earliestCompletedGroup = [...completedGroup].sort(
+    (a, b) => new Date(a.joinedDate) - new Date(b.joinedDate),
+  )[0]
+
+  const unlockedMap = {
+    a1: completedOpportunitiesCount >= 1,
+    a2: totalConfirmedHours >= 10,
+    a3: completedGroupOpportunitiesCount >= 3,
+  }
+
+  const earnedDateMap = {
+    a1: earliestCompleted?.joinedDate || null,
+    a2: earliestCompleted?.joinedDate || null,
+    a3: earliestCompletedGroup?.joinedDate || null,
+  }
+
+  // تقدّم كل إنجاز نحو هدفه (current/target) — تُستخدم فقط لعرض شريط
+  // تقدّم بصري بالواجهة، القيمة الحقيقية للفتح تبقى unlockedMap فوق
+  const progressMap = {
+    a1: { current: Math.min(completedOpportunitiesCount, 1), target: 1 },
+    a2: { current: Math.min(totalConfirmedHours, 10), target: 10 },
+    a3: { current: Math.min(completedGroupOpportunitiesCount, 3), target: 3 },
+  }
+
+  return ACHIEVEMENT_DEFINITIONS.map((definition) => ({
+    ...definition,
+    unlocked: unlockedMap[definition.id] || false,
+    earnedDate: unlockedMap[definition.id] ? earnedDateMap[definition.id] || null : null,
+    progress: progressMap[definition.id] || null,
+  }))
+}
+
+/**
  * يحسب حالة فتح كل إنجاز لمتطوع معيّن، من سجل مشاركاته الحقيقي عبر
  * المنصة كلها (مش خاص بمنظمة وحدة — راجع API_CONTRACT.md لتوضيح ليش
  * قواعد المنح تراكمية عالمنصة، مش قابلة للعزل حسب منظمة بعينها).
@@ -72,42 +147,7 @@ function computeAchievementsForVolunteer(volunteerId) {
     },
   )
 
-  const { totalConfirmedHours, completedOpportunitiesCount } = buildVolunteerHoursSummary(myParticipations)
-
-  // نفس شرط "مكتملة ومقبولة" المستخدم جوا buildVolunteerHoursSummary —
-  // معاد هون فقط لتحديد earnedDate (أقدم فرصة أكملها المتطوع)، مش لحساب
-  // أي رقم ساعات من جديد
-  const completed = myParticipations.filter(
-    (participation) =>
-      participation.status === PARTICIPATION_STATUS.ACCEPTED &&
-      participation.opportunity?.status === OPPORTUNITY_STATUS.COMPLETED,
-  )
-
-  // أقدم فرصة مكتملة (تاريخًا) — تُستخدم كـ earnedDate لإنجاز "أول فرصة"
-  const earliestCompleted = [...completed].sort(
-    (a, b) => new Date(a.joinedDate) - new Date(b.joinedDate),
-  )[0]
-
-  const unlockedMap = {
-    a1: completedOpportunitiesCount >= 1,
-    a2: totalConfirmedHours >= 10,
-    a3: completedOpportunitiesCount >= 3,
-  }
-
-  // تقدّم كل إنجاز نحو هدفه (current/target) — تُستخدم فقط لعرض شريط
-  // تقدّم بصري بالواجهة، القيمة الحقيقية للفتح تبقى unlockedMap فوق
-  const progressMap = {
-    a1: { current: Math.min(completedOpportunitiesCount, 1), target: 1 },
-    a2: { current: Math.min(totalConfirmedHours, 10), target: 10 },
-    a3: { current: Math.min(completedOpportunitiesCount, 3), target: 3 },
-  }
-
-  return ACHIEVEMENT_DEFINITIONS.map((definition) => ({
-    ...definition,
-    unlocked: unlockedMap[definition.id] || false,
-    earnedDate: unlockedMap[definition.id] ? earliestCompleted?.joinedDate || null : null,
-    progress: progressMap[definition.id] || null,
-  }))
+  return computeAchievementsFromParticipations(myParticipations)
 }
 
 /**

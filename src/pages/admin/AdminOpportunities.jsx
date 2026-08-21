@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Megaphone, Search } from 'lucide-react'
 
 import AdminLayout from '../../layouts/admin/AdminLayout'
@@ -13,6 +14,7 @@ import Button from '../../components/ui/Button'
 import { useShowMore } from '../../hooks/useShowMore'
 import { useAdminOpportunitiesQuery } from '../../hooks/queries/useAdminOpportunitiesQuery'
 import { OPPORTUNITY_STATUS_META } from '../../constants/opportunityStatus'
+import { ROUTES } from '../../constants/paths'
 import { formatDateTime } from '../../utils/formatDateTime'
 import { ADMIN_CARD_BASE, ADMIN_PANEL_SURFACE } from '../../utils/adminStyles'
 
@@ -56,9 +58,23 @@ function OpportunityStatusChip({ status }) {
   )
 }
 
-function OpportunityRow({ opportunity }) {
+function OpportunityRow({ opportunity, onSelect }) {
   return (
-    <div className={`${ADMIN_CARD_BASE} p-5`}>
+    // role="button" + onKeyDown بدل <button> يلف الكارد — نفس نمط
+    // VolunteerRow بـ AdminVolunteers.jsx بالضبط
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={() => onSelect(opportunity)}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault()
+          onSelect(opportunity)
+        }
+      }}
+      aria-label={`View details for ${opportunity.title || 'opportunity'}`}
+      className={`${ADMIN_CARD_BASE} p-5 cursor-pointer transition-colors hover:bg-white/6 focus:outline-none focus-visible:ring-2 focus-visible:ring-adminAccent/40`}
+    >
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="min-w-0 space-y-1">
           <Typography variant="h6" className="truncate text-adminTextHi!">
@@ -82,6 +98,7 @@ function OpportunityRow({ opportunity }) {
 }
 
 export default function AdminOpportunities() {
+  const navigate = useNavigate()
   const { data: opportunitiesData, isPending, isError, error, refetch } = useAdminOpportunitiesQuery()
   const opportunities = useMemo(() => opportunitiesData ?? [], [opportunitiesData])
 
@@ -108,6 +125,13 @@ export default function AdminOpportunities() {
     remainingCount,
     showMore,
   } = useShowMore(filteredOpportunities)
+
+  // نفس صفحة تفاصيل الفرصة العامة الموجودة أصلًا (OpportunityDetailsPage)
+  // بدل بناء أي عرض مكرر — نفس pattern التنقّل المستخدم فعليًا بـ
+  // OpportunityCard.jsx (`${ROUTES.OPPORTUNITIES}/${id}`)
+  const handleSelectOpportunity = (opportunity) => {
+    navigate(`${ROUTES.OPPORTUNITIES}/${opportunity.id}`)
+  }
 
   return (
     <AdminLayout
@@ -167,7 +191,7 @@ export default function AdminOpportunities() {
         <>
           <div className="space-y-3">
             {visibleOpportunities.map((opportunity) => (
-              <OpportunityRow key={opportunity.id} opportunity={opportunity} />
+              <OpportunityRow key={opportunity.id} opportunity={opportunity} onSelect={handleSelectOpportunity} />
             ))}
           </div>
           {hasMore && <ShowMoreButton remainingCount={remainingCount} onClick={showMore} />}

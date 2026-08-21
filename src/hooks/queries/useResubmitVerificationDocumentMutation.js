@@ -17,17 +17,16 @@ export function useResubmitVerificationDocumentMutation(organizationId) {
     onSuccess: (result) => {
       if (!result?.success) return
 
+      // الشكل هون مسطّح مباشرة (بدون {success,data}) — نفس شكل
+      // fetchOrganizationProfile الحقيقي هلق بعد ما صار يرمي (throw)
+      // بدل ما يرجّع {success,...}
       queryClient.setQueryData(queryKeys.organization.profile(organizationId), (current) =>
-        current?.success
+        current
           ? {
-              success: true,
-              data: {
-                ...current.data,
-                status: ORGANIZATION_STATUS.PENDING,
-                rejectionReason: '',
-                verificationDocumentUrl:
-                  result.data?.verificationDocumentUrl ?? current.data.verificationDocumentUrl,
-              },
+              ...current,
+              status: ORGANIZATION_STATUS.PENDING,
+              rejectionReason: '',
+              verificationDocumentUrl: result.data?.verificationDocumentUrl ?? current.verificationDocumentUrl,
             }
           : current,
       )

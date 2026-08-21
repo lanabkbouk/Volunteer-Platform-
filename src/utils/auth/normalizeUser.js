@@ -1,23 +1,15 @@
 import { getUserDisplayName } from './displayName'
+import { extractPhotoUrl } from '../extractPhotoUrl'
 
 //  الباك اند الحقيقي (UserResource.php) بيرجّع صورة المتطوع/المنظمة
 // متداخلة جوا user.volunteer.photo أو user.organization.profile_image —
-// مش حقل مسطّح imageUrl زي وضع Mock. هالدالة بتوحّد الشكلين لحقل واحد.
-//
-//  باگ مؤكَّد بالباك اند (VolunteerResource.php): 'photo' => getFirstMedia(...)
-// بترجع كائن Media كامل (Spatie)، مش رابط نصي — بعكس OrganizationResource
-// يلي صح (getFirstMediaUrl). لحد ما يتصلّح (getFirstMedia → getFirstMediaUrl)،
-// بنتعامل دفاعيًا: لو وصل كائن بدل نص، نجرّب original_url (خاصية Spatie
-// القياسية) وإلا نتجاهله بدل ما نعرض [object Object] كرابط صورة مكسور
+// مش حقل مسطّح imageUrl زي وضع Mock. هالدالة بتوحّد الشكلين لحقل واحد،
+// وتستخدم extractPhotoUrl المشتركة (utils/extractPhotoUrl.js) للتعامل
+// الدفاعي مع باگ VolunteerResource.php المعروف (راجعي تفاصيله هناك)
 function extractRealPhotoUrl(rawUser) {
   const volunteerPhoto = rawUser.volunteer?.photo
   const organizationPhoto = rawUser.organization?.profile_image
-  const raw = volunteerPhoto ?? organizationPhoto
-
-  if (!raw) return ''
-  if (typeof raw === 'string') return raw
-  // كائن Media خام (باگ الباك اند أعلاه) — محاولة دفاعية أخيرة
-  return raw.original_url || raw.url || ''
+  return extractPhotoUrl(volunteerPhoto ?? organizationPhoto)
 }
 
 /**

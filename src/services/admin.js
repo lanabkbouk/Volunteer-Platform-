@@ -19,6 +19,8 @@ import { ACCOUNT_TYPES } from '../constants/auth/accountTypes'
 import { ORGANIZATION_STATUS } from '../constants/organizationStatus'
 import { OPPORTUNITY_STATUS } from '../constants/opportunityStatus'
 import { loadMockUsers, updateMockUser } from './mock/mockUserStore'
+import { MOCK_OPPORTUNITIES } from './mock/mockOpportunitiesStore'
+import { getEffectiveOpportunityStatus } from '../utils/opportunityStatus'
 
 const MOCK_MODE = isMockMode()
 
@@ -169,11 +171,20 @@ export async function reviewOrganization(organizationId, decision) {
 //   GET /api/admin/opportunities
 // المتوقّع محميّتين بنفس middleware('role:admin').
 //
-// بوضع Mock: مصفوفتان ثابتتان محليتان (مش مبنيتان من mockUserStore/
-// mockOpportunitiesStore الحقيقيين) — حتى نضمن دايمًا 8-10 متطوعين
-// و6-8 فرص بتواريخ إنشاء متنوعة تغطي آخر أسبوعين على الأقل، بغض النظر
-// عمّا سجّله المستخدم فعليًا بالمتصفح، لتبقى بطاقة "This week" بالداشبورد
-// قابلة للاختبار دايمًا.
+// بوضع Mock — المتطوعون: مصفوفة ثابتة محلية منفصلة (مش مبنية من
+// mockUserStore الحقيقي) — حتى نضمن دايمًا 8-10 متطوعين بتواريخ إنشاء
+// متنوعة تغطي آخر أسبوعين على الأقل، بغض النظر عمّا سجّله المستخدم
+// فعليًا بالمتصفح، لتبقى بطاقة "This week" بالداشبورد قابلة للاختبار
+// دايمًا. لا مشكلة هون لأنه ما في تنقّل لصفحة تفاصيل منفصلة بمعرّف
+// المتطوع (المعاينة بمودال مباشر من نفس البيانات، راجع AdminVolunteers.jsx).
+//
+// بوضع Mock — الفرص: بعكس المتطوعين، هون لازم نُعيد استخدام المخزن
+// الحقيقي (MOCK_OPPORTUNITIES بـ mockOpportunitiesStore.js) بدل مصفوفة
+// منفصلة — نفس مبدأ fetchAdminOrganizationList أعلاه بالضبط. السبب:
+// AdminOpportunities.jsx بينقل الأدمن لصفحة تفاصيل الفرصة العامة
+// (OpportunityDetailsPage) بنفس الـ id، فلو المعرّفات مش من نفس المخزن
+// الفرصة كانت رح تظهر "could not be found" رغم إنها معروضة بالقائمة —
+// بالضبط الـ bug يلي كان موجود هون قبل هالتعديل.
 // ═══════════════════════════════════════════════════════════════════
 
 const MOCK_ADMIN_VOLUNTEERS = [
@@ -188,15 +199,21 @@ const MOCK_ADMIN_VOLUNTEERS = [
   { id: 'v9', name: 'Mona Al-Sayed', email: 'mona.alsayed@example.com', city: 'Al-Hasakah', createdAt: daysFromNow(-25), skillsCount: 4, opportunitiesJoinedCount: 5 },
 ]
 
-const MOCK_ADMIN_OPPORTUNITIES = [
-  { id: 'op1', title: 'Clean Water for All', organizationName: 'Blue Drop Foundation', city: 'Damascus', status: OPPORTUNITY_STATUS.REGISTRATION_OPEN, createdAt: daysFromNow(-1), startDate: daysFromNow(14) },
-  { id: 'op2', title: 'After-School Tutoring Program', organizationName: 'Bright Minds NGO', city: 'Aleppo', status: OPPORTUNITY_STATUS.REGISTRATION_OPEN, createdAt: daysFromNow(-3), startDate: daysFromNow(20) },
-  { id: 'op3', title: 'Coastal Cleanup Day', organizationName: 'Green Coast Initiative', city: 'Latakia', status: OPPORTUNITY_STATUS.REGISTRATION_CLOSED, createdAt: daysFromNow(-9), startDate: daysFromNow(5) },
-  { id: 'op4', title: 'Community Food Bank Support', organizationName: 'Hope Kitchen', city: 'Homs', status: OPPORTUNITY_STATUS.IN_PROGRESS, createdAt: daysFromNow(-16), startDate: daysFromNow(-3) },
-  { id: 'op5', title: 'Winter Clothing Drive', organizationName: 'Warm Hearts Society', city: 'Hama', status: OPPORTUNITY_STATUS.COMPLETED, createdAt: daysFromNow(-30), startDate: daysFromNow(-20) },
-  { id: 'op6', title: 'Elderly Companionship Visits', organizationName: 'Silver Years Care', city: 'Tartus', status: OPPORTUNITY_STATUS.REGISTRATION_OPEN, createdAt: daysFromNow(-5), startDate: daysFromNow(10) },
-  { id: 'op7', title: 'Youth Coding Bootcamp', organizationName: 'Future Builders', city: 'Daraa', status: OPPORTUNITY_STATUS.IN_PROGRESS, createdAt: daysFromNow(-12), startDate: daysFromNow(-2) },
-]
+// يحوّل فرصة من المخزن الحقيقي (MOCK_OPPORTUNITIES) لشكل قائمة الأدمن —
+// نفس فلسفة toOrganizationSummary أعلاه بالضبط. status محسوبة عبر
+// getEffectiveOpportunityStatus (مش الحقل الخام status بالمخزن، يلي هو
+// فقط 'open'/'closed' قديم — راجع تعليق مطابق بـ mockOpportunitiesStore.js)
+function toAdminOpportunitySummary(opportunity) {
+  return {
+    id: opportunity.id,
+    title: opportunity.title || '',
+    organizationName: opportunity.organization?.name || '',
+    city: opportunity.location || '',
+    status: getEffectiveOpportunityStatus(opportunity),
+    createdAt: opportunity.createdAt || null,
+    startDate: opportunity.startDate || null,
+  }
+}
 
 function mapApiVolunteer(raw) {
   if (!raw) return null
@@ -254,7 +271,7 @@ function mapApiOpportunity(raw) {
 export async function fetchAdminOpportunities() {
   if (MOCK_MODE) {
     await wait()
-    return MOCK_ADMIN_OPPORTUNITIES
+    return MOCK_OPPORTUNITIES.map(toAdminOpportunitySummary)
   }
 
   try {

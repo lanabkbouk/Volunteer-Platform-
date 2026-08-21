@@ -38,34 +38,42 @@ export default function NotificationBell({ items, isOpen, onToggle, onClose, tri
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 max-w-[90vw] rounded-2xl bg-field border-2 border-heading/20 shadow-2xl ring-1 ring-black/5 overflow-hidden z-50">
-          <p className="px-4 py-3 text-xs font-semibold text-heading/50 uppercase tracking-wide border-b border-heading/10">
+        // Mobile (< sm): لوحة ثابتة بعرض الشاشة تقريبًا (fixed + هوامش
+        // جانبية) تحت الهيدر مباشرة — بدل absolute المتمركزة على موقع
+        // زر الجرس نفسه، اللي كانت بتطلع خارج حدود الشاشة على 320-375px
+        // (الجرس مش آخر عنصر بالصف، فيه Profile dropdown بعده بكل من
+        // Navbar وAdminTopbar، فعرض 320px كامل كان يفيض من يسار الشاشة).
+        // Desktop (sm+): نفس الـ dropdown الأصلي تمامًا، بدون أي تغيير بصري.
+        <div
+          className="fixed inset-x-3 top-20 z-60 flex max-h-[75vh] flex-col overflow-hidden rounded-2xl bg-field border-2 border-heading/20 shadow-2xl ring-1 ring-black/5 sm:absolute sm:inset-x-auto sm:top-auto sm:right-0 sm:mt-2 sm:max-h-96 sm:w-80 sm:max-w-[90vw]"
+        >
+          <p className="shrink-0 px-4 py-3 text-xs font-semibold text-heading/50 uppercase tracking-wide border-b border-heading/10">
             Notifications
           </p>
 
-          {count === 0 ? (
-            // نفس تركيبة EmptyState (دائرة primary/10 + أيقونة + عنوان)
-            // بس بمقاس مصغّر يلائم عرض القائمة المنسدلة (w-80) — نسخة
-            // EmptyState الكاملة (py-20 وأيقونة 96px) مصمّمة لسكشن كامل
-            // بالصفحة، مش لقائمة منسدلة صغيرة بالنافبار
-            <div className="flex flex-col items-center gap-3 px-4 py-8 text-center">
-              <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10">
-                <PartyPopper size={20} className="text-primary" aria-hidden="true" />
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            {count === 0 ? (
+              // نفس تركيبة EmptyState (دائرة primary/10 + أيقونة + عنوان)
+              // بس بمقاس مصغّر يلائم عرض القائمة المنسدلة (w-80) — نسخة
+              // EmptyState الكاملة (py-20 وأيقونة 96px) مصمّمة لسكشن كامل
+              // بالصفحة، مش لقائمة منسدلة صغيرة بالنافبار
+              <div className="flex flex-col items-center gap-3 px-4 py-8 text-center">
+                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10">
+                  <PartyPopper size={20} className="text-primary" aria-hidden="true" />
+                </div>
+                <p className="text-sm font-semibold text-heading">You're all caught up.</p>
               </div>
-              <p className="text-sm font-semibold text-heading">You're all caught up.</p>
-            </div>
-          ) : (
-            <div className="flex max-h-80 flex-col overflow-y-auto">
-              {items.map((item) => (
+            ) : (
+              items.map((item) => (
                 <NotificationListItem key={item.id} item={item} onNavigate={onClose} />
-              ))}
-            </div>
-          )}
+              ))
+            )}
+          </div>
 
           <Link
             to={ROUTES.NOTIFICATIONS}
             onClick={onClose}
-            className="flex items-center justify-center gap-1.5 border-t border-heading/10 px-4 py-3 text-xs font-semibold text-primary transition hover:bg-heading/5"
+            className="shrink-0 flex items-center justify-center gap-1.5 border-t border-heading/10 px-4 py-3 text-xs font-semibold text-primary transition hover:bg-heading/5"
           >
             See all notifications
             <ArrowRight size={13} aria-hidden="true" />

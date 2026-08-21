@@ -11,37 +11,24 @@
 
 import { z } from 'zod'
 import { calculateAge } from '../validators'
+import { EDUCATION_LEVELS } from '../../constants/educationLevels'
+import { SYRIAN_GOVERNORATES } from '../../services/syrianGovernorates'
 
 
 const GENDER_OPTIONS = ['Female', 'Male']
 
-// قرار منتج مقصود: ما فينا نستبعد "ماجستير"/"دكتوراه" — مش منطقي حمَلة
-// هالشهادتين يسجّلوا كمتطوّعين بمنصة تطوع أصلًا (سياق المنصة مختلف عن
-// سياق توظيف أكاديمي). الفورم (ProfileForm.jsx) أصلًا بيخفيهم، وهون
-// بنمنعهم على مستوى الـ schema كمان حتى ما يوصلوا كقيمة صالحة بأي طريق
-const EDUCATION_LEVEL_OPTIONS = [
-  'No Formal Education',
-  'High School',
-  'Diploma',
-  "Bachelor's Degree",
-]
+// مصدر واحد مشترك مع volunteerProfile/ProfileForm.jsx — راجع
+// constants/educationLevels.js لسبب استبعاد ماجستير/دكتوراه
+const EDUCATION_LEVEL_OPTIONS = EDUCATION_LEVELS
 
-const SYRIA_GOVERNORATES = [
-  'Damascus',
-  'Rif Dimashq',
-  'Aleppo',
-  'Homs',
-  'Hama',
-  'Latakia',
-  'Tartus',
-  'Idlib',
-  'Raqqa',
-  'Deir ez-Zor',
-  'Al-Hasakah',
-  'Daraa',
-  'As-Suwayda',
-  'Quneitra',
-]
+// نفس تحويل nameEn -> value المستخدم فعليًا بالـ select (GOVERNORATE_ITEMS
+// بـ volunteerProfile/ProfileForm.jsx) ومطابق لنفس الاشتقاق المستخدم بـ
+// OrganizationProfileValidation.js — قائمة واحدة مشتقة من المصدر الإداري
+// الوحيد (syrianGovernorates.js) بدل نسخة ثانية يدوية ممكن تنحرف عنها
+// بالمستقبل (متل ما كان الحال هون سابقًا)
+const SYRIA_GOVERNORATES = SYRIAN_GOVERNORATES.map(({ nameEn }) =>
+  nameEn === 'Rural Damascus' ? 'Rif Dimashq' : nameEn,
+)
 
 const requiredSelect = (options, message) =>
   z
