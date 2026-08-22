@@ -8,6 +8,7 @@
 
 import { useMemo } from "react";
 import Typography from "../components/ui/Typography";
+import AuthAlert from "../components/auth/AuthAlert";
 import VolunteeringHoursSummary from "../components/volunteerProfile/VolunteeringHoursSummary";
 import AchievementsList from "../components/volunteerProfile/AchievementsList";
 import CompletedOpportunitiesTimeline from "../components/volunteerProfile/CompletedOpportunitiesTimeline";
@@ -24,6 +25,12 @@ export default function VolunteerJourneyPage() {
     () => (participationsQuery.data ?? []).filter(isCompletedParticipation),
     [participationsQuery.data],
   );
+  // ⚠️ بدون هاد الفحص، فشل الجلب (انقطاع شبكة مثلًا) كان يبان تمامًا متل
+  // "المتطوع فعلًا ما عنده أي فرصة مكتملة" (data ?? [] بيرجع مصفوفة فاضية
+  // بصمت) — لازم نميّز الحالتين للمستخدم
+  const completedError = participationsQuery.isError
+    ? participationsQuery.error?.message || "Failed to load your completed opportunities"
+    : "";
 
   return (
     <div className="mx-auto w-full flex-1 max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -58,7 +65,11 @@ export default function VolunteerJourneyPage() {
           <Typography variant="h4" gutterBottom>
             Completed Opportunities
           </Typography>
-          <CompletedOpportunitiesTimeline participations={completedParticipations} />
+          {completedError ? (
+            <AuthAlert variant="error">{completedError}</AuthAlert>
+          ) : (
+            <CompletedOpportunitiesTimeline participations={completedParticipations} />
+          )}
         </section>
       </div>
     </div>

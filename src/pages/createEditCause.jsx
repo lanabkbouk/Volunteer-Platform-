@@ -33,7 +33,13 @@ function CausePreviewPanel({ categories, imagePreview }) {
 
   return (
     <div className="lg:col-span-1">
-      <div className="sticky top-20 flex flex-col gap-3">
+      {/* top-19.75 = 79px، ارتفاع الـ Navbar الفعلي المقاس (Playwright) —
+          top-20 (80px) القديمة كانت تقريبية بفارق 1px فقط، بس القيمة هون
+          لازم تعتمد على قياس فعلي لا افتراضي مثل بقية عناصر الالتصاق
+          بالمشروع. self-start مو لازم هون: العمود جوا CSS grid مع
+          items-start عالحاوية (مو flex)، فكل عناصر الـ grid أصلًا
+          محاذاة على البداية */}
+      <div className="sticky top-19.75 flex flex-col gap-3">
         <Typography variant="overline" className="px-1">
           Live Preview — how volunteers will see this cause
         </Typography>
@@ -260,7 +266,17 @@ export default function CreateEditCause() {
       <FormProvider {...methods}>
         <form
           onSubmit={methods.handleSubmit(onSubmit)}
-          className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start"
+          // ⚠️ بدون items-start (كانت موجودة سابقًا): بـ CSS Grid، align-items
+          // start بتخلي كل عمود بارتفاع محتواه فقط بدل الامتداد لارتفاع
+          // الصف الكامل — يعني الـ containing block لعمود المعاينة كان
+          // بالضبط بارتفاع محتواه (~538px)، فما بيضل أي مساحة فعلية
+          // يتحرك فيها sticky أثناء التمرير، وكان ينفصل عن العلوي فورًا
+          // (تأكدنا بالقياس الفعلي عبر Playwright: كان ينفصل عند تمرير
+          // 400px فقط رغم إن عمود الفورم أطول بكثير). الامتداد الافتراضي
+          // (stretch) بيحل هالمشكلة: العمود الأطول (الفورم) ما بيتغيّر
+          // شكله (هو أصلًا يلي بيحدد ارتفاع الصف)، وعمود المعاينة بياخد
+          // نفس الارتفاع فيصير عنده مساحة فعلية يلتصق فيها لحد قرب نهاية الفورم
+          className="grid grid-cols-1 lg:grid-cols-3 gap-6"
         >
           {/* عمودا الفورم: نفس نمط PANEL_SURFACE المستخدم بصفحة بروفايل
               المتطوع، عشان الصفحتين تعطيا نفس الإحساس البصري بمكان

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Compass, Filter, Sparkles, ArrowRight } from "lucide-react";
 import Typography from "../components/ui/Typography";
@@ -11,10 +11,7 @@ import ShowMoreButton from "../components/common/ShowMoreButton";
 import { useMyParticipationsQuery } from "../hooks/queries/useMyParticipationsQuery";
 import { useShowMore } from "../hooks/useShowMore";
 import { useParticipationCounts } from "../hooks/useParticipationCounts";
-import { markHoursSeen } from "../utils/hoursSeenTracker";
-import { markStatusSeen } from "../utils/participationStatusSeenTracker";
 import { matchesParticipationStatusTab } from "../utils/participationDisplayStatus";
-import { PARTICIPATION_STATUS } from "../constants/participationStatus";
 import { PARTICIPATION_TAB, PARTICIPATION_TAB_DEFS } from "../constants/participationTabs";
 import { CARD_SURFACE } from "../utils/surfaceStyles";
 import { ROUTES } from "../constants/paths";
@@ -63,23 +60,6 @@ export default function Participates() {
     ? participationsQuery.error?.message || "Failed to load your volunteering history"
     : "";
 
-  // تعليم كل الساعات المؤكدة وحالات القبول/الرفض الظاهرة هلق
-  // كـ"مشاهدة" — بعد هالسطر، النقطة الحمراء بالنافبار بتختفي لحد ما
-  // يظهر تحديث جديد فعليًا
-  useEffect(() => {
-    participations.forEach((participation) => {
-      if (participation.hoursLogged !== null && participation.hoursLogged !== undefined) {
-        markHoursSeen(participation.id, participation.hoursLogged);
-      }
-      if (
-        participation.status === PARTICIPATION_STATUS.ACCEPTED ||
-        participation.status === PARTICIPATION_STATUS.REJECTED
-      ) {
-        markStatusSeen(participation.id, participation.status);
-      }
-    });
-  }, [participations]);
-
   return (
     // max-w-6xl (مش max-w-4xl القديمة) = 72rem بالضبط 896px (max-w-4xl
     // القديمة، عرض عمود المحتوى الأصلي) + 224px (عرض السايدبار md:w-56)
@@ -108,7 +88,10 @@ export default function Participates() {
           w-full على الحاويتين ضروري مع items-start: بدونها كل عمود كان
           رح ياخد عرض محتواه فقط بدل العرض الكامل على الموبايل (flex-col) */}
       <div className="flex flex-col items-start gap-8 md:flex-row">
-        <div className="w-full md:w-56 md:shrink-0">
+        {/* top-19.75 = 79px، ارتفاع الـ Navbar الفعلي المقاس (Playwright) —
+            ثابت من md فما فوق (بلا أي Tabs/شريط تابع فوقه بهاي الصفحة).
+            md:self-start إلزامي لأنه العمود جوا حاوية md:flex-row */}
+        <div className="w-full md:w-56 md:shrink-0 md:sticky md:top-19.75 md:self-start">
           <TabsFilter
             tabs={tabs}
             activeTab={activeTab}

@@ -9,6 +9,10 @@
 // سوا على هالمصدر المشترك الوحيد.
 
 import { PARTICIPATION_STATUS } from '../../constants/participationStatus'
+import {
+  MOCK_PARTICIPATIONS_STORAGE_KEY,
+  MOCK_VOLUNTEER_PROFILES_STORAGE_KEY,
+} from '../../constants/auth/storage'
 
 // نفس نمط daysFromNow المستخدم بـ mockOpportunitiesStore.js — تواريخ
 // نسبية لـ Date.now() بدل تواريخ تقويمية ثابتة، وإلا joinedDate كانت
@@ -18,6 +22,31 @@ function daysFromNow(offset) {
   const date = new Date()
   date.setDate(date.getDate() + offset)
   return date.toISOString().slice(0, 10)
+}
+
+// تحميل نسخة محفوظة من localStorage (تعديلات سابقة: قبول/رفض/سحب/ساعات
+// مؤكدة...) لو موجودة وصالحة، وإلا البيانات الأصلية بالأسفل. بدون هالحفظ،
+// أي Refresh كامل للصفحة (F5) كان يرجّع كل تعديل صار بجلسة Mock سابقة
+// لأصله بصمت — ويكسر أي تنبيه (services/notifications.js) بيعتمد على
+// تغيّر فعلي بالحالة تمّ اختباره قبل الـ Refresh
+function loadMockParticipations() {
+  try {
+    const raw = localStorage.getItem(MOCK_PARTICIPATIONS_STORAGE_KEY)
+    const parsed = raw ? JSON.parse(raw) : null
+    return Array.isArray(parsed) ? parsed : INITIAL_PARTICIPATIONS
+  } catch {
+    return INITIAL_PARTICIPATIONS
+  }
+}
+
+function loadMockVolunteerProfiles() {
+  try {
+    const raw = localStorage.getItem(MOCK_VOLUNTEER_PROFILES_STORAGE_KEY)
+    const parsed = raw ? JSON.parse(raw) : null
+    return parsed && typeof parsed === 'object' ? parsed : INITIAL_VOLUNTEER_PROFILES
+  } catch {
+    return INITIAL_VOLUNTEER_PROFILES
+  }
 }
 
 // ⚠️ كل مشاركة هلق فيها volunteerId ثابت — قبل هيك، كل لقطة متقدم
@@ -31,7 +60,7 @@ function daysFromNow(offset) {
 // نشطة/معلّقة حاليًا، o5/o6 منتهيتين فعليًا) — فمهما كان تاريخ التشغيل
 // الفعلي، attachComputedStatus بيحسب o5/o6 "completed" وo1 لسا نشطة،
 // بنفس الشكل النسبي دايمًا.
-export const MOCK_PARTICIPATIONS = [
+const INITIAL_PARTICIPATIONS = [
   // — المتقدمين الحاليين على مراجعة (زي ما كانوا أصلًا) —
   { id: 'p1', volunteerId: 'v1', opportunityId: 'o1', status: PARTICIPATION_STATUS.PENDING, committedHours: 3, hoursLogged: null, joinedDate: daysFromNow(-11) },
   { id: 'p2', volunteerId: 'v2', opportunityId: 'o2', status: PARTICIPATION_STATUS.ACCEPTED, committedHours: 4, hoursLogged: null, joinedDate: daysFromNow(-16) },
@@ -66,6 +95,8 @@ export const MOCK_PARTICIPATIONS = [
 
 ]
 
+export const MOCK_PARTICIPATIONS = loadMockParticipations()
+
 // بروفايل كل متطوع — مفتاح المصفوفة هلق volunteerId (مش participation
 // id)، لأنه بروفايل يخص شخص، مش طلب مشاركة واحد بعينه
 //
@@ -74,7 +105,7 @@ export const MOCK_PARTICIPATIONS = [
 // بجدول users)، فمينيك أي بروفايل متطوع حقيقي بيوصل بدونه. بيانات
 // الـ Mock هون لازم تطابق هالواقع وإلا نختبر شاشة بشكل مختلف عن شكلها
 // الحقيقي بعد ربط الـ API
-export const MOCK_VOLUNTEER_PROFILES = {
+const INITIAL_VOLUNTEER_PROFILES = {
   v1: {
     volunteerId: 'v1', name: 'Lama Haddad', photo: null, city: 'Damascus',
     skills: ['First Aid', 'Communication'], phone: '+963911111111', email: 'lama.haddad@example.com',
@@ -90,6 +121,28 @@ export const MOCK_VOLUNTEER_PROFILES = {
     skills: ['Photography'], phone: '+963955555555', email: 'maya.saleh@example.com',
     educationLevel: 'High School', dateOfBirth: '2004-11-20', gender: 'female',
   },
+}
+
+export const MOCK_VOLUNTEER_PROFILES = loadMockVolunteerProfiles()
+
+// تُستدعى بعد أي تعديل على MOCK_PARTICIPATIONS أو MOCK_VOLUNTEER_PROFILES
+// (راجع services/participations.js وaddMockParticipation تحت) — حتى
+// تنجو التعديلات من أي Refresh كامل للصفحة بدل ما ترجع لقيمها الأصلية
+export function persistMockParticipations() {
+  try {
+    localStorage.setItem(MOCK_PARTICIPATIONS_STORAGE_KEY, JSON.stringify(MOCK_PARTICIPATIONS))
+  } catch {
+    // تجاهل أي خطأ تخزين (تصفح خاص أو تجاوز الحصة) — نفس نمط
+    // participationStatusSeenTracker.js
+  }
+}
+
+export function persistMockVolunteerProfiles() {
+  try {
+    localStorage.setItem(MOCK_VOLUNTEER_PROFILES_STORAGE_KEY, JSON.stringify(MOCK_VOLUNTEER_PROFILES))
+  } catch {
+    // تجاهل
+  }
 }
 
 /**
@@ -117,6 +170,8 @@ export function addMockParticipation({ opportunityId, committedHours, volunteerP
 
   MOCK_PARTICIPATIONS.push(participation)
   MOCK_VOLUNTEER_PROFILES[volunteerId] = { volunteerId, ...volunteerProfile }
+  persistMockParticipations()
+  persistMockVolunteerProfiles()
 
   return participation
 }

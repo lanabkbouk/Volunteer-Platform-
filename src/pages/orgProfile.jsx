@@ -12,7 +12,6 @@ import { queryKeys } from "../app/queryKeys";
 import { organizationProfileSchema } from "../utils/auth/OrganizationProfileValidation";
 import { ORGANIZATION_STATUS } from "../constants/organizationStatus";
 import { PANEL_SURFACE } from "../utils/surfaceStyles";
-import { markOrganizationStatusSeen } from "../utils/organizationVerificationSeenTracker";
 
 import OrgProfileHeader from "../components/OrgProfile/ProfileHeader";
 import OrgProfileForm from "../components/OrgProfile/ProfileForm";
@@ -81,15 +80,6 @@ export default function OrgProfile() {
     imageUpload.setPreviewUrl(organization.imageUrl || "");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [organization, methods]);
-
-  // تعليم قرار التوثيق الحالي (verified/rejected) كـ"مشاهَد" — نفس منطق
-  // markStatusSeen بـ participates.jsx بالضبط: أول ما المنظمة تشوف
-  // حالتها هون فعليًا، تنبيه جرس الإشعارات المقابل بيختفي لحد ما يصير
-  // قرار جديد فعليًا (راجع services/notifications.js)
-  useEffect(() => {
-    if (!organization?.id || !organization?.status) return;
-    markOrganizationStatusSeen(organization.id, organization.status);
-  }, [organization?.id, organization?.status]);
 
   // نحجز التنقّل بس لما فيه تعديلات فعلية غير محفوظة، وما نحجزه أثناء
   // عملية الحفظ نفسها — نفس نمط volunteerProfile.jsx بالضبط

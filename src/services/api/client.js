@@ -1,13 +1,19 @@
 import axios from 'axios'
-import { AUTH_STORAGE_KEY } from '../../constants/auth/storage'
+import { AUTH_STORAGE_KEY, SESSION_EXPIRED_STORAGE_KEY } from '../../constants/auth/storage'
 import { ROUTES } from '../../constants/paths'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || ''
+
+// بدون هاد، طلب معلَّق (سيرفر لا يرد، لا خطأ صريح) كان ينتظر بلا أي حدّ
+// زمني فعلي — بيضل "جاري التحميل" للأبد بدل ما يفشل بوقت معقول ويعرض
+// رسالة واضحة للمستخدم
+const REQUEST_TIMEOUT_MS = 15000
 
 // لا نضبط Content-Type بشكل ثابت هنا: axios يحدده تلقائيًا
 // (application/json للكائنات العادية، أو multipart/form-data مع الـ boundary الصحيح عند إرسال FormData)
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
+  timeout: REQUEST_TIMEOUT_MS,
 })
 
 apiClient.interceptors.request.use((config) => {
@@ -55,6 +61,17 @@ apiClient.interceptors.response.use(
 
       // تجنّب حلقة تحويل لا نهائية لو الـ 401 صار أصلًا من صفحة تسجيل الدخول نفسها
       if (window.location.pathname !== ROUTES.LOGIN) {
+        // window.location.assign تحويل صلب (إعادة تحميل كاملة)، فأي state
+        // تمرَّر عبر React Router (زي state.from المستخدم بـ ProtectedRoute)
+        // بتضيع. sessionStorage هو الوحيد اللي بينجو من إعادة التحميل —
+        // Login.jsx بيقرأه ويعرض سبب التحويل، بدل ما المستخدم يظهر فجأة
+        // بصفحة الدخول بلا أي تفسير (وبيضيع أي فورم كان يعبّيه)
+        try {
+          sessionStorage.setItem(SESSION_EXPIRED_STORAGE_KEY, '1')
+        } catch {
+          // تجاهل (مثلًا وضع تصفح خاص يمنع sessionStorage) — التحويل نفسه أهم من الرسالة
+        }
+
         window.location.assign(ROUTES.LOGIN)
       }
     }
@@ -63,8 +80,20 @@ apiClient.interceptors.response.use(
   },
 )
 
+// انقطاع شبكة كامل (offline/DNS/CORS) أو انتهاء المهلة (timeout) ما بيوصل
+// أصلًا لسيرفر Laravel، فـ error.response غير موجود إطلاقًا — لازم رسالة
+// مختلفة عن أخطاء الاستجابة العادية (422/500...)، وإلا axios بيرجّع نص
+// عام مثل "Network Error" يبان وكأنه خطأ سيرفر حقيقي
 export function getApiErrorMessage(error, fallbackMessage = 'Something went wrong') {
   if (axios.isAxiosError(error)) {
+    if (error.code === 'ECONNABORTED') {
+      return 'The request took too long to respond. Please check your connection and try again.'
+    }
+
+    if (!error.response) {
+      return 'Unable to reach the server. Please check your internet connection and try again.'
+    }
+
     return error.response?.data?.message || error.response?.data?.error || error.message || fallbackMessage
   }
 

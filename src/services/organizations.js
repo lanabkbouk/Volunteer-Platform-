@@ -61,8 +61,8 @@ const MOCK_ORGANIZATIONS = [
   // المستخدم مسبقًا لنفس المعرّف بـ opportunities.js (إنشاء فرصة جديدة)
   {
     id: 'org-mock',
-    name: 'My Organization',
-    description: 'Your organization profile, used for testing opportunities you publish in mock mode.',
+    name: 'Rotterdam Community Outreach',
+    description: 'Connecting local volunteers with neighborhood initiatives across Rotterdam.',
     city: 'Rotterdam, Netherlands',
     phone: '+31600000000',
     website: '',

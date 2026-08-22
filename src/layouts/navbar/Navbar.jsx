@@ -1,17 +1,17 @@
 import { useState } from "react";
-import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import {
   LogIn,
   Menu,
   UserPlus,
   X,
+  UserIcon,
   LogOut,
   Settings2,
   UserRound,
   ChevronDown,
   Globe,
   Compass,
-  LayoutDashboard,
 } from "lucide-react";
 
 import { ROUTES } from "../../constants/paths";
@@ -22,14 +22,12 @@ import LogoIcon from "../../components/ui/LogoIcon";
 import Button from "../../components/ui/Button";
 import NavbarDropdown from "../../components/ui/NavbarDropdown";
 import NotificationBell from "../../components/ui/NotificationBell";
-import Avatar from "../../components/common/Avatar";
 import { useAuth } from "../../context/AuthContext";
 import useRecentUpdates from "../../hooks/useRecentUpdates";
 import { getOrganizationId } from "../../utils/auth/getOrganizationId";
 
 export default function Navbar({ role = "guest" }) {
   const navigate = useNavigate();
-  const location = useLocation();
   const { user, accountType, isAuthenticated, logout } = useAuth();
   const { items: recentUpdates } = useRecentUpdates();
   // بيوصل من AuthContext (real API) أو محليًا (mock mode بعد التسجيل —
@@ -94,24 +92,12 @@ export default function Navbar({ role = "guest" }) {
     (link) => link.name !== "Dashboard" || Boolean(organizationId)
   );
 
-  // شاشات الأدمن (/admin/*) عندها تنقّلها الخاص بالكامل بـ AdminSidebar
-  // (يسار الشاشة) — أي رابط تاني هون بيصير تكرار، فالنافبار هناك يقتصر
-  // على رابط وحيد وواضح: "View site". لكن لو الأدمن خرج فعليًا من /admin
-  // وعم يتصفّح صفحات الموقع العامة (About, Opportunities...) — زي أي
-  // زائر عادي بالضبط بهالحالة — لازم يشوف نفس روابط guest حتى يقدر يتنقّل
-  // بينها، بالإضافة لرابط رجوع واضح للوحة الأدمن
-  const isWithinAdminArea =
-    location.pathname === ROUTES.ADMIN_DASHBOARD || location.pathname.startsWith(`${ROUTES.ADMIN_DASHBOARD}/`);
-
+  // شاشات الأدمن عندها تنقّلها الخاص بالكامل بـ AdminSidebar (يسار
+  // الشاشة) — أي رابط تاني هون بيصير تكرار. النافبار هون بيقتصر على
+  // رابط وحيد وواضح: "View site"، أي مخرج صريح لوضع المستخدم العادي،
+  // بدل قائمة Home/About Us العامة يلي ما إلها معنى واضح جوا سياق إدارة
   const allLinks = isAdmin
-    ? isWithinAdminArea
-      ? [{ name: "View site", href: ROUTES.HOME, icon: Globe }]
-      : [
-          ...baseLinks,
-          ...linksByRole.guest,
-          aboutLink,
-          { name: "Back to Admin", href: ROUTES.ADMIN_DASHBOARD, icon: LayoutDashboard },
-        ]
+    ? [{ name: "View site", href: ROUTES.HOME, icon: Globe }]
     : [...baseLinks, ...roleLinks, aboutLink];
 
   const linkClass = ({ isActive }) =>
@@ -125,25 +111,33 @@ export default function Navbar({ role = "guest" }) {
         <div className="flex items-center justify-between">
 
           {/* Logo */}
-          <NavLink to={ROUTES.HOME} className="flex items-center gap-3">
+          <NavLink to={ROUTES.HOME} className="flex shrink-0 items-center gap-3">
             <LogoIcon className="h-6 w-6 text-white" />
-            <span className="text-2xl font-semibold text-white">
+            {/* الاسم الكامل مخفي تحت sm — تأكدنا بالقياس الفعلي (Playwright)
+                إنه على 375px، مع bell+profile pill لمستخدم مسجّل دخوله،
+                إبقاء الاسم كامل (حتى مع whitespace-nowrap يمنع التفافه لسطرين
+                زي قبل) كان يسبب overflow أفقي حقيقي لسطر الناف بار كامل
+                (scrollWidth 520px مقابل clientWidth 375px) — الأيقونة لحالها
+                كافية كهوية بصرية بأضيق العروض، نفس نمط أي Navbar موبايل عادي */}
+            <span className="hidden whitespace-nowrap text-2xl font-semibold text-white sm:inline">
               Volunteer Platform
             </span>
           </NavLink>
 
           {/* Right Section */}
-          <div className="flex items-center gap-3 md:order-2">
+          <div className="flex items-center gap-3 lg:order-2">
 
             {!isAuthenticated ? (
-              <div className="hidden md:flex items-center gap-3">
+              <div className="hidden lg:flex items-center gap-3">
 
                 {/* Create Account */}
                 <Button
                   onClick={() => navigate(ROUTES.REGISTER)}
                   variant="primary"
                   size="medium"
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-2 rounded-2xl px-5 py-2.5 
+                             text-[15px] font-medium shadow-sm hover:shadow-md 
+                             border border-primary/40"
                 >
                   <UserPlus className="h-4 w-4" />
                   <span>Create Account</span>
@@ -152,9 +146,17 @@ export default function Navbar({ role = "guest" }) {
                 {/* Sign In */}
                 <Button
                   onClick={() => navigate(ROUTES.LOGIN)}
-                  variant="outlineLight"
+                  variant="ghost"
                   size="medium"
-                  className="flex items-center gap-2"
+                  className="
+                    flex items-center gap-2
+                    rounded-2xl
+                    bg-black
+                    text-white
+                    border border-primary
+                    px-5 py-2.5 text-[15px] font-medium
+                    transition hover:opacity-90
+                  "
                 >
                   <LogIn className="h-4 w-4" />
                   <span>Sign In</span>
@@ -162,7 +164,7 @@ export default function Navbar({ role = "guest" }) {
 
               </div>
             ) : (
-              <div className="flex items-center gap-2">
+              <div className="flex min-w-0 items-center gap-2">
                 <NotificationBell
                   items={recentUpdates}
                   isOpen={isBellOpen}
@@ -173,14 +175,28 @@ export default function Navbar({ role = "guest" }) {
                 <NavbarDropdown
                   isOpen={isProfileOpen}
                   setIsOpen={setIsProfileOpen}
-                  triggerAriaLabel={`Account menu — ${user?.displayName || "Account"}`}
                   trigger={
-                    <div className="flex items-center gap-2 rounded-2xl px-3 py-2
+                    <div className="flex min-w-0 items-center gap-2 rounded-2xl px-3 py-2
                                     bg-white/10 border border-white/15
                                     text-white hover:bg-white/15 hover:border-white/25
                                     transition">
-                      <Avatar src={user?.avatarUrl} name={user?.displayName} size="sm" />
-                      <span className="text-sm sm:text-base">
+                      {user?.avatarUrl ? (
+                        <img
+                          src={user.avatarUrl}
+                          alt={user.displayName}
+                          className="h-7 w-7 shrink-0 rounded-full object-cover border-2 border-primary/70"
+                        />
+                      ) : (
+                        <div className="h-7 w-7 shrink-0 rounded-full bg-primary/20 border border-primary/40 flex items-center justify-center">
+                          <UserIcon className="h-4 w-4 text-primary" />
+                        </div>
+                      )}
+                      {/* اسم المستخدم مخفي تحت sm (كان يسبب overflow أفقي حقيقي
+                          على 375px — تأكدنا بالقياس الفعلي: scrollWidth 520px
+                          مقابل clientWidth 375px). truncate + max-w من sm فما
+                          فوق بدل عرض كامل بلا قيد، حتى لا يتكرر نفس overflow
+                          لاسم مستخدم طويل على شاشات ضيقة نسبيًا */}
+                      <span className="hidden max-w-24 truncate sm:inline sm:text-base text-sm">
                         {user?.displayName}
                       </span>
                       <ChevronDown
@@ -188,19 +204,6 @@ export default function Navbar({ role = "guest" }) {
                           isProfileOpen ? "rotate-180" : ""
                         }`}
                       />
-                    </div>
-                  }
-                  header={
-                    <div className="flex items-center gap-3">
-                      <Avatar src={user?.avatarUrl} name={user?.displayName} size="md" />
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold text-heading">
-                          {user?.displayName}
-                        </p>
-                        <p className="truncate text-xs text-heading/60">
-                          {user?.email}
-                        </p>
-                      </div>
                     </div>
                   }
                   items={dropdownItems}
@@ -211,11 +214,12 @@ export default function Navbar({ role = "guest" }) {
             {/* Mobile Menu Button */}
             <Button
               onClick={() => setIsOpen(!isOpen)}
-              variant="outlineLight"
+              variant="ghost"
               size="small"
               aria-label={isOpen ? "Close menu" : "Open menu"}
               aria-expanded={isOpen}
-              className="p-2 md:hidden"
+              className="p-2 rounded-xl bg-heading/10 text-white
+                         hover:bg-heading/20 lg:hidden"
             >
               {isOpen ? <X className="h-7 w-7" /> : <Menu className="h-7 w-7" />}
             </Button>
@@ -223,8 +227,8 @@ export default function Navbar({ role = "guest" }) {
           </div>
 
           {/* Desktop Links */}
-          <div className="hidden md:flex md:w-auto md:order-1">
-            <ul className="flex flex-row items-center gap-8 font-medium text-[16px]">
+          <div className="hidden lg:flex lg:w-auto lg:order-1">
+            <ul className="flex flex-row items-center gap-3 font-medium text-sm xl:gap-6 xl:text-base">
               {allLinks.map((link) => (
                 <li key={link.name}>
                   <NavLink to={link.href} className={linkClass}>
@@ -241,11 +245,11 @@ export default function Navbar({ role = "guest" }) {
 
         {/* Mobile Menu */}
         <div
-          className={`overflow-hidden transition-all duration-300 md:hidden ${
+          className={`overflow-hidden transition-all duration-300 lg:hidden ${
             isOpen ? "mt-4 max-h-150 pb-4 opacity-100" : "max-h-0 opacity-0"
           }`}
         >
-          <ul className="flex flex-col items-start space-y-1 border-t border-white/10 pt-4 font-medium text-[15px]">
+          <ul className="flex flex-col items-start space-y-1 border-t border-white/10 pt-4 font-medium text-[16px]">
             {allLinks.map((link) => (
               <li key={link.name} className="w-full">
                 <NavLink
@@ -288,9 +292,9 @@ export default function Navbar({ role = "guest" }) {
                   setIsOpen(false);
                   navigate(ROUTES.LOGIN);
                 }}
-                variant="outlineLight"
+                variant="ghost"
                 fullWidth
-                className="flex items-center justify-center gap-2"
+                className="flex items-center justify-center gap-2 bg-black! text-white! border-primary!"
               >
                 <LogIn className="h-4 w-4" />
                 <span>Sign In</span>

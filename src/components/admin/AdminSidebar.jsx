@@ -83,8 +83,8 @@ function SidebarContent({ onNavigate }) {
       <div className="flex items-center gap-3 border-b border-adminBorder px-5 py-5">
         {/* استثناء وحيد بكل هالتحويل: يبقى primary — إمضاء بصري مقصود
             يربط لوحة الأدمن بهوية المنصة الأم رغم الخلفية الغامقة */}
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary text-white">
-          <LogoIcon className="h-5 w-5" aria-hidden="true" />
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary text-white">
+          <LogoIcon className="h-6 w-6" aria-hidden="true" />
         </span>
         <div className="min-w-0">
           <Typography variant="h6" className="truncate text-adminTextHi!">

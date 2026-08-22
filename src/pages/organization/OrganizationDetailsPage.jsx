@@ -235,6 +235,11 @@ export default function OrganizationDetailsPage() {
 
       {/* بدل قسمين منفصلين (Open + Past) تحت بعض، تبويب واحد نشط بكل
           مرة — العداد بجانب كل تبويب يعطي فكرة سريعة قبل حتى الضغط */}
+      {/* sticky من lg فقط (top-19.75 = 79px، ارتفاع الـ Navbar الفعلي
+          المقاس) — نفس منطق CategorySidebar: تحت lg الصفحة عمود واحد
+          بلا سايدبار مجاور، فما في داعي فعلي للالتصاق، وارتفاع الـ Navbar
+          بوضع الموبايل بيختلف باختلاف نوع الحساب المسجّل دخوله (زائر/متطوع/
+          منظمة)، فقيمة واحدة موثوقة للكل مش متوفرة تحت lg أصلًا */}
       <Tabs
         tabs={[
           { id: ORG_OPPORTUNITIES_TABS.OPEN, label: "Open Opportunities", icon: Compass, count: openOpportunities.length },
@@ -243,6 +248,7 @@ export default function OrganizationDetailsPage() {
         activeTab={activeTab}
         onChange={setActiveTab}
         ariaLabel="Organization opportunities"
+        className="lg:sticky lg:top-19.75 z-40 bg-canvas"
       />
 
       {opportunitiesLoading ? (

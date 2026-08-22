@@ -19,7 +19,10 @@ import { fetchMyParticipations, fetchApplicantsForOpportunity } from './particip
 import { fetchOrganizationProfile } from './organization'
 import { fetchMyOpportunities } from './opportunities'
 import { fetchPendingOrganizations } from './admin'
-import { getSeenAchievementIds, markAchievementIdsSeen } from '../utils/achievementSeenTracker'
+import {
+  getSeenAchievementNotificationIds,
+  markAchievementNotificationIdsSeen,
+} from '../utils/achievementNotificationSeenTracker'
 import { getSeenHoursMap, markHoursSeen } from '../utils/hoursSeenTracker'
 import { getSeenStatusMap, markStatusSeen } from '../utils/participationStatusSeenTracker'
 import { getSeenOrganizationStatusMap, markOrganizationStatusSeen } from '../utils/organizationVerificationSeenTracker'
@@ -47,9 +50,11 @@ function buildAchievementItems(achievements, seenAchievements) {
       // صارت قسم فيها بدل صفحة مستقلة
       href: ROUTES.MY_JOURNEY,
       // تعليم صريح كـ"مقروء" (من الـ Bell أو صفحة /notifications) —
-      // بيدمج مع أي إنجازات اتعلّمت مسبقًا بدل ما يفقدها (markAchievementIdsSeen
-      // بتكتب الـ Set كاملة، مش عنصر واحد)
-      onDismiss: () => markAchievementIdsSeen(new Set([...seenAchievements, achievement.id])),
+      // بيدمج مع أي إنجازات اتعلّمت مسبقًا بدل ما يفقدها
+      // (markAchievementNotificationIdsSeen بتكتب الـ Set كاملة، مش عنصر
+      // واحد). تراكر مستقل تمامًا عن مودال الاحتفال بصفحة My Journey —
+      // راجع achievementNotificationSeenTracker.js
+      onDismiss: () => markAchievementNotificationIdsSeen(new Set([...seenAchievements, achievement.id])),
     }))
 }
 
@@ -283,7 +288,7 @@ export async function fetchRecentNotifications({ accountType, organizationId } =
       fetchMyParticipations(),
     ])
 
-    const achievementItems = buildAchievementItems(achievements, getSeenAchievementIds())
+    const achievementItems = buildAchievementItems(achievements, getSeenAchievementNotificationIds())
     const participationItems = buildParticipationItems(
       participations,
       getSeenHoursMap(),

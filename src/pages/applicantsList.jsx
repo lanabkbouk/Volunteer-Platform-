@@ -27,7 +27,6 @@ import { useApplicantsQuery } from "../hooks/queries/useApplicantsQuery";
 import { useUpdateParticipationStatusMutation } from "../hooks/queries/useUpdateParticipationStatusMutation";
 import { useUpdateParticipationHoursMutation } from "../hooks/queries/useUpdateParticipationHoursMutation";
 import { useToast } from "../hooks/useToast";
-import { markApplicantStatusSeen } from "../utils/organizationApplicantSeenTracker";
 import { PARTICIPATION_STATUS } from "../constants/participationStatus";
 import { CARD_SURFACE } from "../utils/surfaceStyles";
 import { ROUTES } from "../constants/paths";
@@ -55,17 +54,6 @@ export default function ApplicantsList() {
     applicantsQuery.refetch();
   };
   const { toast, showSuccess, showError, closeToast } = useToast();
-
-  // تعليم كل انسحاب ظاهر هلق كـ"مشاهَد" — بعد هالسطر، تنبيه "A volunteer
-  // withdrew" المقابل بيختفي من جرس الإشعارات (نفس فلسفة markStatusSeen
-  // المستخدمة بصفحة My Volunteering عند المتطوع، بس هون من منظور المنظمة)
-  useEffect(() => {
-    applicants.forEach((applicant) => {
-      if (applicant.status === PARTICIPATION_STATUS.WITHDRAWN) {
-        markApplicantStatusSeen(applicant.id, PARTICIPATION_STATUS.WITHDRAWN);
-      }
-    });
-  }, [applicants]);
 
   // "إدارة الساعات" ما بتظهر إلا بعد ما تاريخ انتهاء الفرصة الحقيقي يفوت
   const opportunityHasEnded = Boolean(

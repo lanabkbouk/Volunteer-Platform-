@@ -7,7 +7,11 @@
 // هذا المكوّن بدل بناء تبويب جديد لحاله — راجع OpportunityTabs.jsx
 // كمثال على "غلاف" رقيق فوقه بتبويبات جاهزة مسبقًا.
 
-export default function Tabs({ tabs, activeTab, onChange, ariaLabel = "View" }) {
+// className اختياري: يوصل فوق حاوية mb-6 الخارجية مباشرة — بيسمح لكل
+// نقطة استخدام تتحكم بالتصاق (sticky/top/z-index/bg) حسب سياقها الخاص
+// (راجع OpportunityTabs.jsx وOrganizationDetailsPage.jsx)، بدون ما
+// Tabs.jsx نفسه يفرض سلوك sticky واحد على كل استخداماته
+export default function Tabs({ tabs, activeTab, onChange, ariaLabel = "View", className = "" }) {
   return (
     // flex-wrap بدل overflow-x-auto: لما عددها كبير على شاشة موبايل ضيقة
     // (مثلًا 7 تبويبات حالة المشاركة)، التبويبات تلتف لسطر ثانٍ (أو أكثر)
@@ -24,7 +28,7 @@ export default function Tabs({ tabs, activeTab, onChange, ariaLabel = "View" }) 
     // بتتقيّد بعرض الحاوية وتترك flex-wrap يلتف التابات لسطر تانٍ بدل
     // ما تفيض برّا — تجمع بين "الانكماش حول المحتوى" و"القدرة على
     // الالتفاف عند الحاجة" بنفس الوقت
-    <div className="mb-6">
+    <div className={`mb-6 ${className}`}>
       <div
         role="tablist"
         aria-label={ariaLabel}

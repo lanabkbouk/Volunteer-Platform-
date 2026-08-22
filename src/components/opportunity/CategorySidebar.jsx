@@ -36,9 +36,10 @@ export default function CategorySidebar({
   onSelectCategory,
   searchValue,
   onSearchChange,
+  className = "",
 }) {
   return (
-    <aside className="w-full lg:w-72 shrink-0 flex flex-col gap-6">
+    <aside className={`w-full lg:w-72 shrink-0 flex flex-col gap-6 ${className}`}>
       {onSearchChange ? (
         <Input
           name="opportunity-search"

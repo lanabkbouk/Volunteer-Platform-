@@ -11,7 +11,7 @@ import { isMockMode } from './api/mockMode'
 import { wait } from './api/delay'
 import { fetchOpportunities } from './opportunities'
 import { getEffectiveParticipationStatus, PARTICIPATION_STATUS } from '../constants/participationStatus'
-import { MOCK_PARTICIPATIONS, MOCK_VOLUNTEER_PROFILES } from './mock/mockParticipationsStore'
+import { MOCK_PARTICIPATIONS, MOCK_VOLUNTEER_PROFILES, persistMockParticipations } from './mock/mockParticipationsStore'
 import { fetchVolunteerAchievements } from './achievements'
 import { buildVolunteerHoursSummary } from '../utils/volunteerHoursSummary'
 import { extractPhotoUrl } from '../utils/extractPhotoUrl'
@@ -181,6 +181,7 @@ export async function updateParticipationStatus(participationId, status, reason)
       participation.status = status
       // السبب بس بيتخزّن لما القرار فعليًا رفض — قبول ما إله سبب
       if (status === PARTICIPATION_STATUS.REJECTED) participation.rejectionReason = reason
+      persistMockParticipations()
     }
     return { success: true }
   }
@@ -223,6 +224,7 @@ export async function withdrawParticipation(participationId) {
 
     participation.status = PARTICIPATION_STATUS.WITHDRAWN
     participation.withdrawnDate = new Date().toISOString().slice(0, 10)
+    persistMockParticipations()
     return { success: true }
   }
 
@@ -257,6 +259,7 @@ export async function updateParticipationHours(participationId, hours) {
     if (!participation) return { success: false, error: 'Participation not found' }
 
     participation.hoursLogged = hours
+    persistMockParticipations()
     return { success: true }
   }
 

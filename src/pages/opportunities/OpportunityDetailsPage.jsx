@@ -332,7 +332,7 @@ export default function OpportunityDetailsPage() {
             </p>
           ) : null}
 
-          {opportunity.skills.length > 0 ? (
+          {opportunity.skills?.length > 0 ? (
             <div className="flex flex-wrap gap-2 mb-8">
               {opportunity.skills.map((skill) => (
                 <Chip key={skill.id} color="blue">
@@ -359,7 +359,7 @@ export default function OpportunityDetailsPage() {
                     {opportunity.organization.name}
                   </Link>
                 ) : (
-                  <p className="text-lg font-semibold text-heading">{opportunity.organization.name}</p>
+                  <p className="text-lg font-semibold text-heading">{opportunity.organization?.name}</p>
                 )}
 
                 {opportunity.organization?.phone ? (

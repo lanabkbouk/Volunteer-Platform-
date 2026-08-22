@@ -131,7 +131,11 @@ export default function OpportunitiesListPage() {
       </Typography>
 
       {isVolunteer ? (
-        <OpportunityTabs activeTab={activeTab} onChange={setActiveTab} />
+        <OpportunityTabs
+          activeTab={activeTab}
+          onChange={setActiveTab}
+          className="sticky top-19.75 z-40 bg-canvas"
+        />
       ) : null}
 
       <div className="flex flex-col lg:flex-row gap-8">
@@ -173,6 +177,16 @@ export default function OpportunitiesListPage() {
                 onSelectCategory={selectCategory}
                 searchValue={search}
                 onSearchChange={setSearch}
+                // top يعتمد فعليًا على ارتفاع الـ Navbar (19.75 = 79px)، زائد
+                // ارتفاع شريط OpportunityTabs الملتصق فوقه لو ظاهر للمتطوع
+                // (33.25 = 133px = 79 + 54px) — قيم مقاسة فعليًا بالمتصفح
+                // (Playwright)، مش افتراضية. self-start إلزامي لأنه العنصر
+                // جوا حاوية lg:flex-row
+                className={
+                  isVolunteer
+                    ? "lg:sticky lg:top-33.25 lg:self-start"
+                    : "lg:sticky lg:top-19.75 lg:self-start"
+                }
               />
             </div>
           </>

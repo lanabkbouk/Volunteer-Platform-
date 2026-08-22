@@ -17,7 +17,11 @@ export default function ApplicantsToolbar({
   onSortOrderChange,
 }) {
   return (
-    <div className="flex flex-col sm:flex-row gap-3 mb-6">
+    // top-19.75 = 79px، ارتفاع الـ Navbar الفعلي المقاس (Playwright) — قيمة
+    // موحّدة عبر كل نقاط التوقف بعد إصلاح مشكلة overflow الأفقي بالناف بار
+    // على الموبايل (راجع Navbar.jsx). bg-canvas لازمة لأنه القائمة تحتها
+    // بتتمرّر مباشرة ورا الشريط، وإلا الكاردات كانت رح "تظهر من خلاله"
+    <div className="sticky top-19.75 z-40 flex flex-col gap-3 bg-canvas py-3 sm:flex-row mb-6">
       <Input
         name="applicantSearch"
         placeholder="Search by volunteer name..."

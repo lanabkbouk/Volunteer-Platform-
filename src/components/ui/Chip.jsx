@@ -39,7 +39,7 @@ export default function Chip({ children, color = "primary", dark = false, classN
 
   return (
     <span
-      className={`inline-block px-3 py-1 rounded-full text-sm border font-medium shadow-sm ${styles} ${className}`}
+      className={`inline-flex items-center whitespace-nowrap px-3 py-1 rounded-full text-sm border font-medium shadow-sm ${styles} ${className}`}
     >
       {children}
     </span>
